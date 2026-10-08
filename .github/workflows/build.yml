@@ -84,6 +84,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          pattern: "*-package*" # packages only, not the test screenshots
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
