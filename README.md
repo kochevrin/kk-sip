@@ -23,7 +23,10 @@ uses) and Qt 6.
   drop-down at the top picks the one for outgoing calls, with a status dot for each
 - **Call history** with incoming, outgoing, missed and declined calls. Double-click
   to call back. Missed calls show a badge and a tray notification
-- **Phone book** with search, autocomplete in the dial field, and CSV import/export
+- **Phone book** with search, a contact hint under the dial field, and CSV import/export
+- **Busy lamps (BLF)** for colleagues: green free, blinking orange ringing (with who is
+  calling and a one-click pickup, `**ext`), red on a call. Uses dialog-event
+  subscriptions, which Asterisk and FreePBX support out of the box
 - **Easy migration from MicroSIP**: import `Contacts.xml` and the accounts from
   `microsip.ini`
 - **Calls**: answer/reject popup, hold, mute, blind transfer, DTMF from the keypad,
@@ -33,7 +36,8 @@ uses) and Qt 6.
   are set in Settings
 - Do-not-disturb mode, custom WAV ringtone
 - Starts with the system straight into the tray (optional)
-- Light and dark theme in the kk family style, follows the system or set by hand
+- Light and dark theme in the kk family style, follows the system or set by hand;
+  slim own title bar with a 1px edge instead of the window manager frame (optional)
 - Opens `sip:`, `tel:` and `callto:` links (`kk-sip tel:+380...`); a second launch
   hands the number to the running instance
 - English and Russian UI
@@ -127,6 +131,10 @@ Qt Widgets UI (src/ui)                     SipEngine (src/sip)
 
 All PJSIP callbacks run on the GUI thread, so there is no locking between the SIP
 stack and the UI.
+
+PJSIP is built with the fixes in [`patches/`](patches/) until they land upstream
+(currently: a crash on dialog-event NOTIFYs without `<remote>`, which Asterisk sends
+when a watched extension hangs up).
 
 ## Tests
 

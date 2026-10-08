@@ -90,6 +90,8 @@ QList<Contact> readContacts(QIODevice *xmlFile)
             Contact c;
             c.name = xml.attributes().value(QLatin1String("name")).toString().trimmed();
             c.number = SipUri::cleanNumber(xml.attributes().value(QLatin1String("number")).toString());
+            // MicroSIP's "presence" flag is its busy lamp subscription.
+            c.blf = xml.attributes().value(QLatin1String("presence")) == QLatin1String("1");
             if (!c.number.isEmpty())
                 found.append(c);
         }

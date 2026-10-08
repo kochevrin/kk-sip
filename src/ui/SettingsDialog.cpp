@@ -306,6 +306,9 @@ QWidget *SettingsDialog::createGeneralPage()
     m_theme->addItem(tr("Dark"), QStringLiteral("dark"));
     m_theme->setCurrentIndex(qMax(0, m_theme->findData(s.theme)));
     form->addRow(tr("Theme:"), m_theme);
+    m_systemFrame = new QCheckBox(tr("System window frame (restart needed)"), page);
+    m_systemFrame->setChecked(s.systemFrame);
+    form->addRow(m_systemFrame);
     form->addRow(m_closeToTray);
     form->addRow(m_autostart);
     form->addRow(m_startHidden);
@@ -329,6 +332,7 @@ void SettingsDialog::commit()
     s.closeToTray = m_closeToTray->isChecked();
     s.startHidden = m_startHidden->isChecked();
     s.debugLog = m_debugLog->isChecked();
+    s.systemFrame = m_systemFrame->isChecked();
     if (s.theme != m_theme->currentData().toString()) {
         s.theme = m_theme->currentData().toString();
         Theme::apply(Theme::modeFromString(s.theme));

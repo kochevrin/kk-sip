@@ -18,6 +18,7 @@ class AudioMediaPlayer;
 } // namespace pj
 
 class KkAccount;
+class KkBuddy;
 class KkCall;
 
 enum class RegState { Disabled, Registering, Online, Failed };
@@ -39,6 +40,20 @@ struct CallView {
     QDateTime connectedAt;
     int lastCode = 0;
     QString lastReason;
+};
+
+// Busy lamp field: dialog-event (RFC 4235) subscription to a colleague's extension.
+enum class BlfState { Unknown, Idle, Ringing, Busy };
+
+struct BlfTarget {
+    qint64 contactId = 0;
+    QString accountId;
+    QString number;
+};
+
+struct BlfInfo {
+    BlfState state = BlfState::Unknown;
+    QString peer; // who they are talking to / who is calling them, when the PBX says
 };
 
 struct AudioDevice {
@@ -93,15 +108,21 @@ public:
 
     void setRingtone(const QString &wavFile) { m_ringtoneFile = wavFile; }
 
+    // Replaces the set of watched extensions; unchanged ones keep their subscription.
+    void setBlfTargets(const QList<BlfTarget> &targets);
+    BlfInfo blf(qint64 contactId) const;
+
 signals:
     void regStateChanged(const QString &accountId);
     void incomingCall(int callId);
     void callChanged(int callId);
     void callEnded(const CallView &call);
+    void blfChanged(qint64 contactId);
 
 private:
     friend class KkAccount;
     friend class KkCall;
+    friend class KkBuddy;
 
     void onIncoming(KkAccount *acc, int pjCallId);
     void onCallState(KkCall *call);
@@ -117,6 +138,9 @@ private:
     const AccountConfig *accountConfig(const QString &accountId) const;
     void createAccount(const AccountConfig &cfg);
     void removeAccount(const QString &id);
+    void syncBuddies();
+    void deleteBuddiesOf(const QString &accountId);
+    void onBuddyDlgEvent(KkBuddy *buddy);
 
     std::unique_ptr<pj::Endpoint> m_ep;
     QTimer *m_poll = nullptr;
@@ -124,6 +148,8 @@ private:
     QHash<QString, AccountConfig> m_accountConfigs;
     QHash<QString, QString> m_accountErrors;
     QHash<int, KkCall *> m_calls;
+    QHash<qint64, KkBuddy *> m_buddies; // by contact id
+    QList<BlfTarget> m_blfTargets;
     std::unique_ptr<pj::ToneGenerator> m_tone;
     std::unique_ptr<pj::AudioMediaPlayer> m_ringPlayer;
     enum class Tone { None, Ring, Ringback } m_toneState = Tone::None;

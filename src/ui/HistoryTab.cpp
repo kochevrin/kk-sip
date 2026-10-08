@@ -3,6 +3,7 @@
 #include "core/Settings.h"
 #include "ui/ContactsTab.h"
 #include "ui/Icons.h"
+#include "ui/ListDelegate.h"
 #include "ui/Theme.h"
 
 #include <QApplication>
@@ -42,6 +43,7 @@ HistoryTab::HistoryTab(Database *db, QWidget *parent)
     m_list->setContextMenuPolicy(Qt::CustomContextMenu);
     m_list->setAlternatingRowColors(true);
     m_list->setToolTip(tr("Double-click to call back"));
+    m_list->setItemDelegate(new ListDelegate(m_list));
     layout->addWidget(m_list);
 
     connect(m_db, &Database::historyChanged, this, &HistoryTab::reload);
@@ -98,8 +100,8 @@ void HistoryTab::reload()
         if (showAccount && accountTitles.contains(e.accountId))
             details << accountTitles.value(e.accountId);
 
-        auto *item = new QListWidgetItem(
-            (name.isEmpty() ? e.number : name) + QLatin1Char('\n') + details.join(QStringLiteral(" · ")));
+        auto *item = new QListWidgetItem(name.isEmpty() ? e.number : name);
+        item->setData(ListDelegate::SubtitleRole, details.join(QStringLiteral(" · ")));
         item->setIcon(e.status == HistoryEntry::Missed ? missedIcon : e.incoming ? inIcon : outIcon);
         if (e.status == HistoryEntry::Missed)
             item->setForeground(Theme::colors().danger);

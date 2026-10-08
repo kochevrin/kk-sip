@@ -1,11 +1,17 @@
 #include "ui/ContactsTab.h"
 
 #include "core/MicrosipImport.h"
+#include "core/Settings.h"
 #include "core/SipUri.h"
 #include "ui/Icons.h"
+#include "ui/ListDelegate.h"
+#include "ui/Theme.h"
+#include "sip/SipEngine.h"
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QClipboard>
+#include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFile>
@@ -18,6 +24,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QTextStream>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -32,6 +39,18 @@ bool editContactDialog(QWidget *parent, Contact &contact)
     auto *number = new QLineEdit(contact.number, &dlg);
     form->addRow(QObject::tr("Name:"), name);
     form->addRow(QObject::tr("Number:"), number);
+    auto *blf = new QCheckBox(QObject::tr("Show busy lamp (BLF)"), &dlg);
+    blf->setToolTip(QObject::tr("Green: free, orange: ringing, red: on a call. Works for extensions on your PBX."));
+    blf->setChecked(contact.blf);
+    auto *blfAccount = new QComboBox(&dlg);
+    blfAccount->addItem(QObject::tr("Selected account"), QString());
+    for (const AccountConfig &a : Settings::instance().accounts)
+        blfAccount->addItem(a.title(), a.id);
+    blfAccount->setCurrentIndex(qMax(0, blfAccount->findData(contact.blfAccount)));
+    blfAccount->setEnabled(contact.blf);
+    QObject::connect(blf, &QCheckBox::toggled, blfAccount, &QWidget::setEnabled);
+    form->addRow(QString(), blf);
+    form->addRow(QObject::tr("Watch via:"), blfAccount);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, &dlg);
     form->addRow(buttons);
     QObject::connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
@@ -48,14 +67,17 @@ bool editContactDialog(QWidget *parent, Contact &contact)
         return false;
     contact.number = SipUri::cleanNumber(number->text());
     contact.name = name->text().trimmed();
+    contact.blf = blf->isChecked();
+    contact.blfAccount = blfAccount->currentData().toString();
     if (contact.name.isEmpty())
         contact.name = contact.number;
     return true;
 }
 
-ContactsTab::ContactsTab(Database *db, QWidget *parent)
+ContactsTab::ContactsTab(Database *db, SipEngine *engine, QWidget *parent)
     : QWidget(parent)
     , m_db(db)
+    , m_engine(engine)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(8, 8, 8, 8);
@@ -90,6 +112,17 @@ ContactsTab::ContactsTab(Database *db, QWidget *parent)
     m_list = new QListWidget(this);
     m_list->setContextMenuPolicy(Qt::CustomContextMenu);
     m_list->setAlternatingRowColors(true);
+    m_list->setItemDelegate(new ListDelegate(m_list));
+    m_list->setUniformItemSizes(false);
+
+    m_blink = new QTimer(this);
+    m_blink->setInterval(500);
+    connect(m_blink, &QTimer::timeout, this, [this] {
+        m_blinkOn = !m_blinkOn;
+        refreshLamps();
+    });
+    connect(m_engine, &SipEngine::blfChanged, this, [this] { refreshLamps(); });
+    connect(Theme::Notifier::instance(), &Theme::Notifier::changed, this, &ContactsTab::refreshLamps);
     layout->addWidget(m_list, 1);
 
     connect(m_search, &QLineEdit::textChanged, this, &ContactsTab::reload);
@@ -113,20 +146,75 @@ Contact ContactsTab::contactAt(int row) const
     return {};
 }
 
+QString ContactsTab::blfText(const BlfInfo &info)
+{
+    switch (info.state) {
+    case BlfState::Idle:
+        return tr("free");
+    case BlfState::Ringing:
+        return info.peer.isEmpty() ? tr("ringing") : tr("ringing: %1").arg(info.peer);
+    case BlfState::Busy:
+        return info.peer.isEmpty() ? tr("on a call") : tr("on a call with %1").arg(info.peer);
+    case BlfState::Unknown:
+        break;
+    }
+    return tr("status unknown");
+}
+
+void ContactsTab::updateLamp(QListWidgetItem *item, const Contact &c)
+{
+    item->setData(ListDelegate::HasLampSlotRole, m_anyLamp);
+    if (!c.blf) {
+        item->setData(ListDelegate::LampRole, QVariant());
+        item->setData(ListDelegate::SubtitleRole, c.name == c.number ? QString() : c.number);
+        return;
+    }
+    const BlfInfo info = m_engine->blf(c.id);
+    const Theme::Colors &tc = Theme::colors();
+    QColor lamp = tc.muted;
+    if (info.state == BlfState::Idle)
+        lamp = tc.ok;
+    else if (info.state == BlfState::Busy)
+        lamp = tc.danger;
+    else if (info.state == BlfState::Ringing)
+        lamp = m_blinkOn ? tc.warn : tc.warn.darker(170);
+    item->setData(ListDelegate::LampRole, lamp);
+    const QString number = c.name == c.number ? QString() : c.number + QStringLiteral(" · ");
+    item->setData(ListDelegate::SubtitleRole, number + blfText(info));
+    item->setToolTip(c.number + QStringLiteral(" — ") + blfText(info));
+}
+
+void ContactsTab::refreshLamps()
+{
+    bool ringing = false;
+    for (int i = 0; i < m_list->count(); ++i) {
+        QListWidgetItem *item = m_list->item(i);
+        const Contact c = contactAt(i);
+        updateLamp(item, c);
+        ringing |= c.blf && m_engine->blf(c.id).state == BlfState::Ringing;
+    }
+    // A ringing colleague blinks, like the lamp on a desk phone.
+    if (ringing && !m_blink->isActive())
+        m_blink->start();
+    else if (!ringing)
+        m_blink->stop();
+}
+
 void ContactsTab::reload()
 {
     m_contacts = m_db->contacts();
+    m_anyLamp = std::any_of(m_contacts.cbegin(), m_contacts.cend(), [](const Contact &c) { return c.blf; });
     const QString filter = m_search->text().trimmed();
     m_list->clear();
     for (const Contact &c : std::as_const(m_contacts)) {
         if (!filter.isEmpty() && !c.name.contains(filter, Qt::CaseInsensitive)
             && !c.number.contains(filter))
             continue;
-        auto *item = new QListWidgetItem(c.name == c.number ? c.number : c.name + QLatin1Char('\n') + c.number);
+        auto *item = new QListWidgetItem(c.name.isEmpty() ? c.number : c.name);
         item->setData(IdRole, c.id);
-        item->setToolTip(c.number);
         m_list->addItem(item);
     }
+    refreshLamps();
 }
 
 void ContactsTab::addContact()
@@ -155,6 +243,12 @@ void ContactsTab::showMenu(const QPoint &pos)
         const Contact c = contactAt(m_list->row(item));
         menu.addAction(Icons::get(QStringLiteral("call-start"), QStringLiteral("call.svg")), tr("Call"), this,
                        [this, c] { emit callRequested(c.number); });
+        if (c.blf && m_engine->blf(c.id).state == BlfState::Ringing) {
+            // FreePBX / Asterisk directed pickup feature code.
+            const QString code = QStringLiteral("**") + c.number;
+            menu.addAction(Icons::get(QStringLiteral("call-incoming")), tr("Pick up the call (%1)").arg(code), this,
+                           [this, code] { emit callRequested(code); });
+        }
         menu.addAction(Icons::get(QStringLiteral("document-edit")), tr("Edit…"), this,
                        [this, c] { editContact(c.id); });
         menu.addAction(Icons::get(QStringLiteral("edit-copy")), tr("Copy number"), this,

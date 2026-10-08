@@ -25,6 +25,16 @@ if [[ ! -d "$SRC" ]]; then
         | tar -xz -C "$DEPS/src"
 fi
 
+# Fixes we carry until they are upstream (patches/pjsip-<version>-*.patch).
+for p in "$ROOT"/patches/pjsip-"$PJSIP_VERSION"-*.patch; do
+    [[ -e "$p" ]] || continue
+    if patch -d "$SRC" -p1 -R --dry-run --silent < "$p" >/dev/null 2>&1; then
+        continue # already applied
+    fi
+    echo "Applying $(basename "$p")"
+    patch -d "$SRC" -p1 --silent < "$p"
+done
+
 cat > "$SRC/pjlib/include/pj/config_site.h" <<'EOF'
 /* kk-sip: audio only, room for many accounts. */
 #define PJMEDIA_HAS_VIDEO       0

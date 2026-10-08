@@ -140,6 +140,12 @@ QPushButton#suggestion {
 }
 QPushButton#suggestion:hover { text-decoration: underline; }
 QLabel#statusLabel { color: @muted; }
+QWidget#titleBar { background: transparent; }
+QToolButton#titleButton, QToolButton#titleCloseButton {
+    background: transparent; border: none; border-radius: 6px; color: @muted; padding: 0;
+}
+QToolButton#titleButton:hover { background: @accent; color: @fg; }
+QToolButton#titleCloseButton:hover { background: @danger; color: white; }
 QLabel#muted { color: @muted; }
 )");
     const QList<QPair<QString, QColor>> vars = {

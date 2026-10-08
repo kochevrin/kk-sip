@@ -27,9 +27,17 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    // Frameless mode: 1px border, resize from the edges, drag by the title strip.
+    void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
+    QWidget *createTitleBar();
+    Qt::Edges edgesAt(const QPoint &pos) const;
     void reloadAccountBox();
+    void updateBlfTargets();
     void updateAccountIcons();
     void updateStatus();
     void showMessage(const QString &text);
@@ -61,4 +69,6 @@ private:
     QString m_transientMessage;
     int m_missed = 0;
     bool m_quitting = false;
+    bool m_frameless = false;
+    QWidget *m_titleBar = nullptr;
 };

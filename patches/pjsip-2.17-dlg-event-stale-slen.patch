@@ -1,0 +1,42 @@
+dlg_event: clear slen with ptr when <local>/<remote> is absent
+
+pjsip_dlg_event_parse_dialog_info() reuses the caller's status struct (the
+dlg_event module parses every NOTIFY into dlgev->tmp_status). When a dialog
+element has no <local> or <remote> child, only .ptr of the identity strings
+is reset; .slen keeps the length from the previous NOTIFY. Callers that test
+slen (e.g. COPY_TO_BUF in pjsua_buddy_get_dlg_event_info()) then copy from a
+NULL pointer and crash. Asterisk sends exactly this sequence: an "early"
+dialog with <remote>, then a "terminated" one without it.
+
+--- a/pjsip/src/pjsip-simple/dlg_event.c	2026-10-08 15:17:00.166493913 +0300
++++ b/pjsip/src/pjsip-simple/dlg_event.c	2026-10-08 15:17:00.167006864 +0300
+@@ -376,10 +376,14 @@
+                 &dlgev_st->info[dlgev_st->info_cnt].local_target_uri,
+                 pjsip_dlg_info_local_get_target_uri(local));
+         } else {
++            /* Clear slen too: the status struct is reused across NOTIFYs. */
+             dlgev_st->info[dlgev_st->info_cnt].local_identity.ptr = NULL;
++            dlgev_st->info[dlgev_st->info_cnt].local_identity.slen = 0;
+             dlgev_st->info[dlgev_st->info_cnt].local_identity_display.ptr =
+                 NULL;
++            dlgev_st->info[dlgev_st->info_cnt].local_identity_display.slen = 0;
+             dlgev_st->info[dlgev_st->info_cnt].local_target_uri.ptr = NULL;
++            dlgev_st->info[dlgev_st->info_cnt].local_target_uri.slen = 0;
+         }
+ 
+         remote = pjsip_dlg_info_dialog_get_remote(dialog);
+@@ -393,10 +397,14 @@
+                 &dlgev_st->info[dlgev_st->info_cnt].remote_target_uri,
+                 pjsip_dlg_info_remote_get_target_uri(remote));
+         } else {
++            /* Clear slen too: the status struct is reused across NOTIFYs. */
+             dlgev_st->info[dlgev_st->info_cnt].remote_identity.ptr = NULL;
++            dlgev_st->info[dlgev_st->info_cnt].remote_identity.slen = 0;
+             dlgev_st->info[dlgev_st->info_cnt].remote_identity_display.ptr =
+                 NULL;
++            dlgev_st->info[dlgev_st->info_cnt].remote_identity_display.slen = 0;
+             dlgev_st->info[dlgev_st->info_cnt].remote_target_uri.ptr = NULL;
++            dlgev_st->info[dlgev_st->info_cnt].remote_target_uri.slen = 0;
+         }
+     } else {
+         dlgev_st->info[dlgev_st->info_cnt].dialog_node = NULL;

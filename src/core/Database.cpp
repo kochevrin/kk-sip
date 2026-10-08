@@ -2,6 +2,7 @@
 
 #include "core/Settings.h"
 
+#include <QDebug>
 #include <QDir>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -36,9 +37,26 @@ bool Database::open(QString *error)
             "CREATE TABLE IF NOT EXISTS contacts ("
             " id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, number TEXT)"))
         && q.exec(QStringLiteral("CREATE INDEX IF NOT EXISTS calls_started ON calls(started_at)"));
-    if (!ok && error)
-        *error = q.lastError().text();
-    return ok;
+    if (!ok) {
+        if (error)
+            *error = q.lastError().text();
+        return false;
+    }
+
+    // Schema migrations, tracked in PRAGMA user_version.
+    q.exec(QStringLiteral("PRAGMA user_version"));
+    const int version = q.next() ? q.value(0).toInt() : 0;
+    if (version < 1) {
+        const bool migrated = q.exec(QStringLiteral("ALTER TABLE contacts ADD COLUMN blf INTEGER NOT NULL DEFAULT 0"))
+            && q.exec(QStringLiteral("ALTER TABLE contacts ADD COLUMN blf_account TEXT NOT NULL DEFAULT ''"))
+            && q.exec(QStringLiteral("PRAGMA user_version = 1"));
+        if (!migrated) {
+            if (error)
+                *error = q.lastError().text();
+            return false;
+        }
+    }
+    return true;
 }
 
 void Database::addHistory(const HistoryEntry &e)
@@ -99,9 +117,10 @@ void Database::clearHistory()
 QList<Contact> Database::contacts() const
 {
     QList<Contact> out;
-    QSqlQuery q(QStringLiteral("SELECT id, name, number FROM contacts ORDER BY name COLLATE NOCASE"));
+    QSqlQuery q(QStringLiteral("SELECT id, name, number, blf, blf_account FROM contacts ORDER BY name COLLATE NOCASE"));
     while (q.next())
-        out.append({q.value(0).toLongLong(), q.value(1).toString(), q.value(2).toString()});
+        out.append({q.value(0).toLongLong(), q.value(1).toString(), q.value(2).toString(), q.value(3).toInt() != 0,
+                    q.value(4).toString()});
     return out;
 }
 
@@ -110,17 +129,23 @@ qint64 Database::saveContact(const Contact &c)
     QSqlQuery q;
     qint64 id = c.id;
     if (id == 0) {
-        q.prepare(QStringLiteral("INSERT INTO contacts (name, number) VALUES (?, ?)"));
+        q.prepare(QStringLiteral("INSERT INTO contacts (name, number, blf, blf_account) VALUES (?, ?, ?, ?)"));
         q.addBindValue(c.name);
         q.addBindValue(c.number);
-        q.exec();
+        q.addBindValue(c.blf ? 1 : 0);
+        q.addBindValue(c.blfAccount.isEmpty() ? QStringLiteral("") : c.blfAccount); // null QString binds as NULL
+        if (!q.exec())
+            qWarning() << "save contact:" << q.lastError().text();
         id = q.lastInsertId().toLongLong();
     } else {
-        q.prepare(QStringLiteral("UPDATE contacts SET name = ?, number = ? WHERE id = ?"));
+        q.prepare(QStringLiteral("UPDATE contacts SET name = ?, number = ?, blf = ?, blf_account = ? WHERE id = ?"));
         q.addBindValue(c.name);
         q.addBindValue(c.number);
+        q.addBindValue(c.blf ? 1 : 0);
+        q.addBindValue(c.blfAccount.isEmpty() ? QStringLiteral("") : c.blfAccount); // null QString binds as NULL
         q.addBindValue(c.id);
-        q.exec();
+        if (!q.exec())
+            qWarning() << "save contact:" << q.lastError().text();
     }
     emit contactsChanged();
     return id;

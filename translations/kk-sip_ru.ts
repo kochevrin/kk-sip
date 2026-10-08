@@ -215,93 +215,128 @@
 <context>
     <name>ContactsTab</name>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="66" />
+        <location filename="../src/ui/ContactsTab.cpp" line="88" />
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="73" />
+        <location filename="../src/ui/ContactsTab.cpp" line="95" />
         <source>Add contact</source>
         <translation>Добавить контакт</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="82" />
+        <location filename="../src/ui/ContactsTab.cpp" line="104" />
         <source>Import (CSV or MicroSIP Contacts.xml)…</source>
         <translation>Импорт (CSV или Contacts.xml из MicroSIP)…</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="84" />
+        <location filename="../src/ui/ContactsTab.cpp" line="106" />
         <source>Export to CSV…</source>
         <translation>Экспорт в CSV…</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="156" />
+        <location filename="../src/ui/ContactsTab.cpp" line="153" />
+        <source>free</source>
+        <translation>свободен</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="155" />
+        <source>ringing</source>
+        <translation>звонит</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="155" />
+        <source>ringing: %1</source>
+        <translation>звонит: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="157" />
+        <source>on a call</source>
+        <translation>разговаривает</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="157" />
+        <source>on a call with %1</source>
+        <translation>разговаривает с %1</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="161" />
+        <source>status unknown</source>
+        <translation>статус неизвестен</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="244" />
         <source>Call</source>
         <translation>Позвонить</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="158" />
+        <location filename="../src/ui/ContactsTab.cpp" line="249" />
+        <source>Pick up the call (%1)</source>
+        <translation>Перехватить вызов (%1)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="252" />
         <source>Edit…</source>
         <translation>Изменить…</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="160" />
+        <location filename="../src/ui/ContactsTab.cpp" line="254" />
         <source>Copy number</source>
         <translation>Копировать номер</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="163" />
+        <location filename="../src/ui/ContactsTab.cpp" line="257" />
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="164" />
+        <location filename="../src/ui/ContactsTab.cpp" line="258" />
         <source>Delete contact</source>
         <translation>Удалить контакт</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="164" />
+        <location filename="../src/ui/ContactsTab.cpp" line="258" />
         <source>Delete %1?</source>
         <translation>Удалить %1?</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="169" />
+        <location filename="../src/ui/ContactsTab.cpp" line="263" />
         <source>Add contact…</source>
         <translation>Добавить контакт…</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="208" />
+        <location filename="../src/ui/ContactsTab.cpp" line="302" />
         <source>Import contacts</source>
         <translation>Импорт контактов</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="209" />
+        <location filename="../src/ui/ContactsTab.cpp" line="303" />
         <source>Contacts (*.csv *.xml);;All files (*)</source>
         <translation>Контакты (*.csv *.xml);;Все файлы (*)</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="214" />
-        <location filename="../src/ui/ContactsTab.cpp" line="236" />
+        <location filename="../src/ui/ContactsTab.cpp" line="308" />
+        <location filename="../src/ui/ContactsTab.cpp" line="330" />
         <source>Import</source>
         <translation>Импорт</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="236" />
+        <location filename="../src/ui/ContactsTab.cpp" line="330" />
         <source>Imported %1 of %2 contacts.</source>
         <translation>Импортировано контактов: %1 из %2.</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="241" />
+        <location filename="../src/ui/ContactsTab.cpp" line="335" />
         <source>Export contacts</source>
         <translation>Экспорт контактов</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="242" />
+        <location filename="../src/ui/ContactsTab.cpp" line="336" />
         <source>CSV (*.csv)</source>
         <translation>CSV (*.csv)</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="247" />
+        <location filename="../src/ui/ContactsTab.cpp" line="341" />
         <source>Export</source>
         <translation>Экспорт</translation>
     </message>
@@ -332,58 +367,58 @@
 <context>
     <name>HistoryTab</name>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="21" />
+        <location filename="../src/ui/HistoryTab.cpp" line="22" />
         <source>yesterday %1</source>
         <translation>вчера %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="44" />
+        <location filename="../src/ui/HistoryTab.cpp" line="45" />
         <source>Double-click to call back</source>
         <translation>Двойной щелчок — перезвонить</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="93" />
+        <location filename="../src/ui/HistoryTab.cpp" line="95" />
         <source>missed</source>
         <translation>пропущен</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="95" />
+        <location filename="../src/ui/HistoryTab.cpp" line="97" />
         <source>declined</source>
         <translation>отклонён</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="97" />
+        <location filename="../src/ui/HistoryTab.cpp" line="99" />
         <source>no answer</source>
         <translation>не дозвонились</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="116" />
+        <location filename="../src/ui/HistoryTab.cpp" line="118" />
         <source>Call</source>
         <translation>Позвонить</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="118" />
+        <location filename="../src/ui/HistoryTab.cpp" line="120" />
         <source>Add to contacts…</source>
         <translation>Добавить в контакты…</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="123" />
+        <location filename="../src/ui/HistoryTab.cpp" line="125" />
         <source>Copy number</source>
         <translation>Копировать номер</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="126" />
+        <location filename="../src/ui/HistoryTab.cpp" line="128" />
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="129" />
-        <location filename="../src/ui/HistoryTab.cpp" line="130" />
+        <location filename="../src/ui/HistoryTab.cpp" line="131" />
+        <location filename="../src/ui/HistoryTab.cpp" line="132" />
         <source>Clear history</source>
         <translation>Очистить историю</translation>
     </message>
     <message>
-        <location filename="../src/ui/HistoryTab.cpp" line="130" />
+        <location filename="../src/ui/HistoryTab.cpp" line="132" />
         <source>Delete all call history?</source>
         <translation>Удалить всю историю звонков?</translation>
     </message>
@@ -414,123 +449,133 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="46" />
+        <location filename="../src/ui/MainWindow.cpp" line="62" />
         <source>Account for outgoing calls. All enabled accounts receive calls.</source>
         <translation>Аккаунт для исходящих. Входящие принимают все включённые аккаунты.</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="57" />
+        <location filename="../src/ui/MainWindow.cpp" line="73" />
         <source>Settings…</source>
         <translation>Настройки…</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="58" />
-        <location filename="../src/ui/MainWindow.cpp" line="204" />
-        <location filename="../src/ui/MainWindow.cpp" line="405" />
+        <location filename="../src/ui/MainWindow.cpp" line="74" />
+        <location filename="../src/ui/MainWindow.cpp" line="332" />
+        <location filename="../src/ui/MainWindow.cpp" line="548" />
         <source>Do not disturb</source>
         <translation>Не беспокоить</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="62" />
-        <location filename="../src/ui/MainWindow.cpp" line="63" />
+        <location filename="../src/ui/MainWindow.cpp" line="78" />
+        <location filename="../src/ui/MainWindow.cpp" line="79" />
         <source>About kk-sip</source>
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="64" />
+        <location filename="../src/ui/MainWindow.cpp" line="80" />
         <source>&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Minimal SIP softphone for Linux.&lt;br&gt;Built on PJSIP and Qt. License: GPL-2.0-or-later.</source>
         <translation>&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Минималистичный SIP-телефон для Linux.&lt;br&gt;Основан на PJSIP и Qt. Лицензия: GPL-2.0-or-later.</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="68" />
-        <location filename="../src/ui/MainWindow.cpp" line="375" />
-        <location filename="../src/ui/MainWindow.cpp" line="448" />
+        <location filename="../src/ui/MainWindow.cpp" line="84" />
+        <location filename="../src/ui/MainWindow.cpp" line="518" />
+        <location filename="../src/ui/MainWindow.cpp" line="591" />
         <source>Quit</source>
         <translation>Выход</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="81" />
+        <location filename="../src/ui/MainWindow.cpp" line="97" />
         <source>Dial</source>
         <translation>Набор</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="82" />
-        <location filename="../src/ui/MainWindow.cpp" line="342" />
+        <location filename="../src/ui/MainWindow.cpp" line="98" />
+        <location filename="../src/ui/MainWindow.cpp" line="484" />
         <source>History</source>
         <translation>История</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="83" />
+        <location filename="../src/ui/MainWindow.cpp" line="99" />
         <source>Contacts</source>
         <translation>Контакты</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="170" />
+        <location filename="../src/ui/MainWindow.cpp" line="197" />
+        <source>Minimize</source>
+        <translation>Свернуть</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MainWindow.cpp" line="198" />
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MainWindow.cpp" line="298" />
         <source>%1 (off)</source>
         <translation>%1 (выкл.)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="174" />
+        <location filename="../src/ui/MainWindow.cpp" line="302" />
         <source>No accounts</source>
         <translation>Нет аккаунтов</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="199" />
+        <location filename="../src/ui/MainWindow.cpp" line="327" />
         <source>Add an account in Settings</source>
         <translation>Добавьте аккаунт в настройках</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="202" />
+        <location filename="../src/ui/MainWindow.cpp" line="330" />
         <source>No password: press Call to enter it</source>
         <translation>Нет пароля: нажмите «Позвонить», чтобы ввести</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="202" />
+        <location filename="../src/ui/MainWindow.cpp" line="330" />
         <source>Account is off: press Call to turn it on</source>
         <translation>Аккаунт выключен: нажмите «Позвонить», чтобы включить</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="235" />
+        <location filename="../src/ui/MainWindow.cpp" line="363" />
         <source>No account to call from</source>
         <translation>Нет аккаунта для звонка</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="242" />
+        <location filename="../src/ui/MainWindow.cpp" line="370" />
         <source>Call failed: %1</source>
         <translation>Звонок не удался: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="330" />
+        <location filename="../src/ui/MainWindow.cpp" line="472" />
         <source>Missed call</source>
         <translation>Пропущенный вызов</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="334" />
+        <location filename="../src/ui/MainWindow.cpp" line="476" />
         <source>Call failed: %1 %2</source>
         <translation>Звонок не удался: %1 %2</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="342" />
+        <location filename="../src/ui/MainWindow.cpp" line="484" />
         <source>History (%1)</source>
         <translation>История (%1)</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="372" />
+        <location filename="../src/ui/MainWindow.cpp" line="515" />
         <source>Show</source>
         <translation>Показать</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="403" />
+        <location filename="../src/ui/MainWindow.cpp" line="546" />
         <source>Online: %1 of %2</source>
         <translation>В сети: %1 из %2</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="407" />
+        <location filename="../src/ui/MainWindow.cpp" line="550" />
         <source>Missed calls: %1</source>
         <translation>Пропущенных: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/MainWindow.cpp" line="448" />
+        <location filename="../src/ui/MainWindow.cpp" line="591" />
         <source>There are active calls. Hang up and quit?</source>
         <translation>Есть активные звонки. Завершить их и выйти?</translation>
     </message>
@@ -543,39 +588,59 @@
         <translation>В файле не найдено аккаунтов.</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="82" />
+        <location filename="../src/sip/SipEngine.cpp" line="85" />
         <source>Online</source>
         <translation>В сети</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="82" />
+        <location filename="../src/sip/SipEngine.cpp" line="85" />
         <source>Offline</source>
         <translation>Не в сети</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="99" />
+        <location filename="../src/sip/SipEngine.cpp" line="102" />
         <source>Registering…</source>
         <translation>Регистрация…</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="29" />
+        <location filename="../src/ui/ContactsTab.cpp" line="36" />
         <source>Edit contact</source>
         <translation>Изменить контакт</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="29" />
+        <location filename="../src/ui/ContactsTab.cpp" line="36" />
         <source>New contact</source>
         <translation>Новый контакт</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="33" />
+        <location filename="../src/ui/ContactsTab.cpp" line="40" />
         <source>Name:</source>
         <translation>Имя:</translation>
     </message>
     <message>
-        <location filename="../src/ui/ContactsTab.cpp" line="34" />
+        <location filename="../src/ui/ContactsTab.cpp" line="41" />
         <source>Number:</source>
         <translation>Номер:</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="42" />
+        <source>Show busy lamp (BLF)</source>
+        <translation>Показывать занятость (BLF)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="43" />
+        <source>Green: free, orange: ringing, red: on a call. Works for extensions on your PBX.</source>
+        <translation>Зелёный — свободен, оранжевый — звонит, красный — разговаривает. Работает для внутренних номеров вашей АТС.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="46" />
+        <source>Selected account</source>
+        <translation>Выбранный аккаунт</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/ContactsTab.cpp" line="53" />
+        <source>Watch via:</source>
+        <translation>Следить через:</translation>
     </message>
 </context>
 <context>
@@ -768,7 +833,12 @@
         <translation>Тема:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="313" />
+        <location filename="../src/ui/SettingsDialog.cpp" line="309" />
+        <source>System window frame (restart needed)</source>
+        <translation>Системная рамка окна (нужен перезапуск)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SettingsDialog.cpp" line="316" />
         <source>Local SIP port (restart needed):</source>
         <translation>Локальный SIP-порт (нужен перезапуск):</translation>
     </message>
@@ -776,32 +846,32 @@
 <context>
     <name>SipEngine</name>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="336" />
+        <location filename="../src/sip/SipEngine.cpp" line="358" />
         <source>Disabled</source>
         <translation>Отключён</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="308" />
+        <location filename="../src/sip/SipEngine.cpp" line="329" />
         <source>Registering…</source>
         <translation>Регистрация…</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="301" />
+        <location filename="../src/sip/SipEngine.cpp" line="322" />
         <source>Too many enabled accounts (limit %1)</source>
         <translation>Слишком много включённых аккаунтов (максимум %1)</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="337" />
+        <location filename="../src/sip/SipEngine.cpp" line="359" />
         <source>Not configured</source>
         <translation>Не настроен</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="386" />
+        <location filename="../src/sip/SipEngine.cpp" line="522" />
         <source>No account selected</source>
         <translation>Аккаунт не выбран</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="392" />
+        <location filename="../src/sip/SipEngine.cpp" line="528" />
         <source>Nothing to call</source>
         <translation>Некуда звонить</translation>
     </message>

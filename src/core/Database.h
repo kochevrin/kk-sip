@@ -22,6 +22,8 @@ struct Contact {
     qint64 id = 0;
     QString name;
     QString number;
+    bool blf = false;   // watch the busy lamp of this number
+    QString blfAccount; // account to subscribe through; empty = the selected account
 };
 
 // SQLite store for call history and the phone book (~/.local/share/kk-sip/kk-sip.db).

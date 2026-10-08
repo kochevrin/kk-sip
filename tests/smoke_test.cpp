@@ -48,12 +48,13 @@ private slots:
     void incomingAnswer();
     void incomingMissed();
     void manyAccounts();
+    void busyLamp();
     void dialSuggestion();
     void autostart();
     void screenshots();
 
 private:
-    QProcess *startRemote(const QString &target);
+    QProcess *startRemote(const QString &target, bool registerAs103 = false);
     void shot(QWidget *w, const QString &name);
     bool waitNoCalls(int ms = 10000);
     HistoryEntry lastHistory() const;
@@ -340,6 +341,56 @@ void SmokeTest::incomingMissed()
     tabs->setCurrentIndex(0);
 }
 
+void SmokeTest::busyLamp()
+{
+    // Watch 103 (Anna) through account 101.
+    Contact anna;
+    for (const Contact &c : m_db->contacts())
+        if (c.number == QLatin1String("103"))
+            anna = c;
+    QVERIFY(anna.id);
+    anna.blf = true;
+    anna.blfAccount = m_acc101.id;
+    m_db->saveContact(anna); // MainWindow turns this into a subscription
+    const auto lamp = [&] { return m_engine->blf(anna.id).state; };
+    QVERIFY2(QTest::qWaitFor([&] { return lamp() == BlfState::Idle; }, 10000), "no BLF NOTIFY for 103");
+
+    // 103 calls the echo service: busy, then free again.
+    QProcess *remote = startRemote(QStringLiteral("sip:600@") + m_server);
+    QVERIFY(QTest::qWaitFor([&] { return lamp() == BlfState::Busy; }, 10000));
+    auto *tabs = m_window->findChild<QTabWidget *>();
+    tabs->setCurrentIndex(2);
+    QTest::qWait(150);
+    shot(m_window.get(), QStringLiteral("07b-contacts-blf"));
+    tabs->setCurrentIndex(0);
+    remote->write("h\n"); // 103 hangs up (sends BYE)
+    QVERIFY(QTest::qWaitFor([&] { return lamp() == BlfState::Idle; }, 10000));
+    remote->kill();
+    remote->waitForFinished(3000);
+
+    // Someone (we, from 101) calls 103: its lamp blinks "ringing" until we give up.
+    remote = startRemote(QString(), /*registerAs103=*/true);
+    QTest::qWait(1500); // let 103 register
+    QSignalSpy ended(m_engine.get(), &SipEngine::callEnded);
+    m_window->dial(QStringLiteral("103"));
+    const bool rang = QTest::qWaitFor([&] { return lamp() == BlfState::Ringing; }, 10000);
+    if (!rang && !ended.isEmpty()) {
+        const CallView c = ended.first().at(0).value<CallView>();
+        qWarning() << "call to 103 ended:" << c.lastCode << c.lastReason;
+    }
+    QVERIFY(rang);
+    QVERIFY(m_engine->blf(anna.id).peer.contains(QLatin1String("101")));
+    tabs->setCurrentIndex(2);
+    QTest::qWait(150);
+    shot(m_window.get(), QStringLiteral("07c-contacts-blf-ringing"));
+    tabs->setCurrentIndex(0);
+    m_engine->hangupAll();
+    QVERIFY(waitNoCalls());
+    QVERIFY(QTest::qWaitFor([&] { return lamp() == BlfState::Idle; }, 10000));
+    remote->kill();
+    remote->waitForFinished(3000);
+}
+
 void SmokeTest::manyAccounts()
 {
     // More accounts than PJSUA's default limit of 8; unknown users get rejected by the PBX.
@@ -437,7 +488,7 @@ void SmokeTest::screenshots()
 
 // ---------------------------------------------------------------------------
 
-QProcess *SmokeTest::startRemote(const QString &target)
+QProcess *SmokeTest::startRemote(const QString &target, bool registerAs103)
 {
     const QString pjsua = qEnvironmentVariable("KKSIP_PJSUA");
     if (pjsua.isEmpty())
@@ -449,7 +500,12 @@ QProcess *SmokeTest::startRemote(const QString &target)
                      QStringLiteral("--id=\"Anna P\" <sip:103@%1>").arg(m_server),
                      QStringLiteral("--realm=*"), QStringLiteral("--username=103"),
                      QStringLiteral("--password=secret"), QStringLiteral("--log-level=0"),
-                     QStringLiteral("--app-log-level=0"), QStringLiteral("--duration=20"), target});
+                     QStringLiteral("--app-log-level=0"), QStringLiteral("--duration=20")});
+    if (registerAs103) // a registered desk phone: rings (180) when called
+        p->setArguments(p->arguments() << QStringLiteral("--registrar=sip:") + m_server
+                                       << QStringLiteral("--auto-answer=180"));
+    if (!target.isEmpty())
+        p->setArguments(p->arguments() << target);
     p->setProcessChannelMode(QProcess::ForwardedErrorChannel);
     connect(p, &QProcess::readyReadStandardOutput, p, [p] { p->readAllStandardOutput(); });
     p->start();

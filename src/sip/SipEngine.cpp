@@ -3,6 +3,7 @@
 #include "core/SipUri.h"
 
 #include <QDebug>
+#include <QLoggingCategory>
 #include <QSet>
 #include <QDir>
 #include <QFile>
@@ -13,6 +14,8 @@
 #include <pjsua2.hpp>
 
 #include <algorithm>
+
+Q_LOGGING_CATEGORY(lcBlf, "kksip.blf", QtWarningMsg) // QT_LOGGING_RULES="kksip.blf.debug=true"
 
 namespace {
 
@@ -127,6 +130,20 @@ private:
     SipEngine *m_engine;
 };
 
+class KkBuddy : public pj::Buddy {
+public:
+    KkBuddy(SipEngine *engine, BlfTarget target)
+        : m_engine(engine), target(std::move(target)) {}
+
+    void onBuddyDlgEventState() override { m_engine->onBuddyDlgEvent(this); }
+
+    BlfTarget target;
+    BlfInfo info;
+
+private:
+    SipEngine *m_engine;
+};
+
 // ---------------------------------------------------------------------------
 
 SipEngine::SipEngine(QObject *parent)
@@ -227,6 +244,9 @@ void SipEngine::shutdown()
     for (KkCall *c : std::as_const(m_calls))
         delete c;
     m_calls.clear();
+    for (KkBuddy *b : std::as_const(m_buddies))
+        delete b; // sends un-SUBSCRIBE
+    m_buddies.clear();
     for (KkAccount *a : std::as_const(m_accounts))
         delete a; // sends un-REGISTER
     m_accounts.clear();
@@ -257,6 +277,7 @@ void SipEngine::createAccount(const AccountConfig &cfg)
 
 void SipEngine::removeAccount(const QString &id)
 {
+    deleteBuddiesOf(id); // buddies hold a reference to their account
     // Calls keep a reference to their account, end them first.
     for (KkCall *c : std::as_const(m_calls)) {
         if (c->view.accountId == id) {
@@ -315,6 +336,7 @@ void SipEngine::applyAccounts(const QList<AccountConfig> &accounts)
         }
         emit regStateChanged(cfg.id);
     }
+    syncBuddies();
 }
 
 RegState SipEngine::regState(const QString &accountId) const
@@ -346,6 +368,120 @@ const AccountConfig *SipEngine::accountConfig(const QString &accountId) const
 QString SipEngine::accountIdFor(const KkAccount *acc) const
 {
     return acc->id();
+}
+
+// ---------------------------------------------------------------------------
+// BLF
+
+void SipEngine::setBlfTargets(const QList<BlfTarget> &targets)
+{
+    m_blfTargets = targets;
+    syncBuddies();
+}
+
+BlfInfo SipEngine::blf(qint64 contactId) const
+{
+    if (KkBuddy *b = m_buddies.value(contactId))
+        return b->info;
+    return {};
+}
+
+void SipEngine::deleteBuddiesOf(const QString &accountId)
+{
+    for (auto it = m_buddies.begin(); it != m_buddies.end();) {
+        if (it.value()->target.accountId == accountId) {
+            const qint64 id = it.key();
+            delete it.value();
+            it = m_buddies.erase(it);
+            emit blfChanged(id);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SipEngine::syncBuddies()
+{
+    if (!m_started)
+        return;
+    QHash<qint64, BlfTarget> wanted;
+    for (const BlfTarget &t : std::as_const(m_blfTargets))
+        if (m_accounts.contains(t.accountId) && !t.number.isEmpty())
+            wanted.insert(t.contactId, t);
+
+    // Drop subscriptions that are gone or now point elsewhere.
+    for (auto it = m_buddies.begin(); it != m_buddies.end();) {
+        const auto w = wanted.constFind(it.key());
+        const bool keep = w != wanted.cend() && w->accountId == it.value()->target.accountId
+            && w->number == it.value()->target.number;
+        if (keep) {
+            ++it;
+            continue;
+        }
+        const qint64 id = it.key();
+        delete it.value();
+        it = m_buddies.erase(it);
+        emit blfChanged(id);
+    }
+
+    for (const BlfTarget &t : std::as_const(wanted)) {
+        if (m_buddies.contains(t.contactId))
+            continue;
+        const AccountConfig *cfg = accountConfig(t.accountId);
+        KkAccount *acc = m_accounts.value(t.accountId);
+        if (!cfg || !acc)
+            continue;
+        auto *buddy = new KkBuddy(this, t);
+        pj::BuddyConfig bc;
+        bc.uri = toStd(SipUri::toTarget(t.number, *cfg));
+        bc.subscribe = false;           // presence is not what PBX lamps use
+        bc.subscribe_dlg_event = true;  // dialog event = BLF in Asterisk/FreePBX
+        try {
+            buddy->create(*acc, bc);
+        } catch (const pj::Error &e) {
+            qWarning() << "BLF subscribe" << t.number << fromStd(e.info());
+            delete buddy;
+            continue;
+        }
+        m_buddies.insert(t.contactId, buddy);
+    }
+}
+
+void SipEngine::onBuddyDlgEvent(KkBuddy *buddy)
+{
+    pjsua_buddy_dlg_event_info di;
+    if (pjsua_buddy_get_dlg_event_info(buddy->getId(), &di) != PJ_SUCCESS)
+        return;
+    const auto str = [](const pj_str_t &s) { return QString::fromUtf8(s.ptr, int(s.slen)); };
+
+    qCDebug(lcBlf) << buddy->target.number << "sub" << di.sub_state_name << "state" << str(di.dialog_state)
+                   << "dir" << str(di.dialog_direction) << "remote" << str(di.remote_identity);
+    BlfInfo info;
+    if (di.sub_state == PJSIP_EVSUB_STATE_ACTIVE || di.sub_state == PJSIP_EVSUB_STATE_PENDING) {
+        const QString state = str(di.dialog_state).toLower();
+        if (state.isEmpty() || state == QLatin1String("terminated"))
+            info.state = BlfState::Idle;
+        else if (state == QLatin1String("confirmed"))
+            info.state = BlfState::Busy;
+        else if (str(di.dialog_direction).toLower() == QLatin1String("initiator"))
+            info.state = BlfState::Busy; // they are dialling out: nothing to pick up
+        else // trying, proceeding, early on a call to them
+            info.state = BlfState::Ringing;
+        if (info.state != BlfState::Idle) {
+            const QString display = str(di.remote_identity_display);
+            const QString user = SipUri::parse(str(di.remote_identity)).user;
+            if (display.isEmpty() || display == user)
+                info.peer = user;
+            else if (display.contains(user)) // "User 101" already names the extension
+                info.peer = display;
+            else
+                info.peer = display + QLatin1Char(' ') + user;
+        }
+    }
+    if (info.state == buddy->info.state && info.peer == buddy->info.peer)
+        return;
+    buddy->info = info;
+    emit blfChanged(buddy->target.contactId);
 }
 
 // ---------------------------------------------------------------------------

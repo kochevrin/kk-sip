@@ -15,6 +15,9 @@
 
 #include <QApplication>
 #include <QCloseEvent>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QWindow>
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -36,9 +39,22 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     setWindowIcon(Icons::app());
     setMinimumSize(260, 400);
 
+    // Our own slim title strip instead of the window manager's frame (the user asked for
+    // no thick borders); "System window frame" in Settings brings the native one back.
+    m_frameless = !Settings::instance().systemFrame;
+    if (m_frameless) {
+        setWindowFlag(Qt::FramelessWindowHint);
+        setMouseTracking(true);
+    }
+
     auto *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(6, 6, 6, 4);
+    // In frameless mode the margin doubles as an invisible resize handle.
+    layout->setContentsMargins(m_frameless ? QMargins(5, 0, 5, 4) : QMargins(6, 6, 6, 4));
     layout->setSpacing(6);
+    if (m_frameless) {
+        m_titleBar = createTitleBar();
+        layout->addWidget(m_titleBar);
+    }
 
     // Account switcher + menu
     auto *top = new QHBoxLayout;
@@ -77,7 +93,7 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     m_tabs->setDocumentMode(true);
     m_dialer = new DialerTab(m_db, this);
     m_history = new HistoryTab(m_db, this);
-    m_contacts = new ContactsTab(m_db, this);
+    m_contacts = new ContactsTab(m_db, m_engine, this);
     m_tabs->addTab(m_dialer, tr("Dial"));
     m_tabs->addTab(m_history, tr("History"));
     m_tabs->addTab(m_contacts, tr("Contacts"));
@@ -108,6 +124,7 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
             Settings::instance().save();
         }
         updateStatus();
+        updateBlfTargets(); // lamps that follow the selected account
     });
     connect(m_dndAction, &QAction::toggled, this, [this](bool on) {
         m_engine->setDoNotDisturb(on);
@@ -137,12 +154,123 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     reloadAccountBox();
     setupTray();
     updateStatus();
+    connect(m_db, &Database::contactsChanged, this, &MainWindow::updateBlfTargets);
+    updateBlfTargets();
 
     if (!restoreGeometry(Settings::instance().windowGeometry))
         resize(300, 500);
 
     if (Settings::instance().accounts.isEmpty())
         QTimer::singleShot(300, this, &MainWindow::openSettings);
+}
+
+// --- Frameless window -------------------------------------------------------
+
+QWidget *MainWindow::createTitleBar()
+{
+    auto *bar = new QWidget(this);
+    bar->setObjectName(QStringLiteral("titleBar"));
+    bar->setFixedHeight(30);
+    auto *h = new QHBoxLayout(bar);
+    h->setContentsMargins(2, 0, 0, 0);
+    h->setSpacing(2);
+
+    auto *icon = new QLabel(bar);
+    icon->setPixmap(Icons::app().pixmap(16, 16));
+    auto *title = new QLabel(QStringLiteral("kk-sip"), bar);
+    title->setObjectName(QStringLiteral("muted"));
+    h->addWidget(icon);
+    h->addSpacing(4);
+    h->addWidget(title);
+    h->addStretch(1);
+
+    auto makeButton = [bar](const QString &name, const QString &text, const QString &tip) {
+        auto *b = new QToolButton(bar);
+        b->setObjectName(name);
+        b->setText(text);
+        b->setToolTip(tip);
+        b->setAutoRaise(true);
+        b->setFocusPolicy(Qt::NoFocus);
+        b->setFixedSize(30, 24);
+        return b;
+    };
+    auto *minimize = makeButton(QStringLiteral("titleButton"), QStringLiteral("—"), tr("Minimize"));
+    auto *close = makeButton(QStringLiteral("titleCloseButton"), QStringLiteral("✕"), tr("Close"));
+    connect(minimize, &QToolButton::clicked, this, &QWidget::showMinimized);
+    connect(close, &QToolButton::clicked, this, &QWidget::close);
+    h->addWidget(minimize);
+    h->addWidget(close);
+
+    // Drag the window by the strip (and its labels).
+    for (QWidget *w : {bar, static_cast<QWidget *>(icon), static_cast<QWidget *>(title)})
+        w->installEventFilter(this);
+    return bar;
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    if (m_frameless && event->type() == QEvent::MouseButtonPress
+        && static_cast<QMouseEvent *>(event)->button() == Qt::LeftButton && windowHandle()) {
+        windowHandle()->startSystemMove();
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
+}
+
+Qt::Edges MainWindow::edgesAt(const QPoint &pos) const
+{
+    constexpr int grip = 5;
+    Qt::Edges e;
+    if (pos.x() < grip)
+        e |= Qt::LeftEdge;
+    if (pos.x() >= width() - grip)
+        e |= Qt::RightEdge;
+    if (pos.y() < 3)
+        e |= Qt::TopEdge;
+    if (pos.y() >= height() - grip)
+        e |= Qt::BottomEdge;
+    return e;
+}
+
+void MainWindow::mousePressEvent(QMouseEvent *event)
+{
+    if (m_frameless && event->button() == Qt::LeftButton && windowHandle()) {
+        const Qt::Edges edges = edgesAt(event->position().toPoint());
+        if (edges)
+            windowHandle()->startSystemResize(edges);
+        else
+            windowHandle()->startSystemMove();
+        return;
+    }
+    QWidget::mousePressEvent(event);
+}
+
+void MainWindow::mouseMoveEvent(QMouseEvent *event)
+{
+    if (m_frameless) {
+        const Qt::Edges e = edgesAt(event->position().toPoint());
+        Qt::CursorShape shape = Qt::ArrowCursor;
+        if (e == (Qt::LeftEdge | Qt::TopEdge) || e == (Qt::RightEdge | Qt::BottomEdge))
+            shape = Qt::SizeFDiagCursor;
+        else if (e == (Qt::RightEdge | Qt::TopEdge) || e == (Qt::LeftEdge | Qt::BottomEdge))
+            shape = Qt::SizeBDiagCursor;
+        else if (e & (Qt::LeftEdge | Qt::RightEdge))
+            shape = Qt::SizeHorCursor;
+        else if (e & (Qt::TopEdge | Qt::BottomEdge))
+            shape = Qt::SizeVerCursor;
+        setCursor(shape);
+    }
+    QWidget::mouseMoveEvent(event);
+}
+
+void MainWindow::paintEvent(QPaintEvent *event)
+{
+    QWidget::paintEvent(event);
+    if (!m_frameless)
+        return;
+    QPainter p(this);
+    p.setPen(Theme::colors().border);
+    p.drawRect(rect().adjusted(0, 0, -1, -1)); // the only frame: 1px
 }
 
 // --- Accounts / status ------------------------------------------------------
@@ -283,6 +411,20 @@ bool MainWindow::ensureEnabled(const QString &id)
     return true;
 }
 
+void MainWindow::updateBlfTargets()
+{
+    QList<BlfTarget> targets;
+    const QString current = currentAccountId();
+    for (const Contact &c : m_db->contacts()) {
+        if (!c.blf)
+            continue;
+        const QString account = c.blfAccount.isEmpty() ? current : c.blfAccount;
+        if (!account.isEmpty())
+            targets.append({c.id, account, c.number});
+    }
+    m_engine->setBlfTargets(targets);
+}
+
 void MainWindow::onKeypad(const QString &key)
 {
     // During a live call the keypad sends DTMF (IVR menus), otherwise it types the number.
@@ -359,6 +501,7 @@ void MainWindow::openSettings()
     reloadAccountBox();
     m_history->reload();
     updateStatus();
+    updateBlfTargets();
 }
 
 // --- Window / tray -----------------------------------------------------------

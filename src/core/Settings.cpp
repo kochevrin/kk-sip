@@ -60,6 +60,7 @@ void Settings::load()
     doNotDisturb = ini.value("doNotDisturb", false).toBool();
     debugLog = ini.value("debugLog", false).toBool();
     theme = ini.value("theme", "system").toString();
+    systemFrame = ini.value("systemFrame", false).toBool();
     sipPort = ini.value("sipPort", 0).toInt();
     windowGeometry = ini.value("geometry").toByteArray();
     codecs.clear();
@@ -115,6 +116,7 @@ void Settings::save() const
         ini.setValue("doNotDisturb", doNotDisturb);
         ini.setValue("debugLog", debugLog);
         ini.setValue("theme", theme);
+        ini.setValue("systemFrame", systemFrame);
         ini.setValue("sipPort", sipPort);
         ini.setValue("geometry", windowGeometry);
         QStringList codecList;
