@@ -4,6 +4,7 @@
 #include "core/Settings.h"
 #include "core/SipUri.h"
 #include "ui/AccountDialog.h"
+#include "ui/AccountSwitcher.h"
 #include "ui/CallPanel.h"
 #include "ui/ContactsTab.h"
 #include "ui/DialerTab.h"
@@ -60,10 +61,8 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
 
     // Account switcher + menu
     auto *top = new QHBoxLayout;
-    m_accountBox = new QComboBox(this);
-    m_accountBox->setToolTip(tr("Account for outgoing calls. All enabled accounts receive calls."));
-    m_accountBox->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
-    m_accountBox->setMinimumContentsLength(10);
+    m_accountBox = new AccountSwitcher(m_engine, this);
+    m_accountBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     top->addWidget(m_accountBox, 1);
 
     auto *menuButton = new QToolButton(this);
@@ -119,8 +118,10 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
             setMissed(0);
     });
 
-    connect(m_accountBox, &QComboBox::currentIndexChanged, this, [this] {
-        const QString id = m_accountBox->currentData().toString();
+    connect(m_accountBox, &AccountSwitcher::enableRequested, this, &MainWindow::setAccountEnabled);
+    connect(m_accountBox, &AccountSwitcher::settingsRequested, this, &MainWindow::openSettings);
+    connect(m_accountBox, &AccountSwitcher::currentChanged, this, [this] {
+        const QString id = m_accountBox->currentId();
         if (!id.isEmpty() && id != Settings::instance().currentAccountId) {
             Settings::instance().currentAccountId = id;
             Settings::instance().save();
@@ -285,7 +286,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
 QString MainWindow::currentAccountId() const
 {
-    return m_accountBox->currentData().toString();
+    return m_accountBox->currentId();
 }
 
 QString MainWindow::accountTitle(const QString &id) const
@@ -299,30 +300,37 @@ QString MainWindow::accountTitle(const QString &id) const
 void MainWindow::reloadAccountBox()
 {
     const Settings &s = Settings::instance();
-    QSignalBlocker block(m_accountBox);
-    m_accountBox->clear();
-    // Disabled accounts stay in the list (grey) so they can be switched on right from here.
-    for (const AccountConfig &a : s.accounts) {
-        const QString title = a.enabled ? a.title() : tr("%1 (off)").arg(a.title());
-        m_accountBox->addItem(Icons::status(m_engine->regState(a.id)), title, a.id);
-    }
-    if (m_accountBox->count() == 0) {
-        m_accountBox->addItem(Icons::status(RegState::Disabled), tr("No accounts"), QString());
-        m_accountBox->setEnabled(false);
-    } else {
-        m_accountBox->setEnabled(true);
-        const int idx = m_accountBox->findData(s.currentAccountId);
-        m_accountBox->setCurrentIndex(qMax(0, idx));
-    }
+    QString id = s.currentAccountId;
+    const bool known = std::any_of(s.accounts.cbegin(), s.accounts.cend(),
+                                   [&](const AccountConfig &a) { return a.id == id; });
+    if (!known)
+        id = s.accounts.isEmpty() ? QString() : s.accounts.first().id;
+    m_accountBox->setCurrentId(id);
 }
 
 void MainWindow::updateAccountIcons()
 {
-    for (int i = 0; i < m_accountBox->count(); ++i) {
-        const QString id = m_accountBox->itemData(i).toString();
-        if (!id.isEmpty())
-            m_accountBox->setItemIcon(i, Icons::status(m_engine->regState(id)));
+    m_accountBox->refresh();
+}
+
+void MainWindow::setAccountEnabled(const QString &id, bool on)
+{
+    const AccountConfig *cfg = accountConfig(id);
+    if (!cfg || cfg->enabled == on)
+        return;
+    if (on && cfg->password.isEmpty()) {
+        ensureEnabled(id); // asks for the password
+        return;
     }
+    Settings &s = Settings::instance();
+    for (AccountConfig &a : s.accounts)
+        if (a.id == id)
+            a.enabled = on;
+    s.save();
+    m_engine->applyAccounts(s.accounts);
+    reloadAccountBox();
+    updateStatus();
+    updateBlfTargets();
 }
 
 void MainWindow::updateStatus()

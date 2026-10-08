@@ -13,6 +13,7 @@
 #include "core/SipUri.h"
 #include "sip/SipEngine.h"
 #include "ui/AccountDialog.h"
+#include "ui/AccountSwitcher.h"
 #include "ui/CallPanel.h"
 #include "ui/DialerTab.h"
 #include "ui/IncomingDialog.h"
@@ -24,6 +25,7 @@
 #include <QDir>
 #include <QFile>
 #include <QLineEdit>
+#include <QMenu>
 #include <QProcess>
 #include <QPushButton>
 #include <QTimer>
@@ -53,6 +55,7 @@ private slots:
     void dialSuggestion();
     void autostart();
     void kwinRule();
+    void accountSwitcher();
     void screenshots();
 
 private:
@@ -511,6 +514,24 @@ void SmokeTest::kwinRule()
     QCOMPARE(f.readAll(), original);
     f.close();
     QFile::remove(path);
+}
+
+void SmokeTest::accountSwitcher()
+{
+    auto *sw = m_window->findChild<AccountSwitcher *>();
+    QVERIFY(sw);
+    QCOMPARE(sw->currentId(), m_acc101.id);
+
+    // The switch in the menu row turns registration off and on.
+    emit sw->enableRequested(m_acc102.id, false);
+    QVERIFY(QTest::qWaitFor([&] { return m_engine->regState(m_acc102.id) == RegState::Disabled; }, 5000));
+    emit sw->enableRequested(m_acc102.id, true);
+    QVERIFY(QTest::qWaitFor([&] { return m_engine->regState(m_acc102.id) == RegState::Online; }, 10000));
+
+    sw->menu()->popup(sw->mapToGlobal(QPoint(0, sw->height())));
+    QTest::qWait(150);
+    shot(sw->menu(), QStringLiteral("10-account-menu"));
+    sw->menu()->close();
 }
 
 void SmokeTest::screenshots()

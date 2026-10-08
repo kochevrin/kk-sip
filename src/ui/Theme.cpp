@@ -141,6 +141,11 @@ QPushButton#suggestion {
 QPushButton#suggestion:hover { text-decoration: underline; }
 QLabel#statusLabel { color: @muted; }
 QWidget#titleBar { background: transparent; }
+QPushButton#accountSwitcher { text-align: left; padding: 5px 10px; background: @card; border-color: @input; }
+QPushButton#accountSwitcher::menu-indicator { subcontrol-position: right center; right: 8px; }
+QWidget#accountRow { border-radius: 6px; }
+QWidget#accountRow:hover { background: @accent; }
+
 QToolButton#titleButton, QToolButton#titleCloseButton {
     background: transparent; border: none; border-radius: 6px; color: @muted; padding: 0;
 }

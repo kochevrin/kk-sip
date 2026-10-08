@@ -44,6 +44,7 @@ add_library(kk-sip-core OBJECT
     src/ui/Icons.h src/ui/Icons.cpp
     src/ui/Theme.h src/ui/Theme.cpp
     src/ui/ListDelegate.h src/ui/ListDelegate.cpp
+    src/ui/AccountSwitcher.h src/ui/AccountSwitcher.cpp
     resources/resources.qrc
 )
 target_include_directories(kk-sip-core PUBLIC src)
