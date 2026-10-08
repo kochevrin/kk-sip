@@ -1,0 +1,23 @@
+# build trees and the PJSIP built by scripts/build-pjsip.sh
+/build/
+/build-*/
+/.deps/
+compile_commands.json
+.cache/
+
+# packaging outputs
+/dist/
+*.pkg.tar.zst
+*.deb
+*.rpm
+*.AppImage
+packaging/arch/pkg/
+packaging/arch/src/
+packaging/arch/*.tar.gz
+
+# editors
+*.user
+CMakeUserPresets.json
+.vscode/
+.idea/
+*.swp

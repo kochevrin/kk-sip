@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=kk-sip
+GenericName=SIP Softphone
+GenericName[ru]=SIP-телефон
+Comment=Minimal SIP softphone
+Comment[ru]=Минималистичный SIP-телефон
+Exec=kk-sip %u
+Icon=kk-sip
+Terminal=false
+Categories=Network;Telephony;Qt;
+MimeType=x-scheme-handler/sip;x-scheme-handler/tel;x-scheme-handler/callto;
+StartupWMClass=kk-sip
+Keywords=sip;voip;phone;call;softphone;

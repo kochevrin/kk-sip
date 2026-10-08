@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/kk-sip.svg</file>
+        <file>icons/call.svg</file>
+        <file>icons/hangup.svg</file>
+        <file>icons/call-white.svg</file>
+        <file>icons/hangup-white.svg</file>
+    </qresource>
+</RCC>
