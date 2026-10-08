@@ -17,7 +17,9 @@ find_package(PkgConfig REQUIRED)
 # system libpjproject (e.g. the AUR package).
 set(KKSIP_PJSIP_PREFIX "${CMAKE_SOURCE_DIR}/.deps/pjsip" CACHE PATH "PJSIP install prefix")
 if(EXISTS "${KKSIP_PJSIP_PREFIX}/lib/pkgconfig/libpjproject.pc")
-    set(ENV{PKG_CONFIG_PATH} "${KKSIP_PJSIP_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+    # pkg-config searches <prefix>/lib/pkgconfig of CMAKE_PREFIX_PATH entries first
+    # (PKG_CONFIG_PATH separators differ between Linux and Windows).
+    list(PREPEND CMAKE_PREFIX_PATH "${KKSIP_PJSIP_PREFIX}")
 endif()
 pkg_check_modules(PJSIP REQUIRED IMPORTED_TARGET libpjproject)
 
@@ -53,19 +55,27 @@ target_link_libraries(kk-sip-core PUBLIC Qt6::Widgets Qt6::Sql Qt6::Network PkgC
 # The bundled PJSIP is static, so its private deps (opus, ssl, asound...) must be linked too.
 target_link_libraries(kk-sip-core PUBLIC ${PJSIP_STATIC_LDFLAGS})
 
-qt_add_executable(kk-sip src/main.cpp)
+if(WIN32)
+    enable_language(RC)
+    configure_file(packaging/windows/kk-sip.rc.in kk-sip.rc @ONLY)
+    qt_add_executable(kk-sip WIN32 src/main.cpp ${CMAKE_CURRENT_BINARY_DIR}/kk-sip.rc)
+    # Static libstdc++/libgcc: fewer MinGW runtime DLLs to ship.
+    target_link_options(kk-sip PRIVATE -static-libgcc -static-libstdc++)
+else()
+    qt_add_executable(kk-sip src/main.cpp)
+endif()
 target_link_libraries(kk-sip PRIVATE kk-sip-core)
 
 if(Qt6_VERSION VERSION_GREATER_EQUAL 6.7)
     qt_add_translations(kk-sip-core
-        TS_FILES translations/kk-sip_ru.ts
+        TS_FILES translations/kk-sip_ru.ts translations/kk-sip_uk.ts
         SOURCE_TARGETS kk-sip kk-sip-core
         RESOURCE_PREFIX /i18n
     )
 else()
     # Qt 6.4-6.6 (Ubuntu 24.04, Debian 12): no SOURCE_TARGETS; lupdate then misses main.cpp only.
     qt_add_translations(kk-sip-core
-        TS_FILES translations/kk-sip_ru.ts
+        TS_FILES translations/kk-sip_ru.ts translations/kk-sip_uk.ts
         RESOURCE_PREFIX /i18n
     )
 endif()
@@ -75,6 +85,11 @@ if(KKSIP_BUILD_TESTS)
     find_package(Qt6 REQUIRED COMPONENTS Test)
     qt_add_executable(kk-sip-smoke tests/smoke_test.cpp)
     target_link_libraries(kk-sip-smoke PRIVATE kk-sip-core Qt6::Test)
+endif()
+
+# Windows packages are put together by packaging/windows/build-windows.sh.
+if(WIN32)
+    return()
 endif()
 
 include(GNUInstallDirs)
@@ -99,5 +114,6 @@ set(CPACK_DEBIAN_PACKAGE_SECTION comm)
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 # Plugins are loaded at runtime, shlibdeps can't see them.
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6svg6, libqt6sql6-sqlite, qt6-qpa-plugins")
+set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "qt6-translations-l10n")
 include(CPack)
 

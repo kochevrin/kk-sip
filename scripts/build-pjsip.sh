@@ -44,9 +44,17 @@ cat > "$SRC/pjlib/include/pj/config_site.h" <<'EOF'
 EOF
 
 cd "$SRC"
-# -fPIC: Arch toolchains build PIE executables, static libs must be PIC.
-CFLAGS="-O2 -fPIC" CXXFLAGS="-O2 -fPIC" ./configure \
-    --prefix="$PREFIX" \
+if [[ -n "${MSYSTEM:-}" ]]; then
+    # Windows (MSYS2 UCRT64): native CMake reads the .pc files, so they need C:/ paths.
+    CONF_PREFIX="$(cygpath -m "$PREFIX")"
+    FLAGS="-O2"
+else
+    CONF_PREFIX="$PREFIX"
+    # -fPIC: Arch toolchains build PIE executables, static libs must be PIC.
+    FLAGS="-O2 -fPIC"
+fi
+CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" ./configure \
+    --prefix="$CONF_PREFIX" \
     --disable-video \
     --disable-v4l2 \
     --disable-sdl \

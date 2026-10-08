@@ -51,6 +51,7 @@ public:
     bool doNotDisturb = false;
     bool debugLog = false;
     QString theme = QStringLiteral("system"); // system | light | dark
+    QString language; // "" = system, or en | uk | ru
     bool rememberPosition = true;
     bool systemFrame = false; // native window frame instead of the slim kk-sip title strip
     bool historyGrouped = true; // history: calls grouped under each number, or one flat list

@@ -78,7 +78,10 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     auto *darkAction = menu->addAction(Icons::get(QStringLiteral("weather-clear-night")), tr("Dark theme"));
     darkAction->setObjectName(QStringLiteral("darkTheme"));
     darkAction->setCheckable(true);
-    connect(menu, &QMenu::aboutToShow, darkAction, [darkAction] { darkAction->setChecked(Theme::isDark()); });
+    darkAction->setChecked(Theme::isDark());
+    // "Follow system" can flip it behind our back.
+    connect(Theme::Notifier::instance(), &Theme::Notifier::changed, darkAction,
+            [darkAction] { darkAction->setChecked(Theme::isDark()); });
     connect(darkAction, &QAction::triggered, this, [](bool dark) {
         Settings &s = Settings::instance();
         s.theme = dark ? QStringLiteral("dark") : QStringLiteral("light");
@@ -88,7 +91,7 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     menu->addSeparator();
     menu->addAction(tr("About kk-sip"), this, [this] {
         QMessageBox::about(this, tr("About kk-sip"),
-                           tr("<b>kk-sip %1</b><br>Minimal SIP softphone for Linux.<br>"
+                           tr("<b>kk-sip %1</b><br>Minimal SIP softphone for Linux and Windows.<br>"
                               "Built on PJSIP and Qt. License: GPL-2.0-or-later.")
                                .arg(QStringLiteral(KKSIP_VERSION)));
     });

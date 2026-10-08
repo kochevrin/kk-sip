@@ -74,9 +74,62 @@ jobs:
           name: arch-package
           path: dist/*
 
+  windows:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            make patch curl zip
+            mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-qt6-base mingw-w64-ucrt-x86_64-qt6-svg
+            mingw-w64-ucrt-x86_64-qt6-tools mingw-w64-ucrt-x86_64-qt6-translations
+            mingw-w64-ucrt-x86_64-opus mingw-w64-ucrt-x86_64-openssl
+
+      - uses: actions/cache@v4
+        with:
+          path: .deps
+          key: pjsip-windows-${{ hashFiles('scripts/build-pjsip.sh', 'patches/**') }}
+
+      - name: Build and stage
+        run: packaging/windows/build-windows.sh --tests
+
+      # No Asterisk on Windows runners: everything except the calls themselves.
+      - name: Smoke test (offline)
+        env:
+          QT_QPA_PLATFORM: offscreen
+          KKSIP_TEST_SERVER: offline
+          KKSIP_SCREENSHOTS: ${{ github.workspace }}/screenshots-windows
+        run: build-win/kk-sip-smoke.exe
+
+      - name: MSI
+        shell: pwsh
+        run: packaging/windows/build-msi.ps1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: |
+            dist/*.msi
+            dist/*.zip
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-windows
+          path: screenshots-windows
+          if-no-files-found: ignore
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [ubuntu, arch]
+    needs: [ubuntu, arch, windows]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

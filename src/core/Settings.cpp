@@ -63,6 +63,7 @@ void Settings::load()
     doNotDisturb = ini.value("doNotDisturb", false).toBool();
     debugLog = ini.value("debugLog", false).toBool();
     theme = ini.value("theme", "system").toString();
+    language = ini.value("language").toString();
     systemFrame = ini.value("systemFrame", false).toBool();
     rememberPosition = ini.value("rememberPosition", true).toBool();
     historyGrouped = ini.value("historyGrouped", true).toBool();
@@ -122,6 +123,7 @@ void Settings::save() const
         ini.setValue("doNotDisturb", doNotDisturb);
         ini.setValue("debugLog", debugLog);
         ini.setValue("theme", theme);
+        ini.setValue("language", language);
         ini.setValue("systemFrame", systemFrame);
         ini.setValue("rememberPosition", rememberPosition);
         ini.setValue("historyGrouped", historyGrouped);

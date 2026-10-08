@@ -2,8 +2,10 @@
 
 #include <QString>
 
-// XDG autostart entry (~/.config/autostart/kk-sip.desktop), honoured by KDE, GNOME,
-// XFCE and others.
+// Start with the user's session.
+//   Linux:   XDG autostart entry (~/.config/autostart/kk-sip.desktop), honoured by KDE,
+//            GNOME, XFCE and others.
+//   Windows: HKCU\Software\Microsoft\Windows\CurrentVersion\Run\kk-sip.
 namespace Autostart {
 
 bool isEnabled();
@@ -14,5 +16,7 @@ void setEnabled(bool on, bool minimized);
 void refresh(bool minimized);
 // What the entry runs: the AppImage, the installed binary, or the build tree binary.
 QString command();
+// The command line currently registered, empty when off.
+QString registeredCommandLine();
 
 } // namespace Autostart

@@ -3,11 +3,24 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 
+#ifdef Q_OS_WIN
+// Named pipes are visible to the whole machine (terminal servers: many users at once).
+static QString userKey()
+{
+    return qEnvironmentVariable("USERDOMAIN") + QLatin1Char('-') + qEnvironmentVariable("USERNAME");
+}
+#else
 #include <unistd.h>
+
+static QString userKey()
+{
+    return QString::number(getuid());
+}
+#endif
 
 SingleInstance::SingleInstance(QObject *parent)
     : QObject(parent)
-    , m_name(QStringLiteral("kk-sip-%1").arg(getuid()))
+    , m_name(QStringLiteral("kk-sip-%1").arg(userKey()))
 {
     // A second, separate instance (testing, a second profile with its own XDG dirs).
     const QString instance = qEnvironmentVariable("KKSIP_INSTANCE");

@@ -20,6 +20,22 @@
 #include <QTextStream>
 #include <QTranslator>
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+
+#include <cstdio>
+
+// kk-sip.exe is a GUI program without a console; --help and --import-microsip
+// print into the console they were started from.
+static void attachParentConsole()
+{
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        std::freopen("CONOUT$", "w", stdout);
+        std::freopen("CONOUT$", "w", stderr);
+    }
+}
+#endif
+
 static QString findFile(const QDir &dir, const QString &name)
 {
     // MicroSIP writes MicroSIP.ini or microsip.ini depending on version; match case-insensitively.
@@ -91,6 +107,10 @@ static bool needsGui(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     const bool gui = needsGui(argc, argv);
+#ifdef Q_OS_WIN
+    if (!gui)
+        attachParentConsole();
+#endif
     std::unique_ptr<QCoreApplication> appHolder(gui ? new QApplication(argc, argv)
                                                     : new QCoreApplication(argc, argv));
     QCoreApplication &app = *appHolder;
@@ -102,6 +122,11 @@ int main(int argc, char *argv[])
         QApplication::setQuitOnLastWindowClosed(false);
     }
 
+    // English, Ukrainian or Russian: the one chosen in the settings, otherwise the system's.
+    Settings::instance().load();
+    const QString language = Settings::instance().language;
+    if (!language.isEmpty())
+        QLocale::setDefault(QLocale(language));
     QTranslator qtTranslator;
     if (qtTranslator.load(QLocale(), QStringLiteral("qtbase"), QStringLiteral("_"),
                           QLibraryInfo::path(QLibraryInfo::TranslationsPath)))

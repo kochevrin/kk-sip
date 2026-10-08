@@ -176,7 +176,14 @@ void SettingsDialog::moveAccount(int delta)
 
 void SettingsDialog::importMicrosip()
 {
-    const QString path = QFileDialog::getOpenFileName(this, tr("MicroSIP settings"), QString(),
+    // Installed MicroSIP on Windows keeps its settings in %APPDATA%\MicroSIP.
+    QString start;
+#ifdef Q_OS_WIN
+    const QString appData = qEnvironmentVariable("APPDATA") + QStringLiteral("/MicroSIP");
+    if (QFileInfo::exists(appData))
+        start = appData;
+#endif
+    const QString path = QFileDialog::getOpenFileName(this, tr("MicroSIP settings"), start,
                                                       tr("microsip.ini (*.ini);;All files (*)"));
     if (path.isEmpty())
         return;
@@ -323,6 +330,15 @@ QWidget *SettingsDialog::createGeneralPage()
     m_theme->addItem(tr("Dark"), QStringLiteral("dark"));
     m_theme->setCurrentIndex(qMax(0, m_theme->findData(s.theme)));
     form->addRow(tr("Theme:"), m_theme);
+    // Language names stay in their own language so anyone can find theirs.
+    m_language = new QComboBox(page);
+    m_language->addItem(tr("Follow system"), QString());
+    m_language->addItem(QStringLiteral("English"), QStringLiteral("en"));
+    m_language->addItem(QStringLiteral("Українська"), QStringLiteral("uk"));
+    m_language->addItem(QStringLiteral("Русский"), QStringLiteral("ru"));
+    m_language->setCurrentIndex(qMax(0, m_language->findData(s.language)));
+    m_language->setToolTip(tr("Applies after a restart"));
+    form->addRow(tr("Language:"), m_language);
     m_systemFrame = new QCheckBox(tr("System window frame (restart needed)"), page);
     m_systemFrame->setChecked(s.systemFrame);
     form->addRow(m_systemFrame);
@@ -359,6 +375,10 @@ void SettingsDialog::commit()
         s.rememberPosition = m_rememberPosition->isChecked();
         if (WindowPlacement::usesKWinRule())
             WindowPlacement::setKWinRule(s.rememberPosition, parentWidget() ? parentWidget()->size() : QSize(300, 500));
+    }
+    if (s.language != m_language->currentData().toString()) {
+        s.language = m_language->currentData().toString();
+        QMessageBox::information(this, tr("Language"), tr("The new language applies after kk-sip restarts."));
     }
     if (s.theme != m_theme->currentData().toString()) {
         s.theme = m_theme->currentData().toString();

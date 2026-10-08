@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  kk-sip MSI (WiX 5). Per-machine, silent-friendly, so it can be assigned by Group
+  Policy, pushed by SCCM/Intune/Ansible (win_package) or run as msiexec /i kk-sip.msi /qn.
+  Built by packaging/windows/build-msi.ps1 from the folder build-windows.sh stages.
+
+  UpgradeCode must never change: it is how a newer MSI finds and replaces the old one.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="kk-sip" Manufacturer="Konstantin Kochervrin" Version="$(Version)"
+           UpgradeCode="ED40ABD6-704E-4515-A02F-E8671C5FC740" Scope="perMachine" Language="1033">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of kk-sip is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="kksip.ico" SourceFile="$(IconFile)" />
+    <Property Id="ARPPRODUCTICON" Value="kksip.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/kochevrin/kk-sip" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/kochevrin/kk-sip/issues" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="kk-sip" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut">
+        <Shortcut Id="KkSipShortcut" Name="kk-sip" Description="SIP softphone"
+                  Target="[INSTALLFOLDER]kk-sip.exe" WorkingDirectory="INSTALLFOLDER" Icon="kksip.ico" />
+        <RegistryValue Root="HKLM" Key="Software\kk-sip" Name="StartMenuShortcut" Type="integer" Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <!-- sip:, tel: and callto: links. Registered as a capable app (Settings > Default apps)
+         and as the handler itself, so links work right after install. -->
+    <Component Id="UrlHandlers" Directory="INSTALLFOLDER">
+      <RegistryValue Root="HKLM" Key="Software\kk-sip" Name="InstallDir" Type="string" Value="[INSTALLFOLDER]"
+                     KeyPath="yes" />
+      <RegistryValue Root="HKLM" Key="Software\RegisteredApplications" Name="kk-sip" Type="string"
+                     Value="Software\kk-sip\Capabilities" />
+      <RegistryKey Root="HKLM" Key="Software\kk-sip\Capabilities">
+        <RegistryValue Name="ApplicationName" Type="string" Value="kk-sip" />
+        <RegistryValue Name="ApplicationDescription" Type="string" Value="SIP softphone" />
+        <RegistryValue Name="ApplicationIcon" Type="string" Value="[INSTALLFOLDER]kk-sip.exe,0" />
+        <RegistryKey Key="URLAssociations">
+          <RegistryValue Name="sip" Type="string" Value="kk-sip.url" />
+          <RegistryValue Name="tel" Type="string" Value="kk-sip.url" />
+          <RegistryValue Name="callto" Type="string" Value="kk-sip.url" />
+        </RegistryKey>
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\kk-sip.url">
+        <RegistryValue Type="string" Value="kk-sip link" />
+        <RegistryValue Name="URL Protocol" Type="string" Value="" />
+        <RegistryValue Key="DefaultIcon" Type="string" Value="[INSTALLFOLDER]kk-sip.exe,0" />
+        <RegistryValue Key="shell\open\command" Type="string" Value="&quot;[INSTALLFOLDER]kk-sip.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\sip">
+        <RegistryValue Type="string" Value="URL:SIP" />
+        <RegistryValue Name="URL Protocol" Type="string" Value="" />
+        <RegistryValue Key="shell\open\command" Type="string" Value="&quot;[INSTALLFOLDER]kk-sip.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\tel">
+        <RegistryValue Type="string" Value="URL:Telephone" />
+        <RegistryValue Name="URL Protocol" Type="string" Value="" />
+        <RegistryValue Key="shell\open\command" Type="string" Value="&quot;[INSTALLFOLDER]kk-sip.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+      <RegistryKey Root="HKLM" Key="Software\Classes\callto">
+        <RegistryValue Type="string" Value="URL:Callto" />
+        <RegistryValue Name="URL Protocol" Type="string" Value="" />
+        <RegistryValue Key="shell\open\command" Type="string" Value="&quot;[INSTALLFOLDER]kk-sip.exe&quot; &quot;%1&quot;" />
+      </RegistryKey>
+    </Component>
+
+    <Feature Id="Main" Title="kk-sip">
+      <Files Directory="INSTALLFOLDER" Include="!(bindpath.Stage)\**" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="UrlHandlers" />
+    </Feature>
+  </Package>
+</Wix>

@@ -7,7 +7,7 @@
 [![Build](https://github.com/kochevrin/kk-sip/actions/workflows/build.yml/badge.svg)](https://github.com/kochevrin/kk-sip/actions/workflows/build.yml)
 [![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](LICENSE)
 
-A minimal SIP softphone for Linux in the spirit of [MicroSIP](https://www.microsip.org):
+A minimal SIP softphone for Linux and Windows in the spirit of [MicroSIP](https://www.microsip.org):
 a small window, simple settings, many accounts, call history and a phone book.
 Nothing else. Built on [PJSIP](https://www.pjsip.org) (the SIP stack MicroSIP
 uses) and Qt 6.
@@ -22,7 +22,9 @@ uses) and Qt 6.
 - **Many accounts registered at the same time.** All of them receive calls; a
   drop-down at the top picks the one for outgoing calls, with a status dot for each
 - **Call history** with incoming, outgoing, missed and declined calls. Double-click
-  to call back. Missed calls show a badge and a tray notification
+  to call back. Missed calls show a badge and a tray notification. Search by number
+  or name, and two views: grouped by number (one row per number with a call count,
+  click it to see every call with that number) or all calls in one list
 - **Phone book** with search, a contact hint under the dial field, and CSV import/export
 - **Busy lamps (BLF)** for colleagues: green free, blinking orange ringing (with who is
   calling and a one-click pickup, `**ext`), red on a call. Uses dialog-event
@@ -36,11 +38,12 @@ uses) and Qt 6.
   are set in Settings
 - Do-not-disturb mode, custom WAV ringtone
 - Starts with the system straight into the tray (optional)
-- Light and dark theme in the kk family style, follows the system or set by hand;
+- Light and dark theme in the kk family style, follows the system or set by hand
+  (quick switch in the ☰ menu);
   slim own title bar with a 1px edge instead of the window manager frame (optional)
 - Opens `sip:`, `tel:` and `callto:` links (`kk-sip tel:+380...`); a second launch
   hands the number to the running instance
-- English and Russian UI
+- English, Ukrainian and Russian UI: follows the system or set in Settings → General
 
 <p align="center">
   <img src="docs/screenshots/incoming.png" alt="Incoming call" width="280">
@@ -57,6 +60,13 @@ Packages are attached to every [release](https://github.com/kochevrin/kk-sip/rel
 | Arch, EndeavourOS, Manjaro | `kk-sip-<ver>-1-x86_64.pkg.tar.zst` | `sudo pacman -U kk-sip-*.pkg.tar.zst` |
 | Ubuntu 24.04+, Debian 13+ | `kk-sip_<ver>_amd64.deb` | `sudo apt install ./kk-sip_*_amd64.deb` |
 | Any other distribution | `kk-sip-<ver>-x86_64.AppImage` | `chmod +x kk-sip-*.AppImage` and run it |
+| Windows 10/11 (x64) | `kk-sip-<ver>-windows-x64.msi` | double-click, or `msiexec /i kk-sip-<ver>-windows-x64.msi /qn` |
+| Windows, no install | `kk-sip-<ver>-windows-x64.zip` | unpack anywhere and run `kk-sip.exe` |
+
+The MSI installs for all users into `Program Files\kk-sip`, adds a Start menu
+entry and registers kk-sip for `sip:`, `tel:` and `callto:` links. It installs
+silently, so it can be assigned through Group Policy or pushed with SCCM, Intune or
+Ansible (`win_package`). A newer MSI replaces the older one in place.
 
 After installing, kk-sip shows up in the application menu. To start it with the
 system, use ☰ → Settings → General → *Start with the system*.
@@ -84,6 +94,11 @@ cmake --build build -j"$(nproc)"
 ./build/kk-sip
 ```
 
+Windows: in an [MSYS2](https://www.msys2.org) UCRT64 shell,
+`packaging/windows/build-windows.sh --install-deps` builds everything and stages
+the app with its DLLs in `dist\stage` plus a portable ZIP; then
+`packaging\windows\build-msi.ps1` (PowerShell, needs the .NET SDK for WiX) makes the MSI.
+
 Debian / Ubuntu: `packaging/linux/build-ubuntu.sh --install-deps` installs the
 dependencies and produces the `.deb` and the AppImage in `dist/`.
 
@@ -101,16 +116,21 @@ sudo cmake --install build
 
 ## Where data lives
 
-| What | Path |
-|---|---|
-| Autostart entry (when enabled) | `~/.config/autostart/kk-sip.desktop` |
-| Settings and accounts | `~/.config/kk-sip/kk-sip.ini` (mode 600; passwords are stored in plain text) |
-| History and contacts | `~/.local/share/kk-sip/kk-sip.db` (SQLite) |
-| SIP debug log (when enabled) | `~/.local/share/kk-sip/pjsip.log` |
+| What | Linux | Windows |
+|---|---|---|
+| Autostart (when enabled) | `~/.config/autostart/kk-sip.desktop` | `HKCU\…\CurrentVersion\Run\kk-sip` |
+| Settings and accounts | `~/.config/kk-sip/kk-sip.ini` | `%LOCALAPPDATA%\kk-sip\kk-sip.ini` |
+| History and contacts (SQLite) | `~/.local/share/kk-sip/kk-sip.db` | `%LOCALAPPDATA%\kk-sip\kk-sip.db` |
+| SIP debug log (when enabled) | `~/.local/share/kk-sip/pjsip.log` | `%LOCALAPPDATA%\kk-sip\pjsip.log` |
+
+Passwords are stored in plain text in the settings file (mode 600 on Linux).
 
 ## Audio
 
-kk-sip talks to ALSA. On a PipeWire or PulseAudio desktop, "System default" uses
+On Windows kk-sip uses the standard Windows audio devices; "System default"
+follows the default device in Sound settings.
+
+On Linux kk-sip talks to ALSA. On a PipeWire or PulseAudio desktop, "System default" uses
 the sound server's ALSA plugin, so calls follow the default device. You can move
 the kk-sip stream to a headset in the KDE/GNOME volume applet, and it will be
 remembered.
@@ -140,7 +160,8 @@ when a watched extension hangs up).
 
 `scripts/smoke-test.sh` runs an end-to-end test against Asterisk in Docker:
 registration, outgoing, busy, incoming, missed calls, hold, mute and DTMF.
-See [tests/README.md](tests/README.md).
+See [tests/README.md](tests/README.md). On Windows CI the same test runs with
+`KKSIP_TEST_SERVER=offline`, which skips the parts that need a PBX.
 
 ## License
 
@@ -149,8 +170,13 @@ GPL-2.0-or-later, see [LICENSE](LICENSE). Third-party components are listed in
 
 ---
 
-**По-русски.** kk-sip — минималистичный SIP-телефон для Linux по образцу MicroSIP:
+**Українською.** kk-sip — мінімалістичний SIP-телефон для Linux і Windows на зразок
+MicroSIP: маленьке вікно, багато облікових записів одночасно зі швидким перемиканням,
+історія з пошуком і зворотним дзвінком, телефонна книга. Мова інтерфейсу (українська,
+російська, англійська) береться з системи або обирається в «Налаштування → Загальні».
+
+**По-русски.** kk-sip — минималистичный SIP-телефон для Linux и Windows по образцу MicroSIP:
 маленькое окно, несколько аккаунтов одновременно с быстрым переключением,
-история с обратным звонком и телефонная книга. Интерфейс на русском включается
-автоматически по языку системы. Контакты и аккаунты можно перенести из MicroSIP:
+история с поиском и обратным звонком, телефонная книга. Язык интерфейса (украинский,
+русский, английский) берётся из системы или выбирается в «Настройки → Общие». Контакты и аккаунты можно перенести из MicroSIP:
 «Контакты → … → Импорт» и «Настройки → Аккаунты → Из MicroSIP…».

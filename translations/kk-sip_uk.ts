@@ -1,68 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="ru_RU">
+<TS version="2.1" language="uk" sourcelanguage="en">
 <context>
     <name>AccountDialog</name>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="16"/>
         <source>New account</source>
-        <translation>Новый аккаунт</translation>
+        <translation>Новий обліковий запис</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="16"/>
         <source>Edit account</source>
-        <translation>Изменить аккаунт</translation>
+        <translation>Змінити обліковий запис</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="20"/>
         <source>e.g. Office</source>
-        <translation>например, Офис</translation>
+        <translation>наприклад, Офіс</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="22"/>
         <source>pbx.example.com or 10.0.0.1:5060</source>
-        <translation>pbx.example.com или 10.0.0.1:5060</translation>
+        <translation>pbx.example.com або 10.0.0.1:5060</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="24"/>
         <source>same as server</source>
-        <translation>как сервер</translation>
+        <translation>як сервер</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="26"/>
         <location filename="../src/ui/AccountDialog.cpp" line="46"/>
         <source>optional</source>
-        <translation>необязательно</translation>
+        <translation>необов’язково</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="29"/>
         <source>same as username</source>
-        <translation>как имя пользователя</translation>
+        <translation>як ім’я користувача</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="34"/>
         <source>Show password</source>
-        <translation>Показать пароль</translation>
+        <translation>Показати пароль</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="54"/>
         <source>Encrypt media (SRTP, optional)</source>
-        <translation>Шифровать звук (SRTP, по возможности)</translation>
+        <translation>Шифрувати звук (SRTP, за можливості)</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="56"/>
         <source>Adapt addresses to NAT (rewrite Contact/Via/SDP)</source>
-        <translation>Подстраивать адреса под NAT (Contact/Via/SDP)</translation>
+        <translation>Підлаштовувати адреси під NAT (Contact/Via/SDP)</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="57"/>
         <source>Turn on only if calls fail behind a home router and the PBX does not handle NAT.</source>
-        <translation>Включайте, только если звонки не идут из-за домашнего роутера, а АТС сама NAT не обрабатывает.</translation>
+        <translation>Вмикайте, лише якщо дзвінки не проходять через домашній роутер, а АТС сама не обробляє NAT.</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="59"/>
         <source>Enabled</source>
-        <translation>Включён</translation>
+        <translation>Увімкнено</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="63"/>
@@ -72,7 +72,7 @@
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="66"/>
         <source>Account name:</source>
-        <translation>Название:</translation>
+        <translation>Назва:</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="67"/>
@@ -82,7 +82,7 @@
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="68"/>
         <source>Username:</source>
-        <translation>Пользователь:</translation>
+        <translation>Користувач:</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="69"/>
@@ -92,7 +92,7 @@
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="70"/>
         <source>Display name:</source>
-        <translation>Отображаемое имя:</translation>
+        <translation>Відображуване ім’я:</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="71"/>
@@ -107,17 +107,17 @@
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="73"/>
         <source>SIP proxy:</source>
-        <translation>SIP-прокси:</translation>
+        <translation>SIP-проксі:</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="74"/>
         <source>Login (auth ID):</source>
-        <translation>Логин (auth ID):</translation>
+        <translation>Логін (auth ID):</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="75"/>
         <source>Re-register every:</source>
-        <translation>Перерегистрация:</translation>
+        <translation>Перереєстрація:</translation>
     </message>
 </context>
 <context>
@@ -125,37 +125,37 @@
     <message>
         <location filename="../src/ui/AccountSwitcher.cpp" line="89"/>
         <source>Turn off (unregister)</source>
-        <translation>Выключить (снять регистрацию)</translation>
+        <translation>Вимкнути (зняти реєстрацію)</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountSwitcher.cpp" line="90"/>
         <source>Turn on (register)</source>
-        <translation>Включить (зарегистрировать)</translation>
+        <translation>Увімкнути (зареєструвати)</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountSwitcher.cpp" line="114"/>
         <source>Account for outgoing calls. All enabled accounts receive calls.</source>
-        <translation>Аккаунт для исходящих. Входящие принимают все включённые аккаунты.</translation>
+        <translation>Обліковий запис для вихідних. Вхідні приймають усі ввімкнені облікові записи.</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountSwitcher.cpp" line="134"/>
         <source>No accounts</source>
-        <translation>Нет аккаунтов</translation>
+        <translation>Немає облікових записів</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountSwitcher.cpp" line="134"/>
         <source>Choose an account</source>
-        <translation>Выберите аккаунт</translation>
+        <translation>Оберіть обліковий запис</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountSwitcher.cpp" line="138"/>
         <source>%1 (off)</source>
-        <translation>%1 (выкл.)</translation>
+        <translation>%1 (вимк.)</translation>
     </message>
     <message>
         <location filename="../src/ui/AccountSwitcher.cpp" line="167"/>
         <source>Account settings…</source>
-        <translation>Настройки аккаунтов…</translation>
+        <translation>Налаштування облікових записів…</translation>
     </message>
 </context>
 <context>
@@ -163,101 +163,97 @@
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="37"/>
         <source>Calling…</source>
-        <translation>Вызов…</translation>
+        <translation>Виклик…</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="39"/>
         <source>Incoming call</source>
-        <translation>Входящий вызов</translation>
+        <translation>Вхідний виклик</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="41"/>
         <source>Ringing…</source>
-        <translation>Звонит…</translation>
+        <translation>Дзвонить…</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="43"/>
         <source>Connecting…</source>
-        <translation>Соединение…</translation>
+        <translation>З’єднання…</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="48"/>
         <source>on hold</source>
-        <translation>на удержании</translation>
+        <translation>на утриманні</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="50"/>
         <source>muted</source>
-        <translation>микрофон выкл.</translation>
+        <translation>мікрофон вимк.</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="54"/>
         <source>Ended</source>
-        <translation>Завершён</translation>
+        <translation>Завершено</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="90"/>
         <location filename="../src/ui/CallPanel.cpp" line="91"/>
         <location filename="../src/ui/CallPanel.cpp" line="92"/>
         <source>Answer</source>
-        <translation>Ответить</translation>
+        <translation>Відповісти</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="93"/>
         <source>Mute</source>
-        <translation>Микрофон</translation>
+        <translation>Мікрофон</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="93"/>
         <source>Mute microphone</source>
-        <translation>Выключить микрофон</translation>
+        <translation>Вимкнути мікрофон</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="96"/>
         <location filename="../src/ui/CallPanel.cpp" line="96"/>
         <source>Hold</source>
-        <translation>Удержание</translation>
+        <translation>Утримання</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="98"/>
         <location filename="../src/ui/CallPanel.cpp" line="123"/>
         <source>Transfer</source>
-        <translation>Перевод</translation>
+        <translation>Переадресація</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="98"/>
         <source>Transfer call</source>
-        <translation>Перевести вызов</translation>
+        <translation>Переадресувати виклик</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="100"/>
         <location filename="../src/ui/CallPanel.cpp" line="101"/>
         <source>Hang up</source>
-        <translation>Положить трубку</translation>
+        <translation>Покласти слухавку</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="118"/>
         <source>Transfer to number…</source>
-        <translation>Перевести на номер…</translation>
+        <translation>Переадресувати на номер…</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="183"/>
         <source>Reject</source>
-        <translation>Отклонить</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/CallPanel.cpp" line="248"/>
-        <source>Transferring to %1…</source>
-        <translation>Перевод на %1…</translation>
-    </message>
-    <message>
-        <source>Transfer to number:</source>
-        <translation type="vanished">Перевести на номер:</translation>
+        <translation>Відхилити</translation>
     </message>
     <message>
         <location filename="../src/ui/CallPanel.cpp" line="244"/>
         <source>Transfer failed: %1</source>
-        <translation>Не удалось перевести: %1</translation>
+        <translation>Не вдалося переадресувати: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/CallPanel.cpp" line="248"/>
+        <source>Transferring to %1…</source>
+        <translation>Переадресація на %1…</translation>
     </message>
 </context>
 <context>
@@ -265,143 +261,143 @@
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="89"/>
         <source>Search</source>
-        <translation>Поиск</translation>
+        <translation>Пошук</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="96"/>
         <source>Add contact</source>
-        <translation>Добавить контакт</translation>
+        <translation>Додати контакт</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="105"/>
         <source>Import (CSV or MicroSIP Contacts.xml)…</source>
-        <translation>Импорт (CSV или Contacts.xml из MicroSIP)…</translation>
+        <translation>Імпорт (CSV або Contacts.xml з MicroSIP)…</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="107"/>
         <source>Export to CSV…</source>
-        <translation>Экспорт в CSV…</translation>
+        <translation>Експорт у CSV…</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="110"/>
         <source>Busy lamps for all internal numbers</source>
-        <translation>Лампочки занятости для всех внутренних номеров</translation>
+        <translation>Лампочки зайнятості для всіх внутрішніх номерів</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="111"/>
         <source>Turn all busy lamps off</source>
-        <translation>Выключить все лампочки занятости</translation>
+        <translation>Вимкнути всі лампочки зайнятості</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="157"/>
         <source>free</source>
-        <translation>свободен</translation>
+        <translation>вільний</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="159"/>
         <source>ringing</source>
-        <translation>звонит</translation>
+        <translation>дзвонить</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="159"/>
         <source>ringing: %1</source>
-        <translation>звонит: %1</translation>
+        <translation>дзвонить: %1</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="161"/>
         <source>on a call</source>
-        <translation>разговаривает</translation>
+        <translation>розмовляє</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="161"/>
         <source>on a call with %1</source>
-        <translation>разговаривает с %1</translation>
+        <translation>розмовляє з %1</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="165"/>
         <source>status unknown</source>
-        <translation>статус неизвестен</translation>
+        <translation>статус невідомий</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="238"/>
         <source>Busy lamps</source>
-        <translation>Лампочки занятости</translation>
+        <translation>Лампочки зайнятості</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="238"/>
         <source>No internal numbers (2–5 digits) without a lamp.</source>
-        <translation>Нет внутренних номеров (2–5 цифр) без лампочки.</translation>
+        <translation>Немає внутрішніх номерів (2–5 цифр) без лампочки.</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="265"/>
         <source>Call</source>
-        <translation>Позвонить</translation>
+        <translation>Подзвонити</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="270"/>
         <source>Pick up the call (%1)</source>
-        <translation>Перехватить вызов (%1)</translation>
+        <translation>Перехопити виклик (%1)</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="273"/>
         <source>Busy lamp (BLF)</source>
-        <translation>Лампочка занятости (BLF)</translation>
+        <translation>Лампочка зайнятості (BLF)</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="280"/>
         <source>Edit…</source>
-        <translation>Изменить…</translation>
+        <translation>Змінити…</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="282"/>
         <source>Copy number</source>
-        <translation>Копировать номер</translation>
+        <translation>Копіювати номер</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="285"/>
         <source>Delete</source>
-        <translation>Удалить</translation>
+        <translation>Видалити</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="286"/>
         <source>Delete contact</source>
-        <translation>Удалить контакт</translation>
+        <translation>Видалити контакт</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="286"/>
         <source>Delete %1?</source>
-        <translation>Удалить %1?</translation>
+        <translation>Видалити %1?</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="291"/>
         <source>Add contact…</source>
-        <translation>Добавить контакт…</translation>
+        <translation>Додати контакт…</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="330"/>
         <source>Import contacts</source>
-        <translation>Импорт контактов</translation>
+        <translation>Імпорт контактів</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="331"/>
         <source>Contacts (*.csv *.xml);;All files (*)</source>
-        <translation>Контакты (*.csv *.xml);;Все файлы (*)</translation>
+        <translation>Контакти (*.csv *.xml);;Усі файли (*)</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="336"/>
         <location filename="../src/ui/ContactsTab.cpp" line="358"/>
         <source>Import</source>
-        <translation>Импорт</translation>
+        <translation>Імпорт</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="358"/>
         <source>Imported %1 of %2 contacts.</source>
-        <translation>Импортировано контактов: %1 из %2.</translation>
+        <translation>Імпортовано контактів: %1 з %2.</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="363"/>
         <source>Export contacts</source>
-        <translation>Экспорт контактов</translation>
+        <translation>Експорт контактів</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="364"/>
@@ -411,7 +407,7 @@
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="369"/>
         <source>Export</source>
-        <translation>Экспорт</translation>
+        <translation>Експорт</translation>
     </message>
 </context>
 <context>
@@ -419,22 +415,22 @@
     <message>
         <location filename="../src/ui/DialerTab.cpp" line="70"/>
         <source>Number or name</source>
-        <translation>Номер или имя</translation>
+        <translation>Номер або ім’я</translation>
     </message>
     <message>
         <location filename="../src/ui/DialerTab.cpp" line="80"/>
         <source>Delete last digit (hold to clear)</source>
-        <translation>Стереть последнюю цифру</translation>
+        <translation>Стерти останню цифру (утримуйте, щоб очистити)</translation>
     </message>
     <message>
         <location filename="../src/ui/DialerTab.cpp" line="93"/>
         <source>Click to use this number</source>
-        <translation>Нажмите, чтобы подставить номер</translation>
+        <translation>Натисніть, щоб підставити номер</translation>
     </message>
     <message>
         <location filename="../src/ui/DialerTab.cpp" line="135"/>
         <source>Call</source>
-        <translation>Позвонить</translation>
+        <translation>Подзвонити</translation>
     </message>
 </context>
 <context>
@@ -442,92 +438,92 @@
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="28"/>
         <source>yesterday %1</source>
-        <translation>вчера %1</translation>
+        <translation>учора %1</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="56"/>
         <source>Search number or name</source>
-        <translation>Поиск по номеру или имени</translation>
+        <translation>Пошук за номером або ім’ям</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="68"/>
         <source>Group by number: one row per number, click it to see all its calls</source>
-        <translation>По номерам: одна строка на номер, щёлкните по ней, чтобы увидеть все звонки</translation>
+        <translation>За номерами: один рядок на номер, клацніть його, щоб побачити всі дзвінки</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="69"/>
         <source>All calls in one list</source>
-        <translation>Все звонки одним списком</translation>
+        <translation>Усі дзвінки одним списком</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="87"/>
         <source>Double-click to call back</source>
-        <translation>Двойной щелчок — перезвонить</translation>
+        <translation>Подвійне клацання — передзвонити</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="149"/>
         <source>missed</source>
-        <translation>пропущен</translation>
+        <translation>пропущений</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="151"/>
         <source>declined</source>
-        <translation>отклонён</translation>
+        <translation>відхилений</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="153"/>
         <source>no answer</source>
-        <translation>не дозвонились</translation>
+        <translation>без відповіді</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="160"/>
         <source>incoming</source>
-        <translation>входящий</translation>
+        <translation>вхідний</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="160"/>
         <source>outgoing</source>
-        <translation>исходящий</translation>
+        <translation>вихідний</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="251"/>
         <source>Call</source>
-        <translation>Позвонить</translation>
+        <translation>Подзвонити</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="253"/>
         <source>Add to contacts…</source>
-        <translation>Добавить в контакты…</translation>
+        <translation>Додати до контактів…</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="258"/>
         <source>Copy number</source>
-        <translation>Копировать номер</translation>
+        <translation>Копіювати номер</translation>
     </message>
     <message numerus="yes">
         <location filename="../src/ui/HistoryTab.cpp" line="265"/>
         <source>Delete all %n call(s) with this number</source>
         <translation>
-            <numerusform>Удалить %n звонок с этим номером</numerusform>
-            <numerusform>Удалить все %n звонка с этим номером</numerusform>
-            <numerusform>Удалить все %n звонков с этим номером</numerusform>
+            <numerusform>Видалити %n дзвінок з цим номером</numerusform>
+            <numerusform>Видалити всі %n дзвінки з цим номером</numerusform>
+            <numerusform>Видалити всі %n дзвінків з цим номером</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="268"/>
         <source>Delete</source>
-        <translation>Удалить</translation>
+        <translation>Видалити</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="272"/>
         <location filename="../src/ui/HistoryTab.cpp" line="273"/>
         <source>Clear history</source>
-        <translation>Очистить историю</translation>
+        <translation>Очистити історію</translation>
     </message>
     <message>
         <location filename="../src/ui/HistoryTab.cpp" line="273"/>
         <source>Delete all call history?</source>
-        <translation>Удалить всю историю звонков?</translation>
+        <translation>Видалити всю історію дзвінків?</translation>
     </message>
 </context>
 <context>
@@ -535,7 +531,7 @@
     <message>
         <location filename="../src/ui/IncomingDialog.cpp" line="18"/>
         <source>Incoming call</source>
-        <translation>Входящий вызов</translation>
+        <translation>Вхідний виклик</translation>
     </message>
     <message>
         <location filename="../src/ui/IncomingDialog.cpp" line="37"/>
@@ -545,152 +541,140 @@
     <message>
         <location filename="../src/ui/IncomingDialog.cpp" line="44"/>
         <source>Answer</source>
-        <translation>Ответить</translation>
+        <translation>Відповісти</translation>
     </message>
     <message>
         <location filename="../src/ui/IncomingDialog.cpp" line="45"/>
         <source>Reject</source>
-        <translation>Отклонить</translation>
+        <translation>Відхилити</translation>
     </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Account for outgoing calls. All enabled accounts receive calls.</source>
-        <translation type="vanished">Аккаунт для исходящих. Входящие принимают все включённые аккаунты.</translation>
-    </message>
-    <message>
         <location filename="../src/ui/MainWindow.cpp" line="74"/>
         <source>Settings…</source>
-        <translation>Настройки…</translation>
+        <translation>Налаштування…</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="75"/>
         <location filename="../src/ui/MainWindow.cpp" line="358"/>
         <location filename="../src/ui/MainWindow.cpp" line="574"/>
         <source>Do not disturb</source>
-        <translation>Не беспокоить</translation>
+        <translation>Не турбувати</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="78"/>
         <source>Dark theme</source>
-        <translation>Тёмная тема</translation>
+        <translation>Темна тема</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="89"/>
         <location filename="../src/ui/MainWindow.cpp" line="90"/>
         <source>About kk-sip</source>
-        <translation>О программе</translation>
+        <translation>Про програму</translation>
     </message>
     <message>
         <source>&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Minimal SIP softphone for Linux.&lt;br&gt;Built on PJSIP and Qt. License: GPL-2.0-or-later.</source>
-        <translation type="vanished">&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Минималистичный SIP-телефон для Linux.&lt;br&gt;Основан на PJSIP и Qt. Лицензия: GPL-2.0-or-later.</translation>
+        <translation type="vanished">&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Мінімалістичний SIP-телефон для Linux.&lt;br&gt;На основі PJSIP і Qt. Ліцензія: GPL-2.0-or-later.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/MainWindow.cpp" line="91"/>
+        <source>&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Minimal SIP softphone for Linux and Windows.&lt;br&gt;Built on PJSIP and Qt. License: GPL-2.0-or-later.</source>
+        <translation>&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Мінімалістичний SIP-телефон для Linux і Windows.&lt;br&gt;На основі PJSIP і Qt. Ліцензія: GPL-2.0-or-later.</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="95"/>
         <location filename="../src/ui/MainWindow.cpp" line="544"/>
         <location filename="../src/ui/MainWindow.cpp" line="617"/>
         <source>Quit</source>
-        <translation>Выход</translation>
+        <translation>Вихід</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="108"/>
         <source>Dial</source>
-        <translation>Набор</translation>
+        <translation>Набір</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="109"/>
         <location filename="../src/ui/MainWindow.cpp" line="510"/>
         <source>History</source>
-        <translation>История</translation>
+        <translation>Історія</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="110"/>
         <source>Contacts</source>
-        <translation>Контакты</translation>
+        <translation>Контакти</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="211"/>
         <source>Minimize</source>
-        <translation>Свернуть</translation>
+        <translation>Згорнути</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="212"/>
         <source>Close</source>
-        <translation>Закрыть</translation>
-    </message>
-    <message>
-        <source>%1 (off)</source>
-        <translation type="vanished">%1 (выкл.)</translation>
-    </message>
-    <message>
-        <source>No accounts</source>
-        <translation type="vanished">Нет аккаунтов</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/MainWindow.cpp" line="91"/>
-        <source>&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Minimal SIP softphone for Linux and Windows.&lt;br&gt;Built on PJSIP and Qt. License: GPL-2.0-or-later.</source>
-        <translation>&lt;b&gt;kk-sip %1&lt;/b&gt;&lt;br&gt;Минималистичный SIP-телефон для Linux и Windows.&lt;br&gt;Основан на PJSIP и Qt. Лицензия: GPL-2.0-or-later.</translation>
+        <translation>Закрити</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="353"/>
         <source>Add an account in Settings</source>
-        <translation>Добавьте аккаунт в настройках</translation>
+        <translation>Додайте обліковий запис у налаштуваннях</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="356"/>
         <source>No password: press Call to enter it</source>
-        <translation>Нет пароля: нажмите «Позвонить», чтобы ввести</translation>
+        <translation>Немає пароля: натисніть «Подзвонити», щоб ввести</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="356"/>
         <source>Account is off: press Call to turn it on</source>
-        <translation>Аккаунт выключен: нажмите «Позвонить», чтобы включить</translation>
+        <translation>Обліковий запис вимкнено: натисніть «Подзвонити», щоб увімкнути</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="389"/>
         <source>No account to call from</source>
-        <translation>Нет аккаунта для звонка</translation>
+        <translation>Немає облікового запису для дзвінка</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="396"/>
         <source>Call failed: %1</source>
-        <translation>Звонок не удался: %1</translation>
+        <translation>Дзвінок не вдався: %1</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="498"/>
         <source>Missed call</source>
-        <translation>Пропущенный вызов</translation>
+        <translation>Пропущений виклик</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="502"/>
         <source>Call failed: %1 %2</source>
-        <translation>Звонок не удался: %1 %2</translation>
+        <translation>Дзвінок не вдався: %1 %2</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="510"/>
         <source>History (%1)</source>
-        <translation>История (%1)</translation>
+        <translation>Історія (%1)</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="541"/>
         <source>Show</source>
-        <translation>Показать</translation>
+        <translation>Показати</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="572"/>
         <source>Online: %1 of %2</source>
-        <translation>В сети: %1 из %2</translation>
+        <translation>У мережі: %1 з %2</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="576"/>
         <source>Missed calls: %1</source>
-        <translation>Пропущенных: %1</translation>
+        <translation>Пропущених: %1</translation>
     </message>
     <message>
         <location filename="../src/ui/MainWindow.cpp" line="617"/>
         <source>There are active calls. Hang up and quit?</source>
-        <translation>Есть активные звонки. Завершить их и выйти?</translation>
+        <translation>Є активні дзвінки. Завершити їх і вийти?</translation>
     </message>
 </context>
 <context>
@@ -698,37 +682,37 @@
     <message>
         <location filename="../src/core/MicrosipImport.cpp" line="81"/>
         <source>No accounts found in this file.</source>
-        <translation>В файле не найдено аккаунтов.</translation>
+        <translation>У файлі не знайдено облікових записів.</translation>
     </message>
     <message>
         <location filename="../src/sip/SipEngine.cpp" line="92"/>
         <source>Online</source>
-        <translation>В сети</translation>
+        <translation>У мережі</translation>
     </message>
     <message>
         <location filename="../src/sip/SipEngine.cpp" line="92"/>
         <source>Offline</source>
-        <translation>Не в сети</translation>
+        <translation>Не в мережі</translation>
     </message>
     <message>
         <location filename="../src/sip/SipEngine.cpp" line="109"/>
         <source>Registering…</source>
-        <translation>Регистрация…</translation>
+        <translation>Реєстрація…</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="37"/>
         <source>Edit contact</source>
-        <translation>Изменить контакт</translation>
+        <translation>Змінити контакт</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="37"/>
         <source>New contact</source>
-        <translation>Новый контакт</translation>
+        <translation>Новий контакт</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="41"/>
         <source>Name:</source>
-        <translation>Имя:</translation>
+        <translation>Ім’я:</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="42"/>
@@ -738,22 +722,22 @@
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="43"/>
         <source>Show busy lamp (BLF)</source>
-        <translation>Показывать занятость (BLF)</translation>
+        <translation>Показувати зайнятість (BLF)</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="44"/>
         <source>Green: free, orange: ringing, red: on a call. Works for extensions on your PBX.</source>
-        <translation>Зелёный — свободен, оранжевый — звонит, красный — разговаривает. Работает для внутренних номеров вашей АТС.</translation>
+        <translation>Зелений — вільний, помаранчевий — дзвонить, червоний — розмовляє. Працює для внутрішніх номерів вашої АТС.</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="47"/>
         <source>Selected account</source>
-        <translation>Выбранный аккаунт</translation>
+        <translation>Вибраний обліковий запис</translation>
     </message>
     <message>
         <location filename="../src/ui/ContactsTab.cpp" line="54"/>
         <source>Watch via:</source>
-        <translation>Следить через:</translation>
+        <translation>Стежити через:</translation>
     </message>
 </context>
 <context>
@@ -761,12 +745,12 @@
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="38"/>
         <source>Settings</source>
-        <translation>Настройки</translation>
+        <translation>Налаштування</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="41"/>
         <source>Accounts</source>
-        <translation>Аккаунты</translation>
+        <translation>Облікові записи</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="42"/>
@@ -781,28 +765,28 @@
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="44"/>
         <source>General</source>
-        <translation>Общие</translation>
+        <translation>Загальні</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="78"/>
         <source>Add…</source>
-        <translation>Добавить…</translation>
+        <translation>Додати…</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="79"/>
         <source>Edit…</source>
-        <translation>Изменить…</translation>
+        <translation>Змінити…</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="80"/>
         <source>Remove</source>
-        <translation>Удалить</translation>
+        <translation>Видалити</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="81"/>
         <location filename="../src/ui/SettingsDialog.cpp" line="283"/>
         <source>Up</source>
-        <translation>Вверх</translation>
+        <translation>Вгору</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="82"/>
@@ -813,153 +797,135 @@
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="83"/>
         <source>From MicroSIP…</source>
-        <translation>Из MicroSIP…</translation>
+        <translation>З MicroSIP…</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="84"/>
         <source>Import accounts from MicroSIP&apos;s microsip.ini</source>
-        <translation>Импорт аккаунтов из microsip.ini (MicroSIP)</translation>
+        <translation>Імпорт облікових записів з microsip.ini (MicroSIP)</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="122"/>
         <source>off, no password</source>
-        <translation>выключен, нет пароля</translation>
+        <translation>вимкнено, немає пароля</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="122"/>
         <source>off</source>
-        <translation>выключен</translation>
+        <translation>вимкнено</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="159"/>
         <source>Remove account</source>
-        <translation>Удалить аккаунт</translation>
+        <translation>Видалити обліковий запис</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="159"/>
         <source>Remove account %1?</source>
-        <translation>Удалить аккаунт %1?</translation>
+        <translation>Видалити обліковий запис %1?</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="186"/>
         <source>MicroSIP settings</source>
-        <translation>Настройки MicroSIP</translation>
+        <translation>Налаштування MicroSIP</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="187"/>
         <source>microsip.ini (*.ini);;All files (*)</source>
-        <translation>microsip.ini (*.ini);;Все файлы (*)</translation>
+        <translation>microsip.ini (*.ini);;Усі файли (*)</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="193"/>
         <location filename="../src/ui/SettingsDialog.cpp" line="198"/>
         <source>Import</source>
-        <translation>Импорт</translation>
+        <translation>Імпорт</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="199"/>
         <source>Imported %1 account(s). MicroSIP keeps passwords encrypted with a Windows key, so the accounts are disabled until you enter a password with Edit.</source>
-        <translation>Импортировано аккаунтов: %1. MicroSIP шифрует пароли ключом Windows, поэтому аккаунты выключены, пока вы не введёте пароль через «Изменить».</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="381"/>
-        <source>Language</source>
-        <translation>Язык</translation>
-    </message>
-    <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="381"/>
-        <source>The new language applies after kk-sip restarts.</source>
-        <translation>Новый язык будет применён после перезапуска kk-sip.</translation>
-    </message>
-    <message>
-        <source>Imported %1 account(s). MicroSIP keeps passwords encrypted with a Windows key, so enter each password with Edit.</source>
-        <translation type="vanished">Импортировано аккаунтов: %1. MicroSIP шифрует пароли ключом Windows, поэтому введите пароли через «Изменить».</translation>
+        <translation>Імпортовано облікових записів: %1. MicroSIP шифрує паролі ключем Windows, тому облікові записи вимкнено, доки ви не введете пароль через «Змінити».</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="213"/>
         <location filename="../src/ui/SettingsDialog.cpp" line="214"/>
         <source>System default</source>
-        <translation>Системное по умолчанию</translation>
+        <translation>Типовий системний</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="228"/>
         <source>Microphone:</source>
-        <translation>Микрофон:</translation>
+        <translation>Мікрофон:</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="229"/>
         <source>Speaker:</source>
-        <translation>Динамик:</translation>
+        <translation>Динамік:</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="233"/>
         <source>built-in tone</source>
-        <translation>встроенный сигнал</translation>
+        <translation>вбудований сигнал</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="238"/>
         <source>Ringtone</source>
-        <translation>Мелодия звонка</translation>
+        <translation>Мелодія дзвінка</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="238"/>
         <source>WAV files (*.wav)</source>
-        <translation>Файлы WAV (*.wav)</translation>
+        <translation>Файли WAV (*.wav)</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="244"/>
         <source>Ringtone:</source>
-        <translation>Мелодия звонка:</translation>
+        <translation>Мелодія дзвінка:</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="246"/>
         <source>“System default” follows the PipeWire/PulseAudio default device.</source>
-        <translation>«Системное по умолчанию» — устройство, выбранное в PipeWire/PulseAudio.</translation>
+        <translation>«Типовий системний» — пристрій, вибраний у PipeWire/PulseAudio.</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="312"/>
         <source>Closing the window keeps kk-sip in the tray</source>
-        <translation>При закрытии окна оставаться в трее</translation>
-    </message>
-    <message>
-        <source>Start minimized to tray</source>
-        <translation type="vanished">Запускаться свёрнутым в трей</translation>
+        <translation>Під час закриття вікна залишатися в треї</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="314"/>
         <source>Start with the system</source>
-        <translation>Запускать вместе с системой</translation>
+        <translation>Запускати разом із системою</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="316"/>
         <source>…straight to the tray, without the window</source>
-        <translation>…сразу в трей, без окна</translation>
+        <translation>…одразу в трей, без вікна</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="321"/>
         <source>Write SIP debug log (restart needed)</source>
-        <translation>Писать отладочный SIP-лог (нужен перезапуск)</translation>
+        <translation>Вести SIP-журнал налагодження (потрібен перезапуск)</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="325"/>
         <source>random</source>
-        <translation>случайный</translation>
+        <translation>випадковий</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="328"/>
         <location filename="../src/ui/SettingsDialog.cpp" line="335"/>
         <source>Follow system</source>
-        <translation>Как в системе</translation>
+        <translation>Як у системі</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="329"/>
         <source>Light</source>
-        <translation>Светлая</translation>
+        <translation>Світла</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="330"/>
         <source>Dark</source>
-        <translation>Тёмная</translation>
+        <translation>Темна</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="332"/>
@@ -969,65 +935,75 @@
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="340"/>
         <source>Applies after a restart</source>
-        <translation>Применяется после перезапуска</translation>
+        <translation>Застосовується після перезапуску</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="341"/>
         <source>Language:</source>
-        <translation>Язык:</translation>
+        <translation>Мова:</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="342"/>
         <source>System window frame (restart needed)</source>
-        <translation>Системная рамка окна (нужен перезапуск)</translation>
+        <translation>Системна рамка вікна (потрібен перезапуск)</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="345"/>
         <source>Remember window position</source>
-        <translation>Запоминать положение окна</translation>
+        <translation>Запам’ятовувати положення вікна</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="348"/>
         <source>On KDE Wayland this adds a KWin window rule for kk-sip.</source>
-        <translation>В KDE на Wayland для этого добавляется правило окна KWin для kk-sip.</translation>
+        <translation>У KDE на Wayland для цього додається правило вікна KWin для kk-sip.</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="354"/>
         <source>Local SIP port (restart needed):</source>
-        <translation>Локальный SIP-порт (нужен перезапуск):</translation>
+        <translation>Локальний SIP-порт (потрібен перезапуск):</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SettingsDialog.cpp" line="381"/>
+        <source>Language</source>
+        <translation>Мова</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SettingsDialog.cpp" line="381"/>
+        <source>The new language applies after kk-sip restarts.</source>
+        <translation>Нова мова застосується після перезапуску kk-sip.</translation>
     </message>
 </context>
 <context>
     <name>SipEngine</name>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="379"/>
-        <source>Disabled</source>
-        <translation>Отключён</translation>
+        <location filename="../src/sip/SipEngine.cpp" line="343"/>
+        <source>Too many enabled accounts (limit %1)</source>
+        <translation>Забагато ввімкнених облікових записів (максимум %1)</translation>
     </message>
     <message>
         <location filename="../src/sip/SipEngine.cpp" line="350"/>
         <source>Registering…</source>
-        <translation>Регистрация…</translation>
+        <translation>Реєстрація…</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="343"/>
-        <source>Too many enabled accounts (limit %1)</source>
-        <translation>Слишком много включённых аккаунтов (максимум %1)</translation>
+        <location filename="../src/sip/SipEngine.cpp" line="379"/>
+        <source>Disabled</source>
+        <translation>Вимкнено</translation>
     </message>
     <message>
         <location filename="../src/sip/SipEngine.cpp" line="380"/>
         <source>Not configured</source>
-        <translation>Не настроен</translation>
+        <translation>Не налаштовано</translation>
     </message>
     <message>
         <location filename="../src/sip/SipEngine.cpp" line="543"/>
         <source>No account selected</source>
-        <translation>Аккаунт не выбран</translation>
+        <translation>Обліковий запис не вибрано</translation>
     </message>
     <message>
         <location filename="../src/sip/SipEngine.cpp" line="549"/>
         <source>Nothing to call</source>
-        <translation>Некуда звонить</translation>
+        <translation>Немає куди дзвонити</translation>
     </message>
 </context>
 <context>
@@ -1035,57 +1011,57 @@
     <message>
         <location filename="../src/main.cpp" line="54"/>
         <source>Quit kk-sip first, then run the import again.</source>
-        <translation>Сначала закройте kk-sip, затем повторите импорт.</translation>
+        <translation>Спершу закрийте kk-sip, потім повторіть імпорт.</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="75"/>
         <source>Accounts: %1 found, %2 added (disabled until you enter passwords).</source>
-        <translation>Аккаунты: найдено %1, добавлено %2 (выключены, пока не введены пароли).</translation>
+        <translation>Облікові записи: знайдено %1, додано %2 (вимкнено, доки не введено паролі).</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="79"/>
         <source>microsip.ini not found in %1</source>
-        <translation>microsip.ini не найден в %1</translation>
+        <translation>microsip.ini не знайдено в %1</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="87"/>
         <source>Contacts: %1 found, %2 added.</source>
-        <translation>Контакты: найдено %1, добавлено %2.</translation>
+        <translation>Контакти: знайдено %1, додано %2.</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="90"/>
         <source>Contacts.xml not found in %1</source>
-        <translation>Contacts.xml не найден в %1</translation>
+        <translation>Contacts.xml не знайдено в %1</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="139"/>
         <source>Minimal SIP softphone</source>
-        <translation>Минималистичный SIP-телефон</translation>
+        <translation>Мінімалістичний SIP-телефон</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="143"/>
         <source>Number or sip:/tel: link to call</source>
-        <translation>Номер или ссылка sip:/tel: для звонка</translation>
+        <translation>Номер або посилання sip:/tel: для дзвінка</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="147"/>
         <source>Import accounts (microsip.ini) and contacts (Contacts.xml) from a MicroSIP folder, then exit. kk-sip must not be running.</source>
-        <translation>Импортировать аккаунты (microsip.ini) и контакты (Contacts.xml) из папки MicroSIP и выйти. kk-sip должен быть закрыт.</translation>
+        <translation>Імпортувати облікові записи (microsip.ini) і контакти (Contacts.xml) з теки MicroSIP і вийти. kk-sip має бути закрито.</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="152"/>
         <source>Start in the tray without showing the window</source>
-        <translation>Запуститься в трее, не показывая окно</translation>
+        <translation>Запуститися в треї, не показуючи вікно</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="173"/>
         <source>Cannot open database: %1</source>
-        <translation>Не удалось открыть базу: %1</translation>
+        <translation>Не вдалося відкрити базу: %1</translation>
     </message>
     <message>
         <location filename="../src/main.cpp" line="180"/>
         <source>Cannot start SIP stack: %1</source>
-        <translation>Не удалось запустить SIP: %1</translation>
+        <translation>Не вдалося запустити SIP: %1</translation>
     </message>
 </context>
 </TS>

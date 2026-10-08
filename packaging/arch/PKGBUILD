@@ -11,7 +11,8 @@ depends=('qt6-base' 'qt6-svg' 'opus' 'openssl' 'alsa-lib' 'util-linux-libs' 'hic
 makedepends=('cmake' 'qt6-tools')
 options=('!debug')
 optdepends=('pipewire-alsa: route calls through PipeWire'
-            'pulseaudio-alsa: route calls through PulseAudio')
+            'pulseaudio-alsa: route calls through PulseAudio'
+            'qt6-translations: OK/Cancel and other standard buttons in Ukrainian and Russian')
 # PJSIP is linked statically: distro builds of pjproject differ in limits (accounts) and codecs.
 source=("$pkgname-$pkgver.tar.gz::https://github.com/kochevrin/kk-sip/archive/refs/tags/v$pkgver.tar.gz"
         "pjproject-$_pjsipver.tar.gz::https://github.com/pjsip/pjproject/archive/refs/tags/$_pjsipver.tar.gz")

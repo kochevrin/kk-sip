@@ -1,7 +1,8 @@
 // End-to-end smoke test: real SIP stack against a real PBX (see tests/README.md).
 //
 //   KKSIP_TEST_SERVER   PBX address, default 127.0.0.1:5070 (extensions 101-103, password "secret",
-//                       600 = echo, 601 = busy)
+//                       600 = echo, 601 = busy); "offline" skips the tests that need it
+//                       (Windows CI has no Asterisk)
 //   KKSIP_PJSUA         pjsua binary used as the remote party
 //   KKSIP_SCREENSHOTS   optional directory for PNG screenshots of the UI
 
@@ -72,6 +73,7 @@ private:
 
     QString m_server = qEnvironmentVariable("KKSIP_TEST_SERVER", QStringLiteral("127.0.0.1:5070"));
     QString m_shots = qEnvironmentVariable("KKSIP_SCREENSHOTS");
+    bool m_offline = m_server == QLatin1String("offline");
     std::unique_ptr<Database> m_db;
     std::unique_ptr<SipEngine> m_engine;
     std::unique_ptr<MainWindow> m_window;
@@ -140,6 +142,7 @@ void SmokeTest::settingsRoundTrip()
     const Settings saved = s;
     s.currentAccountId = m_acc102.id;
     s.theme = QStringLiteral("light");
+    s.language = QStringLiteral("uk");
     s.debugLog = true;
     s.doNotDisturb = true;
     s.codecs = {{QStringLiteral("PCMA/8000/1"), true}, {QStringLiteral("opus/48000/2"), false}};
@@ -147,12 +150,14 @@ void SmokeTest::settingsRoundTrip()
 
     s.currentAccountId.clear();
     s.theme.clear();
+    s.language.clear();
     s.debugLog = false;
     s.doNotDisturb = false;
     s.codecs.clear();
     s.load();
     QCOMPARE(s.currentAccountId, m_acc102.id);
     QCOMPARE(s.theme, QStringLiteral("light"));
+    QCOMPARE(s.language, QStringLiteral("uk"));
     QVERIFY(s.debugLog);
     QVERIFY(s.doNotDisturb);
     QCOMPARE(s.codecs.size(), 2);
@@ -235,6 +240,8 @@ void SmokeTest::audioDevices()
 
 void SmokeTest::registration()
 {
+    if (m_offline)
+        QSKIP("needs the test PBX");
     QVERIFY2(QTest::qWaitFor([&] { return m_engine->regState(m_acc101.id) == RegState::Online; }, 10000),
              qPrintable(m_engine->regText(m_acc101.id)));
     QVERIFY2(QTest::qWaitFor([&] { return m_engine->regState(m_acc102.id) == RegState::Online; }, 10000),
@@ -245,6 +252,8 @@ void SmokeTest::registration()
 
 void SmokeTest::outgoingEcho()
 {
+    if (m_offline)
+        QSKIP("needs the test PBX");
     m_window->dial(QStringLiteral("600"));
     QVERIFY(QTest::qWaitFor([&] {
         const QList<CallView> calls = m_engine->calls();
@@ -274,6 +283,8 @@ void SmokeTest::outgoingEcho()
 
 void SmokeTest::outgoingBusy()
 {
+    if (m_offline)
+        QSKIP("needs the test PBX");
     QSignalSpy ended(m_engine.get(), &SipEngine::callEnded);
     m_window->dial(QStringLiteral("601"));
     QVERIFY(ended.wait(10000));
@@ -286,6 +297,8 @@ void SmokeTest::outgoingBusy()
 
 void SmokeTest::incomingAnswer()
 {
+    if (m_offline)
+        QSKIP("needs the test PBX");
     QSignalSpy incoming(m_engine.get(), &SipEngine::incomingCall);
     QProcess *remote = startRemote(QStringLiteral("sip:102@") + m_server + QStringLiteral(";transport=tcp"));
     QVERIFY(incoming.wait(10000));
@@ -366,6 +379,8 @@ void SmokeTest::incomingAnswer()
 
 void SmokeTest::incomingMissed()
 {
+    if (m_offline)
+        QSKIP("needs the test PBX");
     QSignalSpy incoming(m_engine.get(), &SipEngine::incomingCall);
     QProcess *remote = startRemote(QStringLiteral("sip:101@") + m_server);
     QVERIFY(incoming.wait(10000));
@@ -470,6 +485,8 @@ void SmokeTest::historyViews()
 
 void SmokeTest::busyLamp()
 {
+    if (m_offline)
+        QSKIP("needs the test PBX");
     // Watch 103 (Anna) through account 101.
     Contact anna;
     for (const Contact &c : m_db->contacts())
@@ -520,6 +537,8 @@ void SmokeTest::busyLamp()
 
 void SmokeTest::manyAccounts()
 {
+    if (m_offline)
+        QSKIP("needs the test PBX");
     // More accounts than PJSUA's default limit of 8; unknown users get rejected by the PBX.
     QList<AccountConfig> list{m_acc101, m_acc102};
     for (int i = 0; i < 20; ++i) {
@@ -582,23 +601,20 @@ void SmokeTest::dialSuggestion()
 
 void SmokeTest::autostart()
 {
-    // Test mode redirects ~/.config to ~/.qttest/config, the real autostart is untouched.
+    // Test mode redirects ~/.config to ~/.qttest/config (Windows: a separate Run value),
+    // the real autostart is untouched.
     Autostart::setEnabled(false, true);
     QVERIFY(!Autostart::isEnabled());
     Autostart::setEnabled(true, true);
     QVERIFY(Autostart::isEnabled());
-    QFile entry(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
-                + QStringLiteral("/autostart/kk-sip.desktop"));
-    QVERIFY(entry.open(QIODevice::ReadOnly));
-    const QString text = QString::fromUtf8(entry.readAll());
-    entry.close();
-    QVERIFY(text.contains(QStringLiteral("Exec=") + Autostart::command() + QStringLiteral(" --minimized")));
+    const QString line = Autostart::registeredCommandLine();
+    QVERIFY2(line.contains(Autostart::command()), qPrintable(line));
+    QVERIFY(line.endsWith(QLatin1String(" --minimized")));
     Autostart::setEnabled(true, false);
-    entry.open(QIODevice::ReadOnly);
-    QVERIFY(!QString::fromUtf8(entry.readAll()).contains(QLatin1String("--minimized")));
-    entry.close();
+    QVERIFY(!Autostart::registeredCommandLine().contains(QLatin1String("--minimized")));
     Autostart::setEnabled(false, true);
     QVERIFY(!Autostart::isEnabled());
+    QVERIFY(Autostart::registeredCommandLine().isEmpty());
 }
 
 void SmokeTest::kwinRule()
@@ -648,7 +664,8 @@ void SmokeTest::accountSwitcher()
     emit sw->enableRequested(m_acc102.id, false);
     QVERIFY(QTest::qWaitFor([&] { return m_engine->regState(m_acc102.id) == RegState::Disabled; }, 5000));
     emit sw->enableRequested(m_acc102.id, true);
-    QVERIFY(QTest::qWaitFor([&] { return m_engine->regState(m_acc102.id) == RegState::Online; }, 10000));
+    if (!m_offline)
+        QVERIFY(QTest::qWaitFor([&] { return m_engine->regState(m_acc102.id) == RegState::Online; }, 10000));
 
     sw->menu()->popup(sw->mapToGlobal(QPoint(0, sw->height())));
     QTest::qWait(150);

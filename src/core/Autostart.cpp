@@ -5,9 +5,50 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QSaveFile>
+#include <QSettings>
 #include <QStandardPaths>
 
 namespace Autostart {
+
+#ifdef Q_OS_WIN
+
+static const char RunKey[] = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+// Tests must not touch the developer's real entry.
+static QString valueName()
+{
+    return QStandardPaths::isTestModeEnabled() ? QStringLiteral("kk-sip-test") : QStringLiteral("kk-sip");
+}
+
+bool isEnabled()
+{
+    return QSettings(QLatin1String(RunKey), QSettings::NativeFormat).contains(valueName());
+}
+
+QString command()
+{
+    return QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
+}
+
+QString registeredCommandLine()
+{
+    return QSettings(QLatin1String(RunKey), QSettings::NativeFormat).value(valueName()).toString();
+}
+
+void setEnabled(bool on, bool minimized)
+{
+    QSettings run(QLatin1String(RunKey), QSettings::NativeFormat);
+    if (!on) {
+        run.remove(valueName());
+        return;
+    }
+    QString line = QLatin1Char('"') + command() + QLatin1Char('"');
+    if (minimized)
+        line += QStringLiteral(" --minimized");
+    run.setValue(valueName(), line);
+}
+
+#else
 
 static QString entryPath()
 {
@@ -18,6 +59,18 @@ static QString entryPath()
 bool isEnabled()
 {
     return QFile::exists(entryPath());
+}
+
+QString registeredCommandLine()
+{
+    QFile f(entryPath());
+    if (!f.open(QIODevice::ReadOnly))
+        return {};
+    const QStringList lines = QString::fromUtf8(f.readAll()).split(QLatin1Char('\n'));
+    for (const QString &l : lines)
+        if (l.startsWith(QLatin1String("Exec=")))
+            return l.mid(5);
+    return {};
 }
 
 QString command()
@@ -69,6 +122,8 @@ void setEnabled(bool on, bool minimized)
                 .toUtf8());
     f.commit();
 }
+
+#endif
 
 void refresh(bool minimized)
 {
