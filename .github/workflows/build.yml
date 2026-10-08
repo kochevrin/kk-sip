@@ -67,7 +67,8 @@ jobs:
           git archive --prefix="kk-sip-$ver/" -o "packaging/arch/kk-sip-$ver.tar.gz" HEAD
           chown -R builder packaging/arch
           cd packaging/arch
-          su builder -c "makepkg --noconfirm"
+          # The PKGBUILD pins the checksum of the release tarball; this one is built from HEAD.
+          su builder -c "makepkg --noconfirm --skipchecksums"
           mkdir -p "$GITHUB_WORKSPACE/dist" && mv ./*.pkg.tar.zst "$GITHUB_WORKSPACE/dist/"
       - uses: actions/upload-artifact@v4
         with:
