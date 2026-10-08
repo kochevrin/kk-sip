@@ -68,10 +68,27 @@ void ListDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     const QVariant fg = index.data(Qt::ForegroundRole);
     const QColor titleColor = fg.isValid() ? fg.value<QBrush>().color() : option.palette.color(QPalette::Text);
     const QFontMetrics tm(option.font);
+    int titleWidth = r.width();
+
+    const QString badge = index.data(BadgeRole).toString();
+    if (!badge.isEmpty()) {
+        const QFont bf = subtitleFont(option.font);
+        const QFontMetrics bm(bf);
+        const int bw = bm.horizontalAdvance(badge) + 12;
+        const QRectF pill(r.right() - bw, r.top() + (tm.height() - bm.height() - 2) / 2.0, bw, bm.height() + 2);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(Theme::colors().secondary);
+        painter->drawRoundedRect(pill, pill.height() / 2, pill.height() / 2);
+        painter->setFont(bf);
+        painter->setPen(Theme::colors().muted);
+        painter->drawText(pill, Qt::AlignCenter, badge);
+        titleWidth -= bw + 6;
+    }
+
     painter->setFont(option.font);
     painter->setPen(titleColor);
-    painter->drawText(QRect(r.left(), r.top(), r.width(), tm.height()), Qt::AlignLeft | Qt::AlignVCenter,
-                      tm.elidedText(index.data(Qt::DisplayRole).toString(), Qt::ElideRight, r.width()));
+    painter->drawText(QRect(r.left(), r.top(), titleWidth, tm.height()), Qt::AlignLeft | Qt::AlignVCenter,
+                      tm.elidedText(index.data(Qt::DisplayRole).toString(), Qt::ElideRight, titleWidth));
 
     const QString subtitle = index.data(SubtitleRole).toString();
     if (!subtitle.isEmpty()) {

@@ -16,6 +16,8 @@
 #include "ui/AccountSwitcher.h"
 #include "ui/CallPanel.h"
 #include "ui/DialerTab.h"
+#include "ui/HistoryTab.h"
+#include "ui/ListDelegate.h"
 #include "ui/IncomingDialog.h"
 #include "ui/MainWindow.h"
 #include "ui/SettingsDialog.h"
@@ -34,7 +36,9 @@
 #include <QTabWidget>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QToolButton>
 #include <QTranslator>
+#include <QTreeWidget>
 
 class SmokeTest : public QObject {
     Q_OBJECT
@@ -51,6 +55,7 @@ private slots:
     void outgoingBusy();
     void incomingAnswer();
     void incomingMissed();
+    void historyViews();
     void manyAccounts();
     void busyLamp();
     void dialSuggestion();
@@ -384,6 +389,83 @@ void SmokeTest::incomingMissed()
     QTest::qWait(100);
     shot(m_window.get(), QStringLiteral("07-contacts"));
     tabs->setCurrentIndex(0);
+}
+
+void SmokeTest::historyViews()
+{
+    // Three calls with one mobile number, older than anything the other tests make.
+    const QDateTime base = QDateTime::currentDateTime().addDays(-2);
+    for (int i = 0; i < 3; ++i) {
+        HistoryEntry e;
+        e.accountId = m_acc101.id;
+        e.incoming = i != 1;
+        e.status = i == 2 ? HistoryEntry::Missed : HistoryEntry::Answered;
+        e.number = QStringLiteral("+380671234567");
+        e.startedAt = base.addSecs(-3600 * i);
+        e.duration = 42 * (i + 1);
+        m_db->addHistory(e);
+    }
+
+    auto *history = m_window->findChild<HistoryTab *>();
+    QVERIFY(history);
+    auto *search = history->findChild<QLineEdit *>(QStringLiteral("historySearch"));
+    auto *tree = history->findChild<QTreeWidget *>();
+    auto *listButton = history->findChild<QToolButton *>(QStringLiteral("historyList"));
+    auto *groupedButton = history->findChild<QToolButton *>(QStringLiteral("historyGrouped"));
+    QVERIFY(search && tree && listButton && groupedButton);
+    history->setGrouped(true);
+
+    // Grouped: every number once.
+    QSet<QString> seen;
+    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+        const QString title = tree->topLevelItem(i)->text(0);
+        QVERIFY2(!seen.contains(title), qPrintable(title));
+        seen.insert(title);
+    }
+
+    // Typed with spaces, found without; the only match unfolds.
+    search->setText(QStringLiteral("067 123"));
+    QCOMPARE(tree->topLevelItemCount(), 1);
+    QTreeWidgetItem *group = tree->topLevelItem(0);
+    QCOMPARE(group->childCount(), 2);
+    QVERIFY(group->isExpanded());
+    QVERIFY(group->data(0, ListDelegate::BadgeRole).toString().startsWith(QLatin1String("3")));
+    auto *tabs = m_window->findChild<QTabWidget *>();
+    tabs->setCurrentWidget(history);
+    QTest::qWait(100);
+    shot(m_window.get(), QStringLiteral("06b-history-grouped"));
+
+    // Click folds and unfolds.
+    const QRect r = tree->visualItemRect(group);
+    QTest::mouseClick(tree->viewport(), Qt::LeftButton, {}, r.center());
+    QVERIFY(!group->isExpanded());
+
+    // Flat list: one row per call, mode remembered.
+    listButton->click();
+    QVERIFY(!Settings::instance().historyGrouped);
+    QCOMPARE(tree->topLevelItemCount(), 3);
+    QCOMPARE(tree->topLevelItem(0)->childCount(), 0);
+
+    // Name search goes through the phone book.
+    search->setText(QStringLiteral("anna"));
+    for (int i = 0; i < tree->topLevelItemCount(); ++i)
+        QCOMPARE(tree->topLevelItem(i)->text(0), QStringLiteral("Anna Petrova"));
+
+    search->clear();
+    groupedButton->click();
+    QVERIFY(Settings::instance().historyGrouped);
+    tabs->setCurrentIndex(0);
+
+    // Quick light/dark switch in the main menu.
+    auto *dark = m_window->findChild<QAction *>(QStringLiteral("darkTheme"));
+    QVERIFY(dark);
+    const bool wasDark = Theme::isDark();
+    dark->trigger();
+    QCOMPARE(Theme::isDark(), !wasDark);
+    QCOMPARE(Settings::instance().theme, wasDark ? QStringLiteral("light") : QStringLiteral("dark"));
+    shot(m_window.get(), QStringLiteral("06c-theme-switched"));
+    dark->trigger();
+    QCOMPARE(Theme::isDark(), wasDark);
 }
 
 void SmokeTest::busyLamp()

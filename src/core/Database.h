@@ -37,6 +37,7 @@ public:
     void addHistory(const HistoryEntry &e);
     QList<HistoryEntry> history(int limit = 500) const;
     void removeHistory(qint64 id);
+    void removeHistory(const QList<qint64> &ids);
     void clearHistory();
 
     QList<Contact> contacts() const;

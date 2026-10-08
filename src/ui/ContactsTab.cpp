@@ -267,7 +267,7 @@ void ContactsTab::showMenu(const QPoint &pos)
         if (c.blf && m_engine->blf(c.id).state == BlfState::Ringing) {
             // FreePBX / Asterisk directed pickup feature code.
             const QString code = QStringLiteral("**") + c.number;
-            menu.addAction(Icons::get(QStringLiteral("call-incoming")), tr("Pick up the call (%1)").arg(code), this,
+            menu.addAction(Icons::get(QStringLiteral("call-incoming"), QStringLiteral("call-in.svg")), tr("Pick up the call (%1)").arg(code), this,
                            [this, code] { emit callRequested(code); });
         }
         QAction *lamp = menu.addAction(tr("Busy lamp (BLF)"), this, [this, c](bool on) {

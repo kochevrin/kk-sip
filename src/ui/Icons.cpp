@@ -34,6 +34,32 @@ QIcon dot(const QColor &color)
     return QIcon(pm);
 }
 
+// Drawn in the text colour so they follow the light/dark theme.
+static QIcon lines(bool indented)
+{
+    QPixmap pm(32, 32);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setPen(QPen(Theme::colors().foreground, 3, Qt::SolidLine, Qt::RoundCap));
+    for (int i = 0; i < 3; ++i) {
+        const int y = 8 + i * 8;
+        const int x = indented && i > 0 ? 12 : 5;
+        p.drawLine(x, y, 27, y);
+    }
+    return QIcon(pm);
+}
+
+QIcon grouped()
+{
+    return lines(true);
+}
+
+QIcon flatList()
+{
+    return lines(false);
+}
+
 QIcon status(RegState state)
 {
     switch (state) {

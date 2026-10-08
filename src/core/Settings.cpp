@@ -65,6 +65,7 @@ void Settings::load()
     theme = ini.value("theme", "system").toString();
     systemFrame = ini.value("systemFrame", false).toBool();
     rememberPosition = ini.value("rememberPosition", true).toBool();
+    historyGrouped = ini.value("historyGrouped", true).toBool();
     sipPort = ini.value("sipPort", 0).toInt();
     windowGeometry = ini.value("geometry").toByteArray();
     codecs.clear();
@@ -123,6 +124,7 @@ void Settings::save() const
         ini.setValue("theme", theme);
         ini.setValue("systemFrame", systemFrame);
         ini.setValue("rememberPosition", rememberPosition);
+        ini.setValue("historyGrouped", historyGrouped);
         ini.setValue("sipPort", sipPort);
         ini.setValue("geometry", windowGeometry);
         QStringList codecList;

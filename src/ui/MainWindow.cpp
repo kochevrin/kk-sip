@@ -75,6 +75,16 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     m_dndAction = menu->addAction(Icons::get(QStringLiteral("notifications-disabled")), tr("Do not disturb"));
     m_dndAction->setCheckable(true);
     m_dndAction->setChecked(Settings::instance().doNotDisturb);
+    auto *darkAction = menu->addAction(Icons::get(QStringLiteral("weather-clear-night")), tr("Dark theme"));
+    darkAction->setObjectName(QStringLiteral("darkTheme"));
+    darkAction->setCheckable(true);
+    connect(menu, &QMenu::aboutToShow, darkAction, [darkAction] { darkAction->setChecked(Theme::isDark()); });
+    connect(darkAction, &QAction::triggered, this, [](bool dark) {
+        Settings &s = Settings::instance();
+        s.theme = dark ? QStringLiteral("dark") : QStringLiteral("light");
+        s.save();
+        Theme::apply(dark ? Theme::Mode::Dark : Theme::Mode::Light);
+    });
     menu->addSeparator();
     menu->addAction(tr("About kk-sip"), this, [this] {
         QMessageBox::about(this, tr("About kk-sip"),

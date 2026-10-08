@@ -13,6 +13,9 @@ QIcon callWhite();
 QIcon hangupWhite();
 QIcon status(RegState state);
 QIcon dot(const QColor &color);
+// History view modes: calls grouped under each number / one flat list.
+QIcon grouped();
+QIcon flatList();
 // Theme icon (Breeze etc.) with a bundled fallback from :/icons.
 QIcon get(const QString &themeName, const QString &fallback = {});
 

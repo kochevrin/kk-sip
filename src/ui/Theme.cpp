@@ -98,13 +98,14 @@ QTabBar::tab {
 QTabBar::tab:selected { color: @fg; border-bottom-color: @primary; }
 QTabBar::tab:hover:!selected { color: @fg; }
 
-QListWidget, QListView {
+QListWidget, QListView, QTreeView {
     background: @card; border: 1px solid @border; border-radius: 8px; outline: none;
     alternate-background-color: @secondary;
 }
-QListWidget::item { padding: 0 6px; min-height: 26px; border-radius: 6px; }
-QListWidget::item:selected { background: @accent; color: @fg; }
-QListWidget::item:hover:!selected { background: @secondary; }
+QListWidget::item, QTreeView::item { padding: 0 6px; min-height: 26px; border-radius: 6px; }
+QListWidget::item:selected, QTreeView::item:selected { background: @accent; color: @fg; }
+QListWidget::item:hover:!selected, QTreeView::item:hover:!selected { background: @secondary; }
+QTreeView::branch { background: transparent; }
 
 QCheckBox::indicator {
     width: 16px; height: 16px; border: 1px solid @input; border-radius: 4px; background: @card;

@@ -100,10 +100,20 @@ QList<HistoryEntry> Database::history(int limit) const
 
 void Database::removeHistory(qint64 id)
 {
+    removeHistory(QList<qint64>{id});
+}
+
+void Database::removeHistory(const QList<qint64> &ids)
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    db.transaction();
     QSqlQuery q;
     q.prepare(QStringLiteral("DELETE FROM calls WHERE id = ?"));
-    q.addBindValue(id);
-    q.exec();
+    for (qint64 id : ids) {
+        q.addBindValue(id);
+        q.exec();
+    }
+    db.commit();
     emit historyChanged();
 }
 
