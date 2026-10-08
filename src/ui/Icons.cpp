@@ -2,6 +2,7 @@
 
 #include "ui/Theme.h"
 
+#include <QAbstractButton>
 #include <QPainter>
 #include <QPixmap>
 
@@ -82,6 +83,33 @@ QIcon get(const QString &themeName, const QString &fallback)
     if (!fallback.isEmpty())
         return QIcon(QStringLiteral(":/icons/") + fallback);
     return {};
+}
+
+QIcon tinted(const QString &name, const QColor &color, const QColor &hover)
+{
+    const QIcon source(QStringLiteral(":/icons/") + name + QStringLiteral(".svg"));
+    QIcon icon;
+    for (int size : {16, 20, 24, 32, 40, 48, 64}) {
+        const QPixmap shape = source.pixmap(size, size);
+        auto paint = [&shape](const QColor &c) {
+            QPixmap pm = shape;
+            QPainter p(&pm);
+            p.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            p.fillRect(pm.rect(), c);
+            return pm;
+        };
+        icon.addPixmap(paint(color));
+        if (hover.isValid())
+            icon.addPixmap(paint(hover), QIcon::Active);
+    }
+    return icon;
+}
+
+void setThemed(QAbstractButton *button, const QString &name)
+{
+    auto apply = [button, name] { button->setIcon(tinted(name, Theme::colors().foreground)); };
+    apply();
+    QObject::connect(Theme::Notifier::instance(), &Theme::Notifier::changed, button, apply);
 }
 
 } // namespace Icons

@@ -5,6 +5,7 @@
 #include <QWidget>
 
 class AccountSwitcher;
+class QAbstractButton;
 class CallPanel;
 class ContactsTab;
 class Database;
@@ -25,18 +26,27 @@ public:
     // Message from a second launch: "show" or "dial <number or link>".
     void handleExternal(const QString &message);
     void showAndRaise();
+    // Compact (dial pad, history and contacts as tabs) or wide (history and contacts
+    // beside the dial pad). Both are fixed sizes: the window is never resized by hand.
+    void setWideView(bool wide);
+    bool isWideView() const { return m_wide; }
+
+    static constexpr QSize CompactSize{300, 500};
+    static constexpr QSize WideSize{680, 500};
 
 protected:
     void closeEvent(QCloseEvent *event) override;
-    // Frameless mode: 1px border, resize from the edges, drag by the title strip.
+    // Frameless mode: 1px border, drag by the title strip or any empty spot.
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     QWidget *createTitleBar();
-    Qt::Edges edgesAt(const QPoint &pos) const;
+    QTabWidget *tabsOf(QWidget *page) const;
+    bool isShowing(QWidget *page) const;
+    void showPage(QWidget *page);
+    QString historyTitle() const;
     void reloadAccountBox();
     void updateBlfTargets();
     void updateAccountIcons();
@@ -62,7 +72,12 @@ private:
     AccountSwitcher *m_accountBox;
     QAction *m_dndAction;
     CallPanel *m_callPanel;
-    QTabWidget *m_tabs;
+    QTabWidget *m_tabs;      // Dial (+ History, Contacts when compact)
+    QTabWidget *m_sideTabs;  // History, Contacts in the wide view
+    QWidget *m_leftColumn;
+    QWidget *m_divider;
+    QAction *m_wideAction;
+    QAbstractButton *m_wideButton = nullptr;
     DialerTab *m_dialer;
     HistoryTab *m_history;
     ContactsTab *m_contacts;
@@ -72,5 +87,6 @@ private:
     int m_missed = 0;
     bool m_quitting = false;
     bool m_frameless = false;
+    bool m_wide = false;
     QWidget *m_titleBar = nullptr;
 };

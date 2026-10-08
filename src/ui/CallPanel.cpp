@@ -1,10 +1,12 @@
 #include "ui/CallPanel.h"
 
 #include "ui/Icons.h"
+#include "ui/Theme.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPainter>
 #include <QKeyEvent>
 #include <QPushButton>
 #include <QTimer>
@@ -17,7 +19,7 @@ CallPanel::CallPanel(SipEngine *engine, NameLookup lookup, QWidget *parent)
 {
     setObjectName(QStringLiteral("callPanel"));
     m_layout = new QVBoxLayout(this);
-    m_layout->setContentsMargins(8, 6, 8, 6);
+    m_layout->setContentsMargins(10, 8, 8, 8);
     m_layout->setSpacing(6);
 
     m_clock = new QTimer(this);
@@ -27,6 +29,11 @@ CallPanel::CallPanel(SipEngine *engine, NameLookup lookup, QWidget *parent)
     connect(m_engine, &SipEngine::callChanged, this, &CallPanel::refresh);
     connect(m_engine, &SipEngine::incomingCall, this, &CallPanel::refresh);
     connect(m_engine, &SipEngine::callEnded, this, &CallPanel::refresh);
+    connect(Theme::Notifier::instance(), &Theme::Notifier::changed, this, [this] {
+        for (Row *row : std::as_const(m_rows))
+            row->muteIcon = -1; // repaint the mute icon in the new text colour
+        refresh();
+    });
     hide();
 }
 
@@ -56,14 +63,40 @@ QString CallPanel::stateText(const CallView &c)
     return {};
 }
 
-static QPushButton *smallButton(const QIcon &icon, const QString &text, const QString &tip, QWidget *parent)
+namespace {
+
+// One line of text cut with "…" when it does not fit; never widens the panel.
+class ElidedLabel : public QLabel {
+public:
+    using QLabel::QLabel;
+    QSize minimumSizeHint() const override { return {16, QLabel::minimumSizeHint().height()}; }
+    QSize sizeHint() const override { return {16, QLabel::sizeHint().height()}; }
+
+protected:
+    void paintEvent(QPaintEvent *) override
+    {
+        QPainter p(this);
+        p.setPen(palette().color(foregroundRole()));
+        p.drawText(contentsRect(), Qt::AlignLeft | Qt::AlignVCenter,
+                   fontMetrics().elidedText(text(), Qt::ElideRight, contentsRect().width()));
+    }
+};
+
+// Square icon button for the call actions; the text lives in the tooltip.
+QPushButton *actionButton(const QString &icon, const QString &tip, QWidget *parent)
 {
-    auto *b = new QPushButton(icon, icon.isNull() ? text : QString(), parent);
+    auto *b = new QPushButton(parent);
+    b->setObjectName(QStringLiteral("callAction"));
+    Icons::setThemed(b, icon);
+    b->setIconSize(QSize(18, 18));
     b->setToolTip(tip);
+    b->setAccessibleName(tip);
     b->setFocusPolicy(Qt::NoFocus);
-    b->setMinimumHeight(30);
+    b->setFixedSize(34, 32);
     return b;
 }
+
+} // namespace
 
 CallPanel::Row *CallPanel::createRow(int callId)
 {
@@ -72,43 +105,64 @@ CallPanel::Row *CallPanel::createRow(int callId)
     connect(row->widget, &QObject::destroyed, this, [row] { delete row; });
     auto *v = new QVBoxLayout(row->widget);
     v->setContentsMargins(0, 0, 0, 0);
-    v->setSpacing(2);
+    v->setSpacing(6);
 
+    // Who and how long on the left, the actions on the right, in one line.
     auto *top = new QHBoxLayout;
-    row->title = new QLabel(row->widget);
+    top->setSpacing(4);
+    auto *text = new QVBoxLayout;
+    text->setSpacing(0);
+    row->title = new ElidedLabel(row->widget);
     QFont f = row->title->font();
     f.setBold(true);
     row->title->setFont(f);
-    row->title->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    row->status = new QLabel(row->widget);
-    top->addWidget(row->title, 1);
-    top->addWidget(row->status);
+    row->status = new ElidedLabel(row->widget);
+    row->status->setObjectName(QStringLiteral("callStatus"));
+    QFont sf = row->status->font();
+    sf.setPointSizeF(sf.pointSizeF() * 0.9);
+    row->status->setFont(sf);
+    text->addWidget(row->title);
+    text->addWidget(row->status);
+    top->addLayout(text, 1);
+    top->addSpacing(4);
+
+    row->mute = actionButton(QStringLiteral("mic"), tr("Mute microphone"), row->widget);
+    row->mute->setCheckable(true);
+    row->hold = actionButton(QStringLiteral("pause"), tr("Hold"), row->widget);
+    row->hold->setCheckable(true);
+    row->transfer = actionButton(QStringLiteral("transfer"), tr("Transfer call"), row->widget);
+    row->transfer->setCheckable(true);
+    row->hangup = new QPushButton(Icons::hangupWhite(), QString(), row->widget);
+    row->hangup->setObjectName(QStringLiteral("hangupButton"));
+    row->hangup->setToolTip(tr("Hang up"));
+    row->hangup->setAccessibleName(tr("Hang up"));
+    row->hangup->setFocusPolicy(Qt::NoFocus);
+    row->hangup->setIconSize(QSize(20, 20));
+    row->hangup->setFixedSize(46, 32);
+    top->addWidget(row->mute);
+    top->addWidget(row->hold);
+    top->addWidget(row->transfer);
+    top->addSpacing(2);
+    top->addWidget(row->hangup);
     v->addLayout(top);
 
-    auto *buttons = new QHBoxLayout;
-    buttons->setSpacing(4);
-    row->answer = smallButton(Icons::callWhite(), tr("Answer"),
-                              tr("Answer"), row->widget);
-    row->answer->setText(tr("Answer"));
-    row->mute = smallButton(Icons::get(QStringLiteral("audio-input-microphone")), tr("Mute"), tr("Mute microphone"),
-                            row->widget);
-    row->mute->setCheckable(true);
-    row->hold = smallButton(Icons::get(QStringLiteral("media-playback-pause")), tr("Hold"), tr("Hold"), row->widget);
-    row->hold->setCheckable(true);
-    row->transfer = smallButton(Icons::get(QStringLiteral("mail-forward")), tr("Transfer"), tr("Transfer call"),
-                                row->widget);
-    row->hangup = smallButton(Icons::hangupWhite(), tr("Hang up"),
-                              tr("Hang up"), row->widget);
-    row->hangup->setObjectName(QStringLiteral("hangupButton"));
+    // Ringing: two wide buttons, there is room for the words.
+    row->incomingBox = new QWidget(row->widget);
+    auto *ib = new QHBoxLayout(row->incomingBox);
+    ib->setContentsMargins(0, 0, 0, 0);
+    ib->setSpacing(6);
+    row->answer = new QPushButton(Icons::callWhite(), tr("Answer"), row->incomingBox);
     row->answer->setObjectName(QStringLiteral("answerButton"));
-
-    buttons->addWidget(row->answer);
-    buttons->addWidget(row->mute);
-    buttons->addWidget(row->hold);
-    buttons->addWidget(row->transfer);
-    buttons->addStretch(1);
-    buttons->addWidget(row->hangup);
-    v->addLayout(buttons);
+    row->reject = new QPushButton(Icons::hangupWhite(), tr("Reject"), row->incomingBox);
+    row->reject->setObjectName(QStringLiteral("hangupButton"));
+    for (QPushButton *b : {row->answer, row->reject}) {
+        b->setFocusPolicy(Qt::NoFocus);
+        b->setFixedHeight(32);
+        b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        ib->addWidget(b);
+    }
+    row->incomingBox->hide();
+    v->addWidget(row->incomingBox);
 
     row->transferBox = new QWidget(row->widget);
     auto *tl = new QHBoxLayout(row->transferBox);
@@ -117,15 +171,15 @@ CallPanel::Row *CallPanel::createRow(int callId)
     row->transferEdit = new QLineEdit(row->transferBox);
     row->transferEdit->setPlaceholderText(tr("Transfer to number…"));
     row->transferEdit->setClearButtonEnabled(true);
-    auto *go = new QPushButton(Icons::get(QStringLiteral("mail-forward")), QString(), row->transferBox);
-    if (go->icon().isNull())
-        go->setText(QStringLiteral("→"));
+    auto *go = new QPushButton(row->transferBox);
+    go->setObjectName(QStringLiteral("callAction"));
+    Icons::setThemed(go, QStringLiteral("transfer"));
     go->setToolTip(tr("Transfer"));
+    go->setFixedSize(34, 32);
     tl->addWidget(row->transferEdit, 1);
     tl->addWidget(go);
     row->transferBox->hide();
     v->addWidget(row->transferBox);
-    row->transfer->setCheckable(true);
 
     // Buttons swap places when a call changes state (Answer -> Mute/Hold/Transfer), so a
     // double click or a click that falls through a closing popup must not hit the new ones.
@@ -138,6 +192,7 @@ CallPanel::Row *CallPanel::createRow(int callId)
         };
     };
     connect(row->answer, &QPushButton::clicked, this, [this, callId] { m_engine->answer(callId); });
+    connect(row->reject, &QPushButton::clicked, this, [this, callId] { m_engine->hangup(callId); });
     connect(row->hangup, &QPushButton::clicked, this, [this, callId] { m_engine->hangup(callId); });
     // Toggle from the call's real state, not from the button's checked flag.
     connect(row->mute, &QPushButton::clicked, this,
@@ -163,24 +218,33 @@ void CallPanel::updateRow(Row *row, const CallView &c)
 {
     const QString contactName = m_lookup ? m_lookup(c.number) : QString();
     const QString name = !contactName.isEmpty() ? contactName : c.name;
-    row->title->setText(name.isEmpty() || name == c.number ? c.number : name + QStringLiteral("  ") + c.number);
-    row->status->setText(stateText(c));
+    // Name on top, number and call state under it; just the number when there's no name.
+    const bool named = !name.isEmpty() && name != c.number;
+    row->title->setText(named ? name : c.number);
+    row->status->setText(named ? c.number + QStringLiteral(" · ") + stateText(c) : stateText(c));
 
     if (c.state != row->shownState) {
         row->shownState = c.state;
         row->armedAt = QDateTime::currentMSecsSinceEpoch();
     }
     const bool active = c.state == CallView::Active;
-    row->answer->setVisible(c.state == CallView::Incoming);
+    const bool incoming = c.state == CallView::Incoming;
+    row->incomingBox->setVisible(incoming);
+    row->hangup->setVisible(!incoming);
     row->mute->setVisible(active);
     row->hold->setVisible(active);
     row->transfer->setVisible(active);
     row->mute->setChecked(c.muted);
     row->hold->setChecked(c.onHold);
+    if (row->muteIcon != int(c.muted)) {
+        row->muteIcon = int(c.muted);
+        row->mute->setIcon(Icons::tinted(c.muted ? QStringLiteral("mic-off") : QStringLiteral("mic"),
+                                         Theme::colors().foreground));
+        row->mute->setToolTip(c.muted ? tr("Unmute microphone") : tr("Mute microphone"));
+    }
     if (!active)
         row->transferBox->hide();
     row->transfer->setChecked(row->transferBox->isVisible());
-    row->hangup->setText(c.state == CallView::Incoming ? tr("Reject") : QString());
 }
 
 void CallPanel::refresh()

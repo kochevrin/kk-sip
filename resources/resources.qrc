@@ -8,5 +8,21 @@
         <file>icons/call-in.svg</file>
         <file>icons/call-out.svg</file>
         <file>icons/call-missed.svg</file>
+        <file>icons/backspace.svg</file>
+        <file>icons/check.svg</file>
+        <file>icons/chevron-down-dark.svg</file>
+        <file>icons/chevron-down-light.svg</file>
+        <file>icons/chevron-up-dark.svg</file>
+        <file>icons/chevron-up-light.svg</file>
+        <file>icons/close.svg</file>
+        <file>icons/menu.svg</file>
+        <file>icons/mic.svg</file>
+        <file>icons/mic-off.svg</file>
+        <file>icons/minimize.svg</file>
+        <file>icons/more.svg</file>
+        <file>icons/pause.svg</file>
+        <file>icons/plus.svg</file>
+        <file>icons/transfer.svg</file>
+        <file>icons/wide-view.svg</file>
     </qresource>
 </RCC>

@@ -1,5 +1,7 @@
 #include "ui/AccountDialog.h"
 
+#include "ui/Theme.h"
+
 #include <QAction>
 #include <QCheckBox>
 #include <QComboBox>
@@ -77,6 +79,7 @@ AccountDialog::AccountDialog(const AccountConfig &account, QWidget *parent)
     form->addRow(QString(), m_natRewrite);
     form->addRow(QString(), m_enabled);
 
+    Theme::tidyForm(form);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     m_ok = buttons->button(QDialogButtonBox::Ok);
     form->addRow(buttons);
@@ -86,7 +89,8 @@ AccountDialog::AccountDialog(const AccountConfig &account, QWidget *parent)
     connect(m_user, &QLineEdit::textChanged, this, &AccountDialog::validate);
     validate();
 
-    setMinimumWidth(380);
+    // Wider than the form needs, but never narrower: a fixed minimum would cut long labels.
+    resize(qMax(380, sizeHint().width()), sizeHint().height());
     if (!account.server.isEmpty() && account.password.isEmpty())
         m_password->setFocus();
 }

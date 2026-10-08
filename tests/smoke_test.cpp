@@ -24,7 +24,12 @@
 #include "ui/SettingsDialog.h"
 #include "ui/Theme.h"
 
+#include <QAbstractButton>
+#include <QAbstractSpinBox>
 #include <QApplication>
+#include <QComboBox>
+#include <QLabel>
+#include <QTabBar>
 #include <QDir>
 #include <QFile>
 #include <QLineEdit>
@@ -63,7 +68,9 @@ private slots:
     void autostart();
     void kwinRule();
     void accountSwitcher();
+    void wideView();
     void screenshots();
+    void layoutAudit();
 
 private:
     QProcess *startRemote(const QString &target, bool registerAs103 = false);
@@ -73,6 +80,7 @@ private:
 
     QString m_server = qEnvironmentVariable("KKSIP_TEST_SERVER", QStringLiteral("127.0.0.1:5070"));
     QString m_shots = qEnvironmentVariable("KKSIP_SCREENSHOTS");
+    QStringList m_layoutProblems; // collected by shot() from every screen it sees
     bool m_offline = m_server == QLatin1String("offline");
     std::unique_ptr<Database> m_db;
     std::unique_ptr<SipEngine> m_engine;
@@ -125,7 +133,6 @@ void SmokeTest::initTestCase()
     m_engine->applyAccounts(s.accounts);
 
     m_window = std::make_unique<MainWindow>(m_engine.get(), m_db.get());
-    m_window->resize(300, 500);
     m_window->show();
 }
 
@@ -261,6 +268,10 @@ void SmokeTest::outgoingEcho()
     }, 10000));
     QTest::qWait(1500);
     shot(m_window.get(), QStringLiteral("02-call-active"));
+    m_window->setWideView(true);
+    QTest::qWait(100);
+    shot(m_window.get(), QStringLiteral("02b-call-wide"));
+    m_window->setWideView(false);
 
     const CallView call = m_engine->calls().first();
     m_engine->setMute(call.id, true);
@@ -393,7 +404,7 @@ void SmokeTest::incomingMissed()
     const HistoryEntry h = lastHistory();
     QVERIFY(h.incoming);
     QCOMPARE(h.status, HistoryEntry::Missed);
-    auto *tabs = m_window->findChild<QTabWidget *>();
+    auto *tabs = m_window->findChild<QTabWidget *>(QStringLiteral("mainTabs"));
     QVERIFY(tabs);
     tabs->setCurrentIndex(0);
     QVERIFY(tabs->tabText(1).contains(QLatin1String("1")));
@@ -445,7 +456,7 @@ void SmokeTest::historyViews()
     QCOMPARE(group->childCount(), 2);
     QVERIFY(group->isExpanded());
     QVERIFY(group->data(0, ListDelegate::BadgeRole).toString().startsWith(QLatin1String("3")));
-    auto *tabs = m_window->findChild<QTabWidget *>();
+    auto *tabs = m_window->findChild<QTabWidget *>(QStringLiteral("mainTabs"));
     tabs->setCurrentWidget(history);
     QTest::qWait(100);
     shot(m_window.get(), QStringLiteral("06b-history-grouped"));
@@ -502,7 +513,7 @@ void SmokeTest::busyLamp()
     // 103 calls the echo service: busy, then free again.
     QProcess *remote = startRemote(QStringLiteral("sip:600@") + m_server);
     QVERIFY(QTest::qWaitFor([&] { return lamp() == BlfState::Busy; }, 10000));
-    auto *tabs = m_window->findChild<QTabWidget *>();
+    auto *tabs = m_window->findChild<QTabWidget *>(QStringLiteral("mainTabs"));
     tabs->setCurrentIndex(2);
     QTest::qWait(150);
     shot(m_window.get(), QStringLiteral("07b-contacts-blf"));
@@ -673,6 +684,42 @@ void SmokeTest::accountSwitcher()
     sw->menu()->close();
 }
 
+void SmokeTest::wideView()
+{
+    auto *wide = m_window->findChild<QAction *>(QStringLiteral("wideView"));
+    auto *tabs = m_window->findChild<QTabWidget *>(QStringLiteral("mainTabs"));
+    auto *dialer = m_window->findChild<DialerTab *>();
+    auto *history = m_window->findChild<HistoryTab *>();
+    QVERIFY(wide && tabs && dialer && history);
+    tabs->setCurrentWidget(dialer);
+    QCOMPARE(m_window->size(), MainWindow::CompactSize);
+    QCOMPARE(m_window->minimumSize(), m_window->maximumSize()); // fixed: no resizing by hand
+    QVERIFY(!history->isVisible());
+
+    wide->trigger();
+    QVERIFY(m_window->isWideView());
+    QVERIFY(Settings::instance().wideView);
+    QCOMPARE(m_window->size(), MainWindow::WideSize);
+    QCOMPARE(m_window->minimumSize(), m_window->maximumSize());
+    QTest::qWait(100);
+    QVERIFY(dialer->isVisible() && history->isVisible()); // side by side
+    QCOMPARE(tabs->count(), 1);
+    shot(m_window.get(), QStringLiteral("11-wide-history"));
+    auto *side = m_window->findChild<QTabWidget *>(QStringLiteral("sideTabs"));
+    QVERIFY(side);
+    side->setCurrentIndex(1);
+    QTest::qWait(100);
+    shot(m_window.get(), QStringLiteral("11b-wide-contacts"));
+    side->setCurrentIndex(0);
+
+    wide->trigger();
+    QVERIFY(!m_window->isWideView());
+    QCOMPARE(m_window->size(), MainWindow::CompactSize);
+    QCOMPARE(tabs->count(), 3);
+    QCOMPARE(tabs->currentWidget(), dialer);
+    QVERIFY(!Settings::instance().wideView);
+}
+
 void SmokeTest::screenshots()
 {
     SettingsDialog settings(m_engine.get(), m_window.get());
@@ -680,9 +727,12 @@ void SmokeTest::screenshots()
     QTest::qWait(100);
     shot(&settings, QStringLiteral("08-settings"));
     if (auto *tabs = settings.findChild<QTabWidget *>()) {
-        tabs->setCurrentIndex(2);
-        QTest::qWait(100);
-        shot(&settings, QStringLiteral("08b-settings-codecs"));
+        const char *names[] = {"08-settings", "08a-settings-audio", "08b-settings-codecs", "08c-settings-general"};
+        for (int i = 1; i < tabs->count(); ++i) {
+            tabs->setCurrentIndex(i);
+            QTest::qWait(100);
+            shot(&settings, QString::fromLatin1(names[i]));
+        }
     }
     AccountDialog account(m_acc102, m_window.get());
     account.show();
@@ -718,9 +768,68 @@ QProcess *SmokeTest::startRemote(const QString &target, bool registerAs103)
     return p;
 }
 
+// Every visible control fits inside its parent, does not overlap a visible sibling and
+// is not squeezed below its minimum size (which is where cut-off text comes from).
+static QStringList layoutProblems(QWidget *root)
+{
+    QStringList out;
+    auto describe = [](QWidget *w) {
+        QString text = w->objectName();
+        if (auto *b = qobject_cast<QAbstractButton *>(w))
+            text = b->text().isEmpty() ? b->toolTip() : b->text();
+        else if (auto *l = qobject_cast<QLabel *>(w))
+            text = l->text();
+        return QStringLiteral("%1 \"%2\"").arg(QLatin1String(w->metaObject()->className()), text.left(32));
+    };
+    auto internal = [root](QWidget *w) {
+        // Parts of composite widgets (clear buttons, spin box editors, scroll bars...).
+        for (QWidget *p = w->parentWidget(); p && p != root; p = p->parentWidget())
+            if (qobject_cast<QLineEdit *>(p) || qobject_cast<QAbstractSpinBox *>(p) || qobject_cast<QComboBox *>(p)
+                || qobject_cast<QTabBar *>(p) || qobject_cast<QAbstractScrollArea *>(p))
+                return true;
+        return false;
+    };
+    QList<QWidget *> checked;
+    for (QWidget *w : root->findChildren<QWidget *>()) {
+        if (w->isWindow() || !w->isVisibleTo(root) || internal(w))
+            continue;
+        checked << w;
+        QWidget *parent = w->parentWidget();
+        if (!parent->rect().contains(w->geometry()))
+            out << QStringLiteral("%1 sticks out of its parent").arg(describe(w));
+        const bool control = qobject_cast<QAbstractButton *>(w) || qobject_cast<QLineEdit *>(w)
+                             || qobject_cast<QComboBox *>(w) || qobject_cast<QAbstractSpinBox *>(w);
+        auto *label = qobject_cast<QLabel *>(w);
+        if (control || (label && !label->wordWrap())) {
+            const QSize min = w->minimumSizeHint();
+            const bool ignoredWidth = w->sizePolicy().horizontalPolicy() == QSizePolicy::Ignored;
+            if ((!ignoredWidth && w->width() < min.width()) || w->height() < min.height())
+                out << QStringLiteral("%1 is %2x%3, needs %4x%5")
+                           .arg(describe(w)).arg(w->width()).arg(w->height()).arg(min.width()).arg(min.height());
+        }
+    }
+    for (int i = 0; i < checked.size(); ++i)
+        for (int j = i + 1; j < checked.size(); ++j)
+            if (checked[i]->parentWidget() == checked[j]->parentWidget()
+                && checked[i]->geometry().intersects(checked[j]->geometry()))
+                out << QStringLiteral("%1 overlaps %2").arg(describe(checked[i]), describe(checked[j]));
+    return out;
+}
+
+void SmokeTest::layoutAudit()
+{
+    for (const QString &p : std::as_const(m_layoutProblems))
+        qWarning().noquote() << p;
+    QVERIFY2(m_layoutProblems.isEmpty(), "layout problems, see the warnings above");
+}
+
 void SmokeTest::shot(QWidget *w, const QString &name)
 {
-    if (m_shots.isEmpty() || !w)
+    if (!w)
+        return;
+    for (const QString &p : layoutProblems(w))
+        m_layoutProblems << name + QStringLiteral(": ") + p;
+    if (m_shots.isEmpty())
         return;
     QDir().mkpath(m_shots);
     w->grab().save(m_shots + QLatin1Char('/') + name + QStringLiteral(".png"));

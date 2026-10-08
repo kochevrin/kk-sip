@@ -31,7 +31,9 @@ private:
         QWidget *widget = nullptr;
         QLabel *title = nullptr;
         QLabel *status = nullptr;
+        QWidget *incomingBox = nullptr;   // full-width Answer / Reject while it rings
         QPushButton *answer = nullptr;
+        QPushButton *reject = nullptr;
         QPushButton *mute = nullptr;
         QPushButton *hold = nullptr;
         QPushButton *transfer = nullptr;
@@ -39,6 +41,7 @@ private:
         QWidget *transferBox = nullptr;   // inline "transfer to" field, shown on request
         QLineEdit *transferEdit = nullptr;
         CallView::State shownState = CallView::Ended;
+        int muteIcon = -1;                // muted state the mute icon shows, -1 = repaint
         qint64 armedAt = 0;               // when the current set of buttons appeared
     };
 

@@ -18,7 +18,9 @@ uses) and Qt 6.
 
 ## Features
 
-- **Compact window**, about 300×500 px, that lives in the system tray
+- **Small fixed-size window** that lives in the system tray: compact 300×500 px, or
+  a wide 680×500 px view with history and contacts next to the dial pad (button in
+  the title bar or ☰ menu → Wide view). It never stretches across the screen
 - **Many accounts registered at the same time.** All of them receive calls; a
   drop-down at the top picks the one for outgoing calls, with a status dot for each
 - **Call history** with incoming, outgoing, missed and declined calls. Double-click
@@ -38,12 +40,17 @@ uses) and Qt 6.
   are set in Settings
 - Do-not-disturb mode, custom WAV ringtone
 - Starts with the system straight into the tray (optional)
-- Light and dark theme in the kk family style, follows the system or set by hand
+- Light and dark theme in the kk family style, built from the logo's navy and orange,
+  with WCAG AA contrast for text; follows the system or set by hand
   (quick switch in the ☰ menu);
   slim own title bar with a 1px edge instead of the window manager frame (optional)
 - Opens `sip:`, `tel:` and `callto:` links (`kk-sip tel:+380...`); a second launch
   hands the number to the running instance
 - English, Ukrainian and Russian UI: follows the system or set in Settings → General
+
+<p align="center">
+  <img src="docs/screenshots/wide.png" alt="Wide view, light theme" width="680">
+</p>
 
 <p align="center">
   <img src="docs/screenshots/incoming.png" alt="Incoming call" width="280">

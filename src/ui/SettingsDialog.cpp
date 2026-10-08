@@ -7,6 +7,7 @@
 #include "ui/AccountDialog.h"
 #include "ui/Icons.h"
 #include "ui/ListDelegate.h"
+#include "ui/MainWindow.h"
 #include "ui/Theme.h"
 
 #include <QCheckBox>
@@ -247,6 +248,7 @@ QWidget *SettingsDialog::createAudioPage()
     hint->setWordWrap(true);
     hint->setObjectName(QStringLiteral("muted"));
     form->addRow(hint);
+    Theme::tidyForm(form);
     return page;
 }
 
@@ -268,6 +270,7 @@ QWidget *SettingsDialog::createCodecsPage()
         auto *item = new QListWidgetItem(id, m_codecList);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(on ? Qt::Checked : Qt::Unchecked);
+        item->setSizeHint(QSize(0, 28));
     };
     for (const CodecSetting &c : saved) {
         if (std::any_of(available.cbegin(), available.cend(), [&](const CodecEntry &e) { return e.id == c.id; })) {
@@ -352,6 +355,7 @@ QWidget *SettingsDialog::createGeneralPage()
     form->addRow(m_startHidden);
     form->addRow(m_debugLog);
     form->addRow(tr("Local SIP port (restart needed):"), m_sipPort);
+    Theme::tidyForm(form);
     return page;
 }
 
@@ -374,7 +378,7 @@ void SettingsDialog::commit()
     if (s.rememberPosition != m_rememberPosition->isChecked()) {
         s.rememberPosition = m_rememberPosition->isChecked();
         if (WindowPlacement::usesKWinRule())
-            WindowPlacement::setKWinRule(s.rememberPosition, parentWidget() ? parentWidget()->size() : QSize(300, 500));
+            WindowPlacement::setKWinRule(s.rememberPosition, parentWidget() ? parentWidget()->size() : MainWindow::CompactSize);
     }
     if (s.language != m_language->currentData().toString()) {
         s.language = m_language->currentData().toString();

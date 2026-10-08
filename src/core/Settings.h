@@ -55,6 +55,7 @@ public:
     bool rememberPosition = true;
     bool systemFrame = false; // native window frame instead of the slim kk-sip title strip
     bool historyGrouped = true; // history: calls grouped under each number, or one flat list
+    bool wideView = false;  // wide window: dial pad with history and contacts next to it
     int sipPort = 0;        // 0 = random local port
 
     QByteArray windowGeometry;

@@ -20,6 +20,8 @@
 #include <QPainter>
 #include <QWindow>
 #include <QComboBox>
+#include <QFrame>
+#include <QTabBar>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
@@ -38,7 +40,6 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
 {
     setWindowTitle(QStringLiteral("kk-sip"));
     setWindowIcon(Icons::app());
-    setMinimumSize(260, 400);
 
     // Our own slim title strip instead of the window manager's frame (the user asked for
     // no thick borders); "System window frame" in Settings brings the native one back.
@@ -47,31 +48,45 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
         setWindowFlag(Qt::FramelessWindowHint);
         // Transparent corners so we can draw rounded ones like the desktop's windows.
         setAttribute(Qt::WA_TranslucentBackground);
-        setMouseTracking(true);
     }
 
     auto *layout = new QVBoxLayout(this);
-    // In frameless mode the margin doubles as an invisible resize handle.
-    layout->setContentsMargins(m_frameless ? QMargins(5, 0, 5, 4) : QMargins(6, 6, 6, 4));
+    layout->setContentsMargins(m_frameless ? QMargins(6, 0, 6, 6) : QMargins(6, 6, 6, 6));
     layout->setSpacing(6);
     if (m_frameless) {
         m_titleBar = createTitleBar();
         layout->addWidget(m_titleBar);
     }
 
+    // Left column: account, current calls, dial pad (and in the compact view the other
+    // tabs). Right column, wide view only: history and contacts.
+    auto *body = new QHBoxLayout;
+    body->setSpacing(10);
+    m_leftColumn = new QWidget(this);
+    auto *left = new QVBoxLayout(m_leftColumn);
+    left->setContentsMargins(0, 0, 0, 0);
+    left->setSpacing(6);
+
     // Account switcher + menu
     auto *top = new QHBoxLayout;
+    top->setSpacing(6);
     m_accountBox = new AccountSwitcher(m_engine, this);
     m_accountBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    m_accountBox->setFocusPolicy(Qt::TabFocus);
     top->addWidget(m_accountBox, 1);
 
     auto *menuButton = new QToolButton(this);
-    menuButton->setIcon(Icons::get(QStringLiteral("application-menu")));
-    menuButton->setText(QStringLiteral("☰"));
+    Icons::setThemed(menuButton, QStringLiteral("menu"));
+    menuButton->setToolTip(tr("Menu"));
     menuButton->setPopupMode(QToolButton::InstantPopup);
-    menuButton->setAutoRaise(true);
+    menuButton->setFocusPolicy(Qt::TabFocus);
     auto *menu = new QMenu(menuButton);
     menu->addAction(Icons::get(QStringLiteral("configure")), tr("Settings…"), this, &MainWindow::openSettings);
+    m_wideAction = menu->addAction(Icons::get(QStringLiteral("view-split-left-right")), tr("Wide view"));
+    m_wideAction->setObjectName(QStringLiteral("wideView"));
+    m_wideAction->setCheckable(true);
+    m_wideAction->setToolTip(tr("History and contacts next to the dial pad"));
+    connect(m_wideAction, &QAction::triggered, this, &MainWindow::setWideView);
     m_dndAction = menu->addAction(Icons::get(QStringLiteral("notifications-disabled")), tr("Do not disturb"));
     m_dndAction->setCheckable(true);
     m_dndAction->setChecked(Settings::instance().doNotDisturb);
@@ -98,12 +113,13 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     menu->addAction(Icons::get(QStringLiteral("application-exit")), tr("Quit"), this, &MainWindow::quit);
     menuButton->setMenu(menu);
     top->addWidget(menuButton);
-    layout->addLayout(top);
+    left->addLayout(top);
 
     m_callPanel = new CallPanel(m_engine, [this](const QString &n) { return nameFor(n); }, this);
-    layout->addWidget(m_callPanel);
+    left->addWidget(m_callPanel);
 
     m_tabs = new QTabWidget(this);
+    m_tabs->setObjectName(QStringLiteral("mainTabs"));
     m_tabs->setDocumentMode(true);
     m_dialer = new DialerTab(m_db, this);
     m_history = new HistoryTab(m_db, this);
@@ -111,12 +127,28 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     m_tabs->addTab(m_dialer, tr("Dial"));
     m_tabs->addTab(m_history, tr("History"));
     m_tabs->addTab(m_contacts, tr("Contacts"));
-    layout->addWidget(m_tabs, 1);
+    left->addWidget(m_tabs, 1);
+    body->addWidget(m_leftColumn, 1);
+
+    m_divider = new QFrame(this);
+    m_divider->setObjectName(QStringLiteral("columnDivider"));
+    m_divider->setFixedWidth(1);
+    m_divider->hide();
+    body->addWidget(m_divider);
+
+    m_sideTabs = new QTabWidget(this);
+    m_sideTabs->setObjectName(QStringLiteral("sideTabs"));
+    m_sideTabs->setDocumentMode(true);
+    m_sideTabs->hide();
+    body->addWidget(m_sideTabs, 1);
+    layout->addLayout(body, 1);
 
     m_status = new QLabel(this);
     m_status->setObjectName(QStringLiteral("statusLabel"));
     m_status->setTextFormat(Qt::PlainText);
     m_status->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    // Long PBX replies must not widen the fixed-size window.
+    m_status->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     QFont sf = m_status->font();
     sf.setPointSizeF(sf.pointSizeF() * 0.9);
     m_status->setFont(sf);
@@ -126,10 +158,11 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     connect(m_dialer, &DialerTab::keyPressed, this, &MainWindow::onKeypad);
     connect(m_history, &HistoryTab::callRequested, this, &MainWindow::dial);
     connect(m_contacts, &ContactsTab::callRequested, this, &MainWindow::dial);
-    connect(m_tabs, &QTabWidget::currentChanged, this, [this](int index) {
-        if (m_tabs->widget(index) == m_history)
-            setMissed(0);
-    });
+    for (QTabWidget *tabs : {m_tabs, m_sideTabs})
+        connect(tabs, &QTabWidget::currentChanged, this, [this, tabs](int index) {
+            if (tabs->widget(index) == m_history)
+                setMissed(0);
+        });
 
     connect(m_accountBox, &AccountSwitcher::enableRequested, this, &MainWindow::setAccountEnabled);
     connect(m_accountBox, &AccountSwitcher::settingsRequested, this, &MainWindow::openSettings);
@@ -174,8 +207,10 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     updateBlfTargets();
 
     // On Wayland the compositor ignores the position part; KWin's rule handles it (main.cpp).
-    if (!Settings::instance().rememberPosition || !restoreGeometry(Settings::instance().windowGeometry))
-        resize(300, 500);
+    if (Settings::instance().rememberPosition)
+        restoreGeometry(Settings::instance().windowGeometry);
+    setWideView(Settings::instance().wideView); // fixes the size, whatever was saved
+    m_dialer->setFocus(); // not the account button: its focus ring looked like an error
 
     if (Settings::instance().accounts.isEmpty())
         QTimer::singleShot(300, this, &MainWindow::openSettings);
@@ -187,7 +222,7 @@ QWidget *MainWindow::createTitleBar()
 {
     auto *bar = new QWidget(this);
     bar->setObjectName(QStringLiteral("titleBar"));
-    bar->setFixedHeight(30);
+    bar->setFixedHeight(32);
     auto *h = new QHBoxLayout(bar);
     h->setContentsMargins(2, 0, 0, 0);
     h->setSpacing(2);
@@ -201,20 +236,35 @@ QWidget *MainWindow::createTitleBar()
     h->addWidget(title);
     h->addStretch(1);
 
-    auto makeButton = [bar](const QString &name, const QString &text, const QString &tip) {
+    // Muted glyphs that light up under the mouse (white on the red close button).
+    auto makeButton = [this, bar](const QString &name, const QString &icon, const QString &tip, bool closeButton) {
         auto *b = new QToolButton(bar);
         b->setObjectName(name);
-        b->setText(text);
         b->setToolTip(tip);
+        b->setAccessibleName(tip);
         b->setAutoRaise(true);
         b->setFocusPolicy(Qt::NoFocus);
         b->setFixedSize(30, 24);
+        b->setIconSize(QSize(14, 14));
+        auto paint = [b, icon, closeButton] {
+            const Theme::Colors &c = Theme::colors();
+            b->setIcon(Icons::tinted(icon, c.muted, closeButton ? QColor(Qt::white) : c.foreground));
+        };
+        paint();
+        connect(Theme::Notifier::instance(), &Theme::Notifier::changed, b, paint);
         return b;
     };
-    auto *minimize = makeButton(QStringLiteral("titleButton"), QStringLiteral("—"), tr("Minimize"));
-    auto *close = makeButton(QStringLiteral("titleCloseButton"), QStringLiteral("✕"), tr("Close"));
+    auto *wide = makeButton(QStringLiteral("titleButton"), QStringLiteral("wide-view"),
+                            tr("Wide view: history and contacts next to the dial pad"), false);
+    wide->setCheckable(true);
+    connect(wide, &QToolButton::clicked, this, &MainWindow::setWideView);
+    m_wideButton = wide;
+    auto *minimize = makeButton(QStringLiteral("titleButton"), QStringLiteral("minimize"), tr("Minimize"), false);
+    auto *close = makeButton(QStringLiteral("titleCloseButton"), QStringLiteral("close"), tr("Close"), true);
     connect(minimize, &QToolButton::clicked, this, &QWidget::showMinimized);
     connect(close, &QToolButton::clicked, this, &QWidget::close);
+    h->addWidget(wide);
+    h->addSpacing(4);
     h->addWidget(minimize);
     h->addWidget(close);
 
@@ -234,50 +284,82 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     return QWidget::eventFilter(watched, event);
 }
 
-Qt::Edges MainWindow::edgesAt(const QPoint &pos) const
-{
-    constexpr int grip = 5;
-    Qt::Edges e;
-    if (pos.x() < grip)
-        e |= Qt::LeftEdge;
-    if (pos.x() >= width() - grip)
-        e |= Qt::RightEdge;
-    if (pos.y() < 3)
-        e |= Qt::TopEdge;
-    if (pos.y() >= height() - grip)
-        e |= Qt::BottomEdge;
-    return e;
-}
-
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (m_frameless && event->button() == Qt::LeftButton && windowHandle()) {
-        const Qt::Edges edges = edgesAt(event->position().toPoint());
-        if (edges)
-            windowHandle()->startSystemResize(edges);
-        else
-            windowHandle()->startSystemMove();
+        windowHandle()->startSystemMove();
         return;
     }
     QWidget::mousePressEvent(event);
 }
 
-void MainWindow::mouseMoveEvent(QMouseEvent *event)
+// --- Compact / wide view -------------------------------------------------------
+
+void MainWindow::setWideView(bool wide)
 {
-    if (m_frameless) {
-        const Qt::Edges e = edgesAt(event->position().toPoint());
-        Qt::CursorShape shape = Qt::ArrowCursor;
-        if (e == (Qt::LeftEdge | Qt::TopEdge) || e == (Qt::RightEdge | Qt::BottomEdge))
-            shape = Qt::SizeFDiagCursor;
-        else if (e == (Qt::RightEdge | Qt::TopEdge) || e == (Qt::LeftEdge | Qt::BottomEdge))
-            shape = Qt::SizeBDiagCursor;
-        else if (e & (Qt::LeftEdge | Qt::RightEdge))
-            shape = Qt::SizeHorCursor;
-        else if (e & (Qt::TopEdge | Qt::BottomEdge))
-            shape = Qt::SizeVerCursor;
-        setCursor(shape);
+    m_wide = wide;
+    if (wide) {
+        for (QWidget *page : {static_cast<QWidget *>(m_history), static_cast<QWidget *>(m_contacts)}) {
+            const int i = m_tabs->indexOf(page);
+            if (i < 0)
+                continue;
+            const QString text = m_tabs->tabText(i);
+            m_tabs->removeTab(i);
+            m_sideTabs->addTab(page, text);
+        }
+        m_tabs->setCurrentWidget(m_dialer);
+        // Same column width as the compact window, so the dial pad looks the same.
+        const QMargins m = layout()->contentsMargins();
+        m_leftColumn->setFixedWidth(CompactSize.width() - m.left() - m.right());
+    } else {
+        for (QWidget *page : {static_cast<QWidget *>(m_history), static_cast<QWidget *>(m_contacts)}) {
+            const int i = m_sideTabs->indexOf(page);
+            if (i < 0)
+                continue;
+            const QString text = m_sideTabs->tabText(i);
+            m_sideTabs->removeTab(i);
+            m_tabs->addTab(page, text);
+        }
+        m_leftColumn->setMinimumWidth(0);
+        m_leftColumn->setMaximumWidth(QWIDGETSIZE_MAX);
     }
-    QWidget::mouseMoveEvent(event);
+    m_tabs->tabBar()->setVisible(!wide);
+    m_sideTabs->setVisible(wide);
+    m_divider->setVisible(wide);
+    m_wideAction->setChecked(wide);
+    if (m_wideButton)
+        m_wideButton->setChecked(wide);
+
+    // Keep the top-left corner where it is; a fixed size also hides the maximize button.
+    const QPoint corner = pos();
+    setFixedSize(wide ? WideSize : CompactSize);
+    move(corner);
+
+    Settings &s = Settings::instance();
+    if (s.wideView != wide) {
+        s.wideView = wide;
+        s.save();
+    }
+}
+
+QTabWidget *MainWindow::tabsOf(QWidget *page) const
+{
+    return m_sideTabs->indexOf(page) >= 0 ? m_sideTabs : m_tabs;
+}
+
+bool MainWindow::isShowing(QWidget *page) const
+{
+    return isVisible() && tabsOf(page)->currentWidget() == page;
+}
+
+void MainWindow::showPage(QWidget *page)
+{
+    tabsOf(page)->setCurrentWidget(page);
+}
+
+QString MainWindow::historyTitle() const
+{
+    return m_missed > 0 ? tr("History (%1)").arg(m_missed) : tr("History");
 }
 
 void MainWindow::paintEvent(QPaintEvent *event)
@@ -401,7 +483,7 @@ void MainWindow::dial(const QString &input)
     }
     m_dialer->setLastDialed(number);
     m_dialer->setNumber(QString());
-    m_tabs->setCurrentWidget(m_dialer);
+    showPage(m_dialer);
 }
 
 const AccountConfig *MainWindow::accountConfig(const QString &id) const
@@ -495,7 +577,7 @@ void MainWindow::onCallEnded(const CallView &c)
     m_db->addHistory(e);
 
     if (e.status == HistoryEntry::Missed) {
-        if (!(isVisible() && m_tabs->currentWidget() == m_history))
+        if (!isShowing(m_history))
             setMissed(m_missed + 1);
         if (m_tray)
             m_tray->showMessage(tr("Missed call"), e.name.isEmpty() ? e.number : e.name + QLatin1Char(' ') + e.number,
@@ -509,8 +591,8 @@ void MainWindow::onCallEnded(const CallView &c)
 void MainWindow::setMissed(int count)
 {
     m_missed = count;
-    m_tabs->setTabText(m_tabs->indexOf(m_history),
-                       count > 0 ? tr("History (%1)").arg(count) : tr("History"));
+    QTabWidget *tabs = tabsOf(m_history);
+    tabs->setTabText(tabs->indexOf(m_history), historyTitle());
     updateTray();
 }
 
@@ -556,7 +638,7 @@ void MainWindow::setupTray()
     });
     connect(m_tray, &QSystemTrayIcon::messageClicked, this, [this] {
         showAndRaise();
-        m_tabs->setCurrentWidget(m_history);
+        showPage(m_history);
     });
     updateTray();
     m_tray->show();

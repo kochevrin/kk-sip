@@ -52,6 +52,7 @@ bool editContactDialog(QWidget *parent, Contact &contact)
     QObject::connect(blf, &QCheckBox::toggled, blfAccount, &QWidget::setEnabled);
     form->addRow(QString(), blf);
     form->addRow(QObject::tr("Watch via:"), blfAccount);
+    Theme::tidyForm(form);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, &dlg);
     form->addRow(buttons);
     QObject::connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
@@ -91,15 +92,16 @@ ContactsTab::ContactsTab(Database *db, SipEngine *engine, QWidget *parent)
     top->addWidget(m_search, 1);
 
     auto *add = new QToolButton(this);
-    add->setIcon(Icons::get(QStringLiteral("contact-new")));
-    add->setText(QStringLiteral("+"));
+    Icons::setThemed(add, QStringLiteral("plus"));
     add->setToolTip(tr("Add contact"));
+    add->setAccessibleName(tr("Add contact"));
     connect(add, &QToolButton::clicked, this, &ContactsTab::addContact);
     top->addWidget(add);
 
     auto *more = new QToolButton(this);
-    more->setIcon(Icons::get(QStringLiteral("application-menu")));
-    more->setText(QStringLiteral("…"));
+    Icons::setThemed(more, QStringLiteral("more"));
+    more->setToolTip(tr("Import, export, busy lamps"));
+    more->setAccessibleName(more->toolTip());
     more->setPopupMode(QToolButton::InstantPopup);
     auto *moreMenu = new QMenu(more);
     moreMenu->addAction(Icons::get(QStringLiteral("document-import")), tr("Import (CSV or MicroSIP Contacts.xml)…"),
@@ -115,7 +117,7 @@ ContactsTab::ContactsTab(Database *db, SipEngine *engine, QWidget *parent)
 
     m_list = new QListWidget(this);
     m_list->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_list->setAlternatingRowColors(true);
+    m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_list->setItemDelegate(new ListDelegate(m_list));
     m_list->setUniformItemSizes(false);
 

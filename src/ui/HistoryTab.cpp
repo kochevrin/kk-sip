@@ -83,7 +83,7 @@ HistoryTab::HistoryTab(Database *db, QWidget *parent)
     m_tree->setIndentation(18);
     m_tree->setExpandsOnDoubleClick(false); // double-click calls back
     m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_tree->setAlternatingRowColors(true);
+    m_tree->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_tree->setToolTip(tr("Double-click to call back"));
     m_tree->setItemDelegate(new ListDelegate(m_tree));
     layout->addWidget(m_tree, 1);
@@ -170,10 +170,12 @@ void HistoryTab::fillItem(QTreeWidgetItem *item, int entryIndex, bool child)
     item->setData(0, EntryRole, entryIndex);
     item->setText(0, title);
     item->setData(0, ListDelegate::SubtitleRole, details.join(QStringLiteral(" · ")));
-    // Own arrows, not the icon theme: same look on every desktop and on Windows.
-    item->setIcon(0, QIcon(e.status == HistoryEntry::Missed ? QStringLiteral(":/icons/call-missed.svg")
-                           : e.incoming                     ? QStringLiteral(":/icons/call-in.svg")
-                                                            : QStringLiteral(":/icons/call-out.svg")));
+    // Own arrows, not the icon theme: same look on every desktop and on Windows. Only
+    // the state colours: green in, neutral out, red missed.
+    const Theme::Colors &tc = Theme::colors();
+    item->setIcon(0, e.status == HistoryEntry::Missed ? Icons::tinted(QStringLiteral("call-missed"), tc.danger)
+                     : e.incoming                     ? Icons::tinted(QStringLiteral("call-in"), tc.ok)
+                                                      : Icons::tinted(QStringLiteral("call-out"), tc.muted));
     item->setData(0, Qt::ForegroundRole,
                   e.status == HistoryEntry::Missed ? QVariant(QBrush(Theme::colors().danger)) : QVariant());
     if (item->childCount() > 0)

@@ -32,7 +32,7 @@ protected:
         p.drawControl(QStyle::CE_PushButtonBevel, opt);
 
         QFont digitFont = font();
-        digitFont.setPointSizeF(font().pointSizeF() * (height() < 52 ? 1.35 : 1.6));
+        digitFont.setPointSizeF(font().pointSizeF() * (height() < 40 ? 1.25 : height() < 52 ? 1.4 : 1.6));
         QFont letterFont = font();
         letterFont.setPointSizeF(font().pointSizeF() * 0.72);
         const QFontMetrics dm(digitFont);
@@ -62,8 +62,8 @@ DialerTab::DialerTab(Database *db, QWidget *parent)
     , m_db(db)
 {
     auto *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(8, 8, 8, 8);
-    layout->setSpacing(8);
+    layout->setContentsMargins(4, 8, 4, 4);
+    layout->setSpacing(6);
 
     auto *numberRow = new QHBoxLayout;
     m_number = new QLineEdit(this);
@@ -71,15 +71,18 @@ DialerTab::DialerTab(Database *db, QWidget *parent)
     QFont f = m_number->font();
     f.setPointSizeF(f.pointSizeF() * 1.4);
     m_number->setFont(f);
-    m_number->setMinimumHeight(36);
+    m_number->setFixedHeight(40);
     numberRow->addWidget(m_number, 1);
+    setFocusProxy(m_number);
 
     auto *backspace = new QToolButton(this);
-    backspace->setIcon(Icons::get(QStringLiteral("edit-clear-locationbar-rtl")));
-    backspace->setText(QStringLiteral("⌫"));
+    Icons::setThemed(backspace, QStringLiteral("backspace"));
+    backspace->setIconSize(QSize(20, 20));
     backspace->setToolTip(tr("Delete last digit (hold to clear)"));
+    backspace->setAccessibleName(tr("Delete last digit"));
     backspace->setAutoRepeat(true);
-    backspace->setMinimumHeight(36);
+    backspace->setFocusPolicy(Qt::NoFocus);
+    backspace->setFixedSize(44, 40);
     connect(backspace, &QToolButton::clicked, this, [this] { m_number->backspace(); });
     numberRow->addWidget(backspace);
     layout->addLayout(numberRow);
@@ -125,7 +128,8 @@ DialerTab::DialerTab(Database *db, QWidget *parent)
         auto *b = new KeypadButton(key, sub, this);
         b->setObjectName(QStringLiteral("keypadKey"));
         b->setFocusPolicy(Qt::NoFocus);
-        b->setMinimumHeight(46);
+        b->setMinimumHeight(30); // shrinks while a call panel takes room above
+        b->setAccessibleName(sub.isEmpty() ? key : key + QLatin1Char(' ') + sub);
         b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         connect(b, &QPushButton::clicked, this, [this, key] { emit keyPressed(key); });
         grid->addWidget(b, i / 3, i % 3);
@@ -133,7 +137,8 @@ DialerTab::DialerTab(Database *db, QWidget *parent)
     layout->addLayout(grid, 1);
 
     m_callButton = new QPushButton(Icons::callWhite(), tr("Call"), this);
-    m_callButton->setMinimumHeight(42);
+    m_callButton->setFixedHeight(40);
+    m_callButton->setIconSize(QSize(18, 18));
     m_callButton->setObjectName(QStringLiteral("callButton"));
     connect(m_callButton, &QPushButton::clicked, this, &DialerTab::requestCall);
     connect(m_number, &QLineEdit::returnPressed, this, &DialerTab::requestCall);

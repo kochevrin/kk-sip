@@ -70,6 +70,6 @@ IncomingDialog::IncomingDialog(SipEngine *engine, int callId, const QString &cal
             close();
     });
 
-    setMinimumWidth(280);
     adjustSize();
+    resize(qMax(280, width()), height());
 }
