@@ -108,7 +108,12 @@ jobs:
           QT_QPA_PLATFORM: offscreen
           KKSIP_TEST_SERVER: offline
           KKSIP_SCREENSHOTS: ${{ github.workspace }}/screenshots-windows
-        run: build-win/kk-sip-smoke.exe
+        run: |
+          rc=0
+          build-win/kk-sip-smoke.exe -o smoke.txt,txt || rc=$?
+          cat smoke.txt || true
+          echo "exit code $rc"
+          exit $rc
 
       - name: MSI
         shell: pwsh
