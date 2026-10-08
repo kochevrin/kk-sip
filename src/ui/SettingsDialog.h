@@ -47,4 +47,5 @@ private:
     QSpinBox *m_sipPort = nullptr;
     QComboBox *m_theme = nullptr;
     QCheckBox *m_systemFrame = nullptr;
+    QCheckBox *m_rememberPosition = nullptr;
 };

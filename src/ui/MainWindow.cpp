@@ -44,6 +44,8 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     m_frameless = !Settings::instance().systemFrame;
     if (m_frameless) {
         setWindowFlag(Qt::FramelessWindowHint);
+        // Transparent corners so we can draw rounded ones like the desktop's windows.
+        setAttribute(Qt::WA_TranslucentBackground);
         setMouseTracking(true);
     }
 
@@ -157,7 +159,8 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     connect(m_db, &Database::contactsChanged, this, &MainWindow::updateBlfTargets);
     updateBlfTargets();
 
-    if (!restoreGeometry(Settings::instance().windowGeometry))
+    // On Wayland the compositor ignores the position part; KWin's rule handles it (main.cpp).
+    if (!Settings::instance().rememberPosition || !restoreGeometry(Settings::instance().windowGeometry))
         resize(300, 500);
 
     if (Settings::instance().accounts.isEmpty())
@@ -268,9 +271,14 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QWidget::paintEvent(event);
     if (!m_frameless)
         return;
+    // Same radius as the window decoration's corners (about 10px in Breeze-like and
+    // Aurorae themes); the only frame is a 1px line.
+    constexpr qreal radius = 10;
     QPainter p(this);
-    p.setPen(Theme::colors().border);
-    p.drawRect(rect().adjusted(0, 0, -1, -1)); // the only frame: 1px
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setPen(QPen(Theme::colors().border, 1));
+    p.setBrush(palette().color(QPalette::Window));
+    p.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), radius, radius);
 }
 
 // --- Accounts / status ------------------------------------------------------

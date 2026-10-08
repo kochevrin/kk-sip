@@ -24,6 +24,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QTextStream>
+#include <QRegularExpression>
 #include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -105,6 +106,9 @@ ContactsTab::ContactsTab(Database *db, SipEngine *engine, QWidget *parent)
                         this, &ContactsTab::importFile);
     moreMenu->addAction(Icons::get(QStringLiteral("document-export")), tr("Export to CSV…"), this,
                         &ContactsTab::exportCsv);
+    moreMenu->addSeparator();
+    moreMenu->addAction(tr("Busy lamps for all internal numbers"), this, [this] { setLampsForInternal(true); });
+    moreMenu->addAction(tr("Turn all busy lamps off"), this, [this] { setLampsForInternal(false); });
     more->setMenu(moreMenu);
     top->addWidget(more);
     layout->addLayout(top);
@@ -217,6 +221,23 @@ void ContactsTab::reload()
     refreshLamps();
 }
 
+void ContactsTab::setLampsForInternal(bool on)
+{
+    // Internal = short extension numbers; city and mobile numbers have no lamp on a PBX.
+    static const QRegularExpression internal(QStringLiteral("^\\d{2,5}$"));
+    int changed = 0;
+    for (Contact c : m_db->contacts()) {
+        const bool want = on && internal.match(c.number).hasMatch();
+        if (c.blf == want)
+            continue;
+        c.blf = want;
+        m_db->saveContact(c);
+        ++changed;
+    }
+    if (on && changed == 0)
+        QMessageBox::information(this, tr("Busy lamps"), tr("No internal numbers (2–5 digits) without a lamp."));
+}
+
 void ContactsTab::addContact()
 {
     Contact c;
@@ -249,6 +270,13 @@ void ContactsTab::showMenu(const QPoint &pos)
             menu.addAction(Icons::get(QStringLiteral("call-incoming")), tr("Pick up the call (%1)").arg(code), this,
                            [this, code] { emit callRequested(code); });
         }
+        QAction *lamp = menu.addAction(tr("Busy lamp (BLF)"), this, [this, c](bool on) {
+            Contact edited = c;
+            edited.blf = on;
+            m_db->saveContact(edited);
+        });
+        lamp->setCheckable(true);
+        lamp->setChecked(c.blf);
         menu.addAction(Icons::get(QStringLiteral("document-edit")), tr("Edit…"), this,
                        [this, c] { editContact(c.id); });
         menu.addAction(Icons::get(QStringLiteral("edit-copy")), tr("Copy number"), this,

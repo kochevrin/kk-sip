@@ -31,6 +31,7 @@ add_library(kk-sip-core OBJECT
     src/core/SingleInstance.h src/core/SingleInstance.cpp
     src/core/MicrosipImport.h src/core/MicrosipImport.cpp
     src/core/Autostart.h src/core/Autostart.cpp
+    src/core/WindowPlacement.h src/core/WindowPlacement.cpp
     src/sip/SipEngine.h src/sip/SipEngine.cpp
     src/ui/MainWindow.h src/ui/MainWindow.cpp
     src/ui/DialerTab.h src/ui/DialerTab.cpp

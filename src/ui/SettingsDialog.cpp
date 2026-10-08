@@ -2,9 +2,11 @@
 
 #include "core/Autostart.h"
 #include "core/MicrosipImport.h"
+#include "core/WindowPlacement.h"
 #include "sip/SipEngine.h"
 #include "ui/AccountDialog.h"
 #include "ui/Icons.h"
+#include "ui/ListDelegate.h"
 #include "ui/Theme.h"
 
 #include <QCheckBox>
@@ -68,6 +70,8 @@ QWidget *SettingsDialog::createAccountsPage()
     auto *layout = new QHBoxLayout(page);
 
     m_accountList = new QListWidget(page);
+    m_accountList->setItemDelegate(new ListDelegate(m_accountList));
+    m_accountList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     layout->addWidget(m_accountList, 1);
 
     auto *side = new QVBoxLayout;
@@ -93,6 +97,7 @@ QWidget *SettingsDialog::createAccountsPage()
     connect(m_accountList, &QListWidget::itemActivated, this, &SettingsDialog::editAccount);
 
     reloadAccounts();
+    connect(m_engine, &SipEngine::regStateChanged, this, &SettingsDialog::reloadAccounts);
     return page;
 }
 
@@ -100,14 +105,25 @@ void SettingsDialog::reloadAccounts()
 {
     const int row = m_accountList->currentRow();
     m_accountList->clear();
+    const Theme::Colors &tc = Theme::colors();
     for (const AccountConfig &a : std::as_const(m_accounts)) {
-        QString text = a.title();
-        if (!a.label.isEmpty())
-            text += QStringLiteral("  (") + a.user + QLatin1Char('@') + a.sipDomain() + QLatin1Char(')');
-        auto *item = new QListWidgetItem(Icons::status(a.enabled ? m_engine->regState(a.id) : RegState::Disabled),
-                                         text);
+        auto *item = new QListWidgetItem(a.title());
+        const RegState st = a.enabled ? m_engine->regState(a.id) : RegState::Disabled;
+        QColor lamp = tc.muted;
+        if (st == RegState::Online)
+            lamp = tc.ok;
+        else if (st == RegState::Registering)
+            lamp = tc.warn;
+        else if (st == RegState::Failed)
+            lamp = tc.danger;
+        item->setData(ListDelegate::HasLampSlotRole, true);
+        item->setData(ListDelegate::LampRole, lamp);
+        const QString status = a.enabled ? m_engine->regText(a.id)
+                                         : (a.password.isEmpty() ? tr("off, no password") : tr("off"));
+        item->setData(ListDelegate::SubtitleRole,
+                      a.user + QLatin1Char('@') + a.sipDomain() + QStringLiteral(" · ") + status);
         if (!a.enabled)
-            item->setForeground(palette().color(QPalette::Disabled, QPalette::Text));
+            item->setForeground(tc.muted);
         m_accountList->addItem(item);
     }
     m_accountList->setCurrentRow(qBound(0, row, int(m_accounts.size()) - 1));
@@ -234,6 +250,7 @@ QWidget *SettingsDialog::createCodecsPage()
     auto *page = new QWidget(this);
     auto *layout = new QHBoxLayout(page);
     m_codecList = new QListWidget(page);
+    m_codecList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     layout->addWidget(m_codecList, 1);
 
     // Saved order first, then whatever else PJSIP offers with its default state.
@@ -309,6 +326,11 @@ QWidget *SettingsDialog::createGeneralPage()
     m_systemFrame = new QCheckBox(tr("System window frame (restart needed)"), page);
     m_systemFrame->setChecked(s.systemFrame);
     form->addRow(m_systemFrame);
+    m_rememberPosition = new QCheckBox(tr("Remember window position"), page);
+    m_rememberPosition->setChecked(s.rememberPosition);
+    if (WindowPlacement::usesKWinRule())
+        m_rememberPosition->setToolTip(tr("On KDE Wayland this adds a KWin window rule for kk-sip."));
+    form->addRow(m_rememberPosition);
     form->addRow(m_closeToTray);
     form->addRow(m_autostart);
     form->addRow(m_startHidden);
@@ -333,6 +355,11 @@ void SettingsDialog::commit()
     s.startHidden = m_startHidden->isChecked();
     s.debugLog = m_debugLog->isChecked();
     s.systemFrame = m_systemFrame->isChecked();
+    if (s.rememberPosition != m_rememberPosition->isChecked()) {
+        s.rememberPosition = m_rememberPosition->isChecked();
+        if (WindowPlacement::usesKWinRule())
+            WindowPlacement::setKWinRule(s.rememberPosition, parentWidget() ? parentWidget()->size() : QSize(300, 500));
+    }
     if (s.theme != m_theme->currentData().toString()) {
         s.theme = m_theme->currentData().toString();
         Theme::apply(Theme::modeFromString(s.theme));

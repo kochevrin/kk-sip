@@ -102,7 +102,7 @@ QListWidget, QListView {
     background: @card; border: 1px solid @border; border-radius: 8px; outline: none;
     alternate-background-color: @secondary;
 }
-QListWidget::item { padding: 6px 6px; border-radius: 6px; }
+QListWidget::item { padding: 0 6px; min-height: 26px; border-radius: 6px; }
 QListWidget::item:selected { background: @accent; color: @fg; }
 QListWidget::item:hover:!selected { background: @secondary; }
 

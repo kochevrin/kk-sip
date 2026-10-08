@@ -50,6 +50,7 @@ public:
     bool doNotDisturb = false;
     bool debugLog = false;
     QString theme = QStringLiteral("system"); // system | light | dark
+    bool rememberPosition = true;
     bool systemFrame = false; // native window frame instead of the slim kk-sip title strip
     int sipPort = 0;        // 0 = random local port
 

@@ -1,4 +1,5 @@
 #include "core/Autostart.h"
+#include "core/WindowPlacement.h"
 #include "core/Database.h"
 #include "core/MicrosipImport.h"
 #include "core/Settings.h"
@@ -159,6 +160,8 @@ int main(int argc, char *argv[])
     MainWindow window(&engine, &db);
     QObject::connect(&instance, &SingleInstance::messageReceived, &window, &MainWindow::handleExternal);
     Autostart::refresh(settings.startHidden);
+    if (WindowPlacement::usesKWinRule())
+        WindowPlacement::setKWinRule(settings.rememberPosition, window.size());
     // Autostart passes --minimized; a manual launch or a first run without accounts shows the window.
     if (!parser.isSet(minimizedOption) || !target.isEmpty() || settings.accounts.isEmpty())
         window.show();

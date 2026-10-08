@@ -6,6 +6,7 @@
 //   KKSIP_SCREENSHOTS   optional directory for PNG screenshots of the UI
 
 #include "core/Autostart.h"
+#include "core/WindowPlacement.h"
 #include "core/Database.h"
 #include "core/MicrosipImport.h"
 #include "core/Settings.h"
@@ -51,6 +52,7 @@ private slots:
     void busyLamp();
     void dialSuggestion();
     void autostart();
+    void kwinRule();
     void screenshots();
 
 private:
@@ -474,12 +476,54 @@ void SmokeTest::autostart()
     QVERIFY(!Autostart::isEnabled());
 }
 
+void SmokeTest::kwinRule()
+{
+    // Someone else's rules must survive byte for byte (same layout as a real kwinrulesrc).
+    const QString path = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+        + QStringLiteral("/kwinrulesrc");
+    const QByteArray original =
+        "[0222d8f1-8989-4494-8bd3-4b81a8c15642]\nDescription=Aspia Console -> Pervynka\nactivityrule=2\n"
+        "wmclass=aspia_console\nwmclassmatch=2\n\n[General]\ncount=2\n"
+        "rules=0222d8f1-8989-4494-8bd3-4b81a8c15642,orca-minimized\n\n"
+        "[orca-minimized]\nDescription=Orca -> start minimized\nminimize=true\nminimizerule=3\n";
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    f.write(original);
+    f.close();
+
+    WindowPlacement::setKWinRule(true, QSize(300, 500));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QByteArray with = f.readAll();
+    f.close();
+    QVERIFY(with.contains("rules=0222d8f1-8989-4494-8bd3-4b81a8c15642,orca-minimized,kk-sip-position\n"));
+    QVERIFY(with.contains("count=3\n"));
+    QVERIFY(with.contains("[kk-sip-position]\n"));
+    QVERIFY(with.contains("positionrule=4\n"));
+    QVERIFY(with.contains("[orca-minimized]\nDescription=Orca -> start minimized\nminimize=true\nminimizerule=3\n"));
+
+    WindowPlacement::setKWinRule(true, QSize(300, 500)); // idempotent
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QCOMPARE(f.readAll(), with);
+    f.close();
+
+    WindowPlacement::setKWinRule(false, QSize());
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QCOMPARE(f.readAll(), original);
+    f.close();
+    QFile::remove(path);
+}
+
 void SmokeTest::screenshots()
 {
     SettingsDialog settings(m_engine.get(), m_window.get());
     settings.show();
     QTest::qWait(100);
     shot(&settings, QStringLiteral("08-settings"));
+    if (auto *tabs = settings.findChild<QTabWidget *>()) {
+        tabs->setCurrentIndex(2);
+        QTest::qWait(100);
+        shot(&settings, QStringLiteral("08b-settings-codecs"));
+    }
     AccountDialog account(m_acc102, m_window.get());
     account.show();
     QTest::qWait(100);

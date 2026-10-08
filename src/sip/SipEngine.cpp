@@ -211,7 +211,21 @@ bool SipEngine::start(QString *error)
 
     m_started = true;
     applyAudioDevices(s.captureDevice, s.playbackDevice);
-    applyCodecs(s.codecs);
+    if (s.codecs.isEmpty()) {
+        // PJSIP's own order puts Speex first; offer what office PBXs expect, MicroSIP-style.
+        QList<CodecSetting> defaults;
+        const QStringList preferred = {QStringLiteral("opus/48000/2"), QStringLiteral("G722/16000/1"),
+                                       QStringLiteral("PCMA/8000/1"), QStringLiteral("PCMU/8000/1"),
+                                       QStringLiteral("GSM/8000/1")};
+        for (const QString &id : preferred)
+            defaults.append({id, true});
+        for (const CodecEntry &c : codecs())
+            if (!preferred.contains(c.id))
+                defaults.append({c.id, false});
+        applyCodecs(defaults);
+    } else {
+        applyCodecs(s.codecs);
+    }
     m_ringtoneFile = s.ringtoneFile;
     m_dnd = s.doNotDisturb;
 

@@ -29,6 +29,7 @@ private:
     void refreshLamps();
     void updateLamp(QListWidgetItem *item, const Contact &c);
     void addContact();
+    void setLampsForInternal(bool on);
     void editContact(qint64 id);
     void showMenu(const QPoint &pos);
     void importFile();
