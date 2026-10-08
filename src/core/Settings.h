@@ -16,6 +16,7 @@ struct AccountConfig {
     QString displayName;
     QString transport = QStringLiteral("udp"); // udp | tcp | tls
     bool srtp = false;
+    bool natRewrite = false; // rewrite Via/Contact/SDP from what the server sees (MicroSIP "allowRewrite")
     bool enabled = true;
     int regExpiry = 300;
 

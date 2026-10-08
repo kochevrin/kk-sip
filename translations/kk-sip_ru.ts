@@ -51,61 +51,71 @@
     </message>
     <message>
         <location filename="../src/ui/AccountDialog.cpp" line="56" />
+        <source>Adapt addresses to NAT (rewrite Contact/Via/SDP)</source>
+        <translation>Подстраивать адреса под NAT (Contact/Via/SDP)</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/AccountDialog.cpp" line="57" />
+        <source>Turn on only if calls fail behind a home router and the PBX does not handle NAT.</source>
+        <translation>Включайте, только если звонки не идут из-за домашнего роутера, а АТС сама NAT не обрабатывает.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/AccountDialog.cpp" line="59" />
         <source>Enabled</source>
         <translation>Включён</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="60" />
+        <location filename="../src/ui/AccountDialog.cpp" line="63" />
         <source> s</source>
         <translation> с</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="63" />
+        <location filename="../src/ui/AccountDialog.cpp" line="66" />
         <source>Account name:</source>
         <translation>Название:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="64" />
+        <location filename="../src/ui/AccountDialog.cpp" line="67" />
         <source>SIP server:</source>
         <translation>SIP-сервер:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="65" />
+        <location filename="../src/ui/AccountDialog.cpp" line="68" />
         <source>Username:</source>
         <translation>Пользователь:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="66" />
+        <location filename="../src/ui/AccountDialog.cpp" line="69" />
         <source>Password:</source>
         <translation>Пароль:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="67" />
+        <location filename="../src/ui/AccountDialog.cpp" line="70" />
         <source>Display name:</source>
         <translation>Отображаемое имя:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="68" />
+        <location filename="../src/ui/AccountDialog.cpp" line="71" />
         <source>Transport:</source>
         <translation>Транспорт:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="69" />
+        <location filename="../src/ui/AccountDialog.cpp" line="72" />
         <source>SIP domain:</source>
         <translation>SIP-домен:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="70" />
+        <location filename="../src/ui/AccountDialog.cpp" line="73" />
         <source>SIP proxy:</source>
         <translation>SIP-прокси:</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="71" />
+        <location filename="../src/ui/AccountDialog.cpp" line="74" />
         <source>Login (auth ID):</source>
         <translation>Логин (auth ID):</translation>
     </message>
     <message>
-        <location filename="../src/ui/AccountDialog.cpp" line="72" />
+        <location filename="../src/ui/AccountDialog.cpp" line="75" />
         <source>Re-register every:</source>
         <translation>Перерегистрация:</translation>
     </message>
@@ -643,22 +653,22 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/core/MicrosipImport.cpp" line="80" />
+        <location filename="../src/core/MicrosipImport.cpp" line="81" />
         <source>No accounts found in this file.</source>
         <translation>В файле не найдено аккаунтов.</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="85" />
+        <location filename="../src/sip/SipEngine.cpp" line="92" />
         <source>Online</source>
         <translation>В сети</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="85" />
+        <location filename="../src/sip/SipEngine.cpp" line="92" />
         <source>Offline</source>
         <translation>Не в сети</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="102" />
+        <location filename="../src/sip/SipEngine.cpp" line="109" />
         <source>Registering…</source>
         <translation>Регистрация…</translation>
     </message>
@@ -926,32 +936,32 @@
 <context>
     <name>SipEngine</name>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="372" />
+        <location filename="../src/sip/SipEngine.cpp" line="379" />
         <source>Disabled</source>
         <translation>Отключён</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="343" />
+        <location filename="../src/sip/SipEngine.cpp" line="350" />
         <source>Registering…</source>
         <translation>Регистрация…</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="336" />
+        <location filename="../src/sip/SipEngine.cpp" line="343" />
         <source>Too many enabled accounts (limit %1)</source>
         <translation>Слишком много включённых аккаунтов (максимум %1)</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="373" />
+        <location filename="../src/sip/SipEngine.cpp" line="380" />
         <source>Not configured</source>
         <translation>Не настроен</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="536" />
+        <location filename="../src/sip/SipEngine.cpp" line="543" />
         <source>No account selected</source>
         <translation>Аккаунт не выбран</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="542" />
+        <location filename="../src/sip/SipEngine.cpp" line="549" />
         <source>Nothing to call</source>
         <translation>Некуда звонить</translation>
     </message>

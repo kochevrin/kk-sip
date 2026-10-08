@@ -17,7 +17,7 @@ bool AccountConfig::sameSipConfig(const AccountConfig &o) const
 {
     return server == o.server && domain == o.domain && proxy == o.proxy && user == o.user && authUser == o.authUser
         && password == o.password && displayName == o.displayName && transport == o.transport
-        && srtp == o.srtp && enabled == o.enabled && regExpiry == o.regExpiry;
+        && srtp == o.srtp && natRewrite == o.natRewrite && enabled == o.enabled && regExpiry == o.regExpiry;
 }
 
 Settings &Settings::instance()
@@ -96,6 +96,7 @@ void Settings::load()
         a.displayName = ini.value("displayName").toString();
         a.transport = ini.value("transport", "udp").toString();
         a.srtp = ini.value("srtp", false).toBool();
+        a.natRewrite = ini.value("natRewrite", false).toBool();
         a.enabled = ini.value("enabled", true).toBool();
         a.regExpiry = ini.value("regExpiry", 300).toInt();
         accounts.append(a);
@@ -145,6 +146,7 @@ void Settings::save() const
             ini.setValue("displayName", a.displayName);
             ini.setValue("transport", a.transport);
             ini.setValue("srtp", a.srtp);
+            ini.setValue("natRewrite", a.natRewrite);
             ini.setValue("enabled", a.enabled);
             ini.setValue("regExpiry", a.regExpiry);
         }

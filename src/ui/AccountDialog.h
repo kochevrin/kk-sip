@@ -31,6 +31,7 @@ private:
     QLineEdit *m_displayName;
     QComboBox *m_transport;
     QCheckBox *m_srtp;
+    QCheckBox *m_natRewrite;
     QCheckBox *m_enabled;
     QSpinBox *m_expiry;
     QPushButton *m_ok = nullptr;

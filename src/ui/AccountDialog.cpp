@@ -53,6 +53,9 @@ AccountDialog::AccountDialog(const AccountConfig &account, QWidget *parent)
 
     m_srtp = new QCheckBox(tr("Encrypt media (SRTP, optional)"), this);
     m_srtp->setChecked(account.srtp);
+    m_natRewrite = new QCheckBox(tr("Adapt addresses to NAT (rewrite Contact/Via/SDP)"), this);
+    m_natRewrite->setToolTip(tr("Turn on only if calls fail behind a home router and the PBX does not handle NAT."));
+    m_natRewrite->setChecked(account.natRewrite);
     m_enabled = new QCheckBox(tr("Enabled"), this);
     m_enabled->setChecked(account.enabled);
     m_expiry = new QSpinBox(this);
@@ -71,6 +74,7 @@ AccountDialog::AccountDialog(const AccountConfig &account, QWidget *parent)
     form->addRow(tr("Login (auth ID):"), m_authUser);
     form->addRow(tr("Re-register every:"), m_expiry);
     form->addRow(QString(), m_srtp);
+    form->addRow(QString(), m_natRewrite);
     form->addRow(QString(), m_enabled);
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -113,6 +117,7 @@ AccountConfig AccountDialog::account() const
     a.displayName = m_displayName->text().trimmed();
     a.transport = m_transport->currentData().toString();
     a.srtp = m_srtp->isChecked();
+    a.natRewrite = m_natRewrite->isChecked();
     a.enabled = m_enabled->isChecked();
     a.regExpiry = m_expiry->value();
     return a;

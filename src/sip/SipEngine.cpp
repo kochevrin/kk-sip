@@ -62,6 +62,13 @@ pj::AccountConfig toPjConfig(const AccountConfig &a)
         c.sipConfig.proxies.push_back(toStd(proxy));
     }
 
+    // Like MicroSIP's "allowRewrite": off by default. With a NAT between us and the PBX
+    // (seen as another address) rewriting breaks calls on PBXs that handle NAT themselves.
+    c.natConfig.viaRewriteUse = a.natRewrite;
+    c.natConfig.sdpNatRewriteUse = a.natRewrite;
+    c.natConfig.contactRewriteUse = a.natRewrite ? 2 : 0;
+    c.natConfig.contactRewriteMethod = PJSUA_CONTACT_REWRITE_ALWAYS_UPDATE | PJSUA_CONTACT_REWRITE_UNREGISTER;
+
     c.mediaConfig.srtpUse = a.srtp ? PJMEDIA_SRTP_OPTIONAL : PJMEDIA_SRTP_DISABLED;
     c.mediaConfig.srtpSecureSignaling = 0;
     c.presConfig.publishEnabled = false;

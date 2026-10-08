@@ -67,6 +67,7 @@ QList<AccountConfig> readAccounts(const QString &iniPath, QString *error)
         const QString tr = s.value(QStringLiteral("transport")).toLower();
         a.transport = (tr == QLatin1String("tcp") || tr == QLatin1String("tls")) ? tr : QStringLiteral("udp");
         a.srtp = !s.value(QStringLiteral("srtp")).isEmpty();
+        a.natRewrite = s.value(QStringLiteral("allowrewrite")) == QLatin1String("1");
         a.enabled = false; // no password yet, don't hammer the PBX with failing REGISTERs
         if (a.server.isEmpty())
             a.server = a.domain;
