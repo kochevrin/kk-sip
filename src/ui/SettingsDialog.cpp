@@ -244,7 +244,11 @@ QWidget *SettingsDialog::createAudioPage()
     ringRow->addWidget(browse);
     form->addRow(tr("Ringtone:"), ringRow);
 
+#ifdef Q_OS_WIN
+    auto *hint = new QLabel(tr("“System default” follows the default devices in Windows sound settings."), page);
+#else
     auto *hint = new QLabel(tr("“System default” follows the PipeWire/PulseAudio default device."), page);
+#endif
     hint->setWordWrap(true);
     hint->setObjectName(QStringLiteral("muted"));
     form->addRow(hint);
@@ -321,6 +325,9 @@ QWidget *SettingsDialog::createGeneralPage()
     m_startHidden->setEnabled(m_autostart->isChecked());
     m_startHidden->setContentsMargins(22, 0, 0, 0);
     connect(m_autostart, &QCheckBox::toggled, m_startHidden, &QWidget::setEnabled);
+    m_checkUpdates = new QCheckBox(tr("Check GitHub for new versions"), page);
+    m_checkUpdates->setToolTip(tr("Once a day. kk-sip only tells you about a new version, it never installs anything."));
+    m_checkUpdates->setChecked(s.checkUpdates);
     m_debugLog = new QCheckBox(tr("Write SIP debug log (restart needed)"), page);
     m_debugLog->setChecked(s.debugLog);
     m_sipPort = new QSpinBox(page);
@@ -353,6 +360,7 @@ QWidget *SettingsDialog::createGeneralPage()
     form->addRow(m_closeToTray);
     form->addRow(m_autostart);
     form->addRow(m_startHidden);
+    form->addRow(m_checkUpdates);
     form->addRow(m_debugLog);
     form->addRow(tr("Local SIP port (restart needed):"), m_sipPort);
     Theme::tidyForm(form);
@@ -374,6 +382,7 @@ void SettingsDialog::commit()
     s.closeToTray = m_closeToTray->isChecked();
     s.startHidden = m_startHidden->isChecked();
     s.debugLog = m_debugLog->isChecked();
+    s.checkUpdates = m_checkUpdates->isChecked();
     s.systemFrame = m_systemFrame->isChecked();
     if (s.rememberPosition != m_rememberPosition->isChecked()) {
         s.rememberPosition = m_rememberPosition->isChecked();

@@ -56,6 +56,8 @@ public:
     bool systemFrame = false; // native window frame instead of the slim kk-sip title strip
     bool historyGrouped = true; // history: calls grouped under each number, or one flat list
     bool wideView = false;  // wide window: dial pad with history and contacts next to it
+    bool checkUpdates = true;   // ask GitHub once a day whether a newer release exists
+    bool trayHintShown = false; // told once that closing the window keeps kk-sip in the tray
     int sipPort = 0;        // 0 = random local port
 
     QByteArray windowGeometry;

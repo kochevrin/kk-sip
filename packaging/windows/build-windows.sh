@@ -43,7 +43,7 @@ cp "$ROOT/LICENSE" "$ROOT/THIRD-PARTY.md" "$STAGE/"
 
 WINDEPLOYQT="$(command -v windeployqt6 || command -v windeployqt-qt6 || command -v windeployqt)"
 "$WINDEPLOYQT" --release --no-compiler-runtime --no-system-d3d-compiler --no-opengl-sw \
-    --translations en,ru,uk --skip-plugin-types tls,networkinformation,generic \
+    --translations en,ru,uk --skip-plugin-types networkinformation,generic \
     "$STAGE/kk-sip.exe"
 
 # windeployqt copies Qt only; pull in everything else from /ucrt64/bin (opus, OpenSSL,

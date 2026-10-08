@@ -3,11 +3,13 @@
 #include "core/Database.h"
 #include "core/Settings.h"
 #include "core/SipUri.h"
+#include "core/UpdateChecker.h"
 #include "ui/AccountDialog.h"
 #include "ui/AccountSwitcher.h"
 #include "ui/CallPanel.h"
 #include "ui/ContactsTab.h"
 #include "ui/DialerTab.h"
+#include "ui/ElidedLabel.h"
 #include "ui/HistoryTab.h"
 #include "ui/Icons.h"
 #include "ui/IncomingDialog.h"
@@ -16,6 +18,8 @@
 
 #include <QApplication>
 #include <QCloseEvent>
+#include <QDesktopServices>
+#include <QPushButton>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QWindow>
@@ -87,6 +91,11 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     m_wideAction->setCheckable(true);
     m_wideAction->setToolTip(tr("History and contacts next to the dial pad"));
     connect(m_wideAction, &QAction::triggered, this, &MainWindow::setWideView);
+    menu->addAction(Icons::get(QStringLiteral("system-software-update")), tr("Check for updates…"), this,
+                    [this] {
+                        m_manualCheck = true;
+                        m_updates->check(true);
+                    });
     m_dndAction = menu->addAction(Icons::get(QStringLiteral("notifications-disabled")), tr("Do not disturb"));
     m_dndAction->setCheckable(true);
     m_dndAction->setChecked(Settings::instance().doNotDisturb);
@@ -143,16 +152,26 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     body->addWidget(m_sideTabs, 1);
     layout->addLayout(body, 1);
 
-    m_status = new QLabel(this);
+    // Status line: registration state or the last error (cut with "…", the whole text in
+    // the tooltip), and on the right a link when a newer release is out.
+    auto *statusRow = new QHBoxLayout;
+    statusRow->setSpacing(8);
+    m_status = new ElidedLabel(this);
     m_status->setObjectName(QStringLiteral("statusLabel"));
     m_status->setTextFormat(Qt::PlainText);
-    m_status->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    // Long PBX replies must not widen the fixed-size window.
-    m_status->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     QFont sf = m_status->font();
     sf.setPointSizeF(sf.pointSizeF() * 0.9);
     m_status->setFont(sf);
-    layout->addWidget(m_status);
+    statusRow->addWidget(m_status, 1);
+    m_updateLink = new QPushButton(this);
+    m_updateLink->setObjectName(QStringLiteral("updateLink"));
+    m_updateLink->setFlat(true);
+    m_updateLink->setCursor(Qt::PointingHandCursor);
+    m_updateLink->setFocusPolicy(Qt::NoFocus);
+    m_updateLink->setFont(sf);
+    m_updateLink->hide();
+    statusRow->addWidget(m_updateLink);
+    layout->addLayout(statusRow);
 
     connect(m_dialer, &DialerTab::callRequested, this, &MainWindow::dial);
     connect(m_dialer, &DialerTab::keyPressed, this, &MainWindow::onKeypad);
@@ -214,6 +233,8 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
 
     if (Settings::instance().accounts.isEmpty())
         QTimer::singleShot(300, this, &MainWindow::openSettings);
+
+    setupUpdates();
 }
 
 // --- Frameless window -------------------------------------------------------
@@ -432,6 +453,7 @@ void MainWindow::updateStatus()
 {
     if (!m_transientMessage.isEmpty()) {
         m_status->setText(m_transientMessage);
+        m_status->setToolTip(m_transientMessage);
         return;
     }
     const QString id = currentAccountId();
@@ -442,6 +464,7 @@ void MainWindow::updateStatus()
     if (m_engine->doNotDisturb())
         text = tr("Do not disturb") + QStringLiteral(" · ") + text;
     m_status->setText(text);
+    m_status->setToolTip(text);
 }
 
 void MainWindow::showMessage(const QString &text)
@@ -615,12 +638,63 @@ void MainWindow::openSettings()
     updateBlfTargets();
 }
 
+// --- Updates -----------------------------------------------------------------
+
+void MainWindow::setupUpdates()
+{
+    m_updates = new UpdateChecker(this);
+    connect(m_updateLink, &QPushButton::clicked, this, [this] { QDesktopServices::openUrl(m_updatePage); });
+    connect(m_updates, &UpdateChecker::updateAvailable, this, [this](const QString &version, const QUrl &page) {
+        const bool fresh = m_updateLink->isHidden() || m_updatePage != page;
+        m_updatePage = page;
+        m_updateLink->setText(tr("Update %1").arg(version));
+        m_updateLink->setToolTip(tr("kk-sip %1 is out (you have %2). Open the download page.")
+                                     .arg(version, QStringLiteral(KKSIP_VERSION)));
+        m_updateLink->show();
+        if (fresh && m_tray)
+            m_tray->showMessage(tr("kk-sip update"), tr("Version %1 is available.").arg(version), Icons::app(), 10000);
+        if (m_manualCheck) {
+            m_manualCheck = false;
+            if (QMessageBox::question(this, tr("Updates"),
+                                      tr("kk-sip %1 is available (you have %2). Open the download page?")
+                                          .arg(version, QStringLiteral(KKSIP_VERSION)))
+                == QMessageBox::Yes)
+                QDesktopServices::openUrl(page);
+        }
+    });
+    connect(m_updates, &UpdateChecker::upToDate, this, [this] {
+        m_manualCheck = false;
+        QMessageBox::information(this, tr("Updates"),
+                                 tr("You have the latest version, %1.").arg(QStringLiteral(KKSIP_VERSION)));
+    });
+    connect(m_updates, &UpdateChecker::failed, this, [this](const QString &error) {
+        m_manualCheck = false;
+        QMessageBox::warning(this, tr("Updates"), tr("Could not check for updates: %1").arg(error));
+    });
+
+    // Once shortly after start, then daily; never while the setting is off.
+    auto automatic = [this] {
+        if (Settings::instance().checkUpdates)
+            m_updates->check(false);
+    };
+    QTimer::singleShot(20000, this, automatic);
+    auto *daily = new QTimer(this);
+    daily->setInterval(24 * 60 * 60 * 1000);
+    connect(daily, &QTimer::timeout, this, automatic);
+    daily->start();
+}
+
 // --- Window / tray -----------------------------------------------------------
 
 void MainWindow::setupTray()
 {
-    if (!QSystemTrayIcon::isSystemTrayAvailable())
+    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+        // Started with the session before the panel: try again for a few minutes.
+        static int attempts = 0;
+        if (++attempts < 60)
+            QTimer::singleShot(3000, this, &MainWindow::setupTray);
         return;
+    }
     m_tray = new QSystemTrayIcon(Icons::app(), this);
     auto *menu = new QMenu(this);
     menu->addAction(tr("Show"), this, &MainWindow::showAndRaise);
@@ -685,9 +759,20 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     Settings::instance().windowGeometry = saveGeometry();
     Settings::instance().save();
-    if (!m_quitting && m_tray && Settings::instance().closeToTray) {
+    // Close = hide, kk-sip keeps taking calls. Even without a tray icon: launching
+    // kk-sip again brings the window back (SingleInstance).
+    if (!m_quitting && Settings::instance().closeToTray) {
         hide();
         event->ignore();
+        Settings &s = Settings::instance();
+        if (m_tray && !s.trayHintShown) {
+            m_tray->showMessage(QStringLiteral("kk-sip"),
+                                tr("kk-sip keeps running in the tray and takes calls. To exit, use Quit in "
+                                   "the tray icon's menu."),
+                                Icons::app(), 8000);
+            s.trayHintShown = true;
+            s.save();
+        }
         return;
     }
     if (quit())

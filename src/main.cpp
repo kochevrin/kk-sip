@@ -92,6 +92,22 @@ static int importMicrosip(const QString &folder)
     return 0;
 }
 
+// The UI language: the one set in Settings, otherwise the first of the system's UI
+// languages that kk-sip speaks. Not QTranslator::load(QLocale()): English needs no file,
+// so on a Windows with "English, Русский" in its language list that call skipped
+// English and loaded Russian.
+static QString uiLanguage(const QString &chosen)
+{
+    if (!chosen.isEmpty())
+        return chosen;
+    for (const QString &name : QLocale::system().uiLanguages()) {
+        const QString code = name.left(2).toLower(); // "en-US", "ru_UA", "uk"
+        if (code == QLatin1String("en") || code == QLatin1String("uk") || code == QLatin1String("ru"))
+            return code;
+    }
+    return QStringLiteral("en");
+}
+
 // --help, --version and --import-microsip must work without a display (ssh, scripts).
 static bool needsGui(int argc, char *argv[])
 {
@@ -124,16 +140,27 @@ int main(int argc, char *argv[])
 
     // English, Ukrainian or Russian: the one chosen in the settings, otherwise the system's.
     Settings::instance().load();
-    const QString language = Settings::instance().language;
-    if (!language.isEmpty())
+    const QString language = uiLanguage(Settings::instance().language);
+    if (!Settings::instance().language.isEmpty())
         QLocale::setDefault(QLocale(language));
     QTranslator qtTranslator;
-    if (qtTranslator.load(QLocale(), QStringLiteral("qtbase"), QStringLiteral("_"),
-                          QLibraryInfo::path(QLibraryInfo::TranslationsPath)))
-        QCoreApplication::installTranslator(&qtTranslator);
     QTranslator appTranslator;
-    if (appTranslator.load(QLocale(), QStringLiteral("kk-sip"), QStringLiteral("_"), QStringLiteral(":/i18n")))
-        QCoreApplication::installTranslator(&appTranslator);
+    if (language != QLatin1String("en")) {
+        // Qt's own strings (OK, Cancel, Save...): from the Qt install on Linux, from the
+        // translations folder windeployqt puts next to kk-sip.exe on Windows.
+        const QLocale locale(language);
+        const QStringList dirs{QLibraryInfo::path(QLibraryInfo::TranslationsPath),
+                               QCoreApplication::applicationDirPath() + QStringLiteral("/translations")};
+        bool loaded = false;
+        for (const QString &dir : dirs)
+            for (const QString &name : {QStringLiteral("qtbase"), QStringLiteral("qt")})
+                if (!loaded && qtTranslator.load(locale, name, QStringLiteral("_"), dir))
+                    loaded = true;
+        if (loaded)
+            QCoreApplication::installTranslator(&qtTranslator);
+        if (appTranslator.load(locale, QStringLiteral("kk-sip"), QStringLiteral("_"), QStringLiteral(":/i18n")))
+            QCoreApplication::installTranslator(&appTranslator);
+    }
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QCoreApplication::translate("main", "Minimal SIP softphone"));

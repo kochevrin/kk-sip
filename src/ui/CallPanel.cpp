@@ -1,12 +1,12 @@
 #include "ui/CallPanel.h"
 
+#include "ui/ElidedLabel.h"
 #include "ui/Icons.h"
 #include "ui/Theme.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QPainter>
 #include <QKeyEvent>
 #include <QPushButton>
 #include <QTimer>
@@ -64,23 +64,6 @@ QString CallPanel::stateText(const CallView &c)
 }
 
 namespace {
-
-// One line of text cut with "…" when it does not fit; never widens the panel.
-class ElidedLabel : public QLabel {
-public:
-    using QLabel::QLabel;
-    QSize minimumSizeHint() const override { return {16, QLabel::minimumSizeHint().height()}; }
-    QSize sizeHint() const override { return {16, QLabel::sizeHint().height()}; }
-
-protected:
-    void paintEvent(QPaintEvent *) override
-    {
-        QPainter p(this);
-        p.setPen(palette().color(foregroundRole()));
-        p.drawText(contentsRect(), Qt::AlignLeft | Qt::AlignVCenter,
-                   fontMetrics().elidedText(text(), Qt::ElideRight, contentsRect().width()));
-    }
-};
 
 // Square icon button for the call actions; the text lives in the tooltip.
 QPushButton *actionButton(const QString &icon, const QString &tip, QWidget *parent)

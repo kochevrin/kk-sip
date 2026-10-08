@@ -202,6 +202,10 @@ QPushButton#suggestion {
     background: transparent; border: none; color: @link; text-align: left; padding: 0 4px; min-height: 0;
 }
 QPushButton#suggestion:hover { text-decoration: underline; }
+QPushButton#updateLink {
+    background: transparent; border: none; color: @link; padding: 0 2px; min-height: 0; font-weight: 600;
+}
+QPushButton#updateLink:hover { text-decoration: underline; }
 QLabel#statusLabel { color: @muted; padding: 0 2px; }
 QLabel#callStatus { color: @muted; }
 QWidget#titleBar { background: transparent; }

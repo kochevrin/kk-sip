@@ -2,6 +2,7 @@
 
 #include "sip/SipEngine.h"
 
+#include <QUrl>
 #include <QWidget>
 
 class AccountSwitcher;
@@ -14,6 +15,8 @@ class HistoryTab;
 class QAction;
 class QComboBox;
 class QLabel;
+class QPushButton;
+class UpdateChecker;
 class QSystemTrayIcon;
 class QTabWidget;
 
@@ -57,6 +60,7 @@ private:
     void onCallEnded(const CallView &call);
     void openSettings();
     void setupTray();
+    void setupUpdates();
     void updateTray();
     void setMissed(int count);
     bool quit();
@@ -82,6 +86,10 @@ private:
     HistoryTab *m_history;
     ContactsTab *m_contacts;
     QLabel *m_status;
+    QPushButton *m_updateLink;
+    UpdateChecker *m_updates = nullptr;
+    QUrl m_updatePage;
+    bool m_manualCheck = false;
     QSystemTrayIcon *m_tray = nullptr;
     QString m_transientMessage;
     int m_missed = 0;

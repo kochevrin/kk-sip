@@ -43,6 +43,7 @@ private:
     QCheckBox *m_closeToTray = nullptr;
     QCheckBox *m_startHidden = nullptr;
     QCheckBox *m_autostart = nullptr;
+    QCheckBox *m_checkUpdates = nullptr;
     QCheckBox *m_debugLog = nullptr;
     QSpinBox *m_sipPort = nullptr;
     QComboBox *m_theme = nullptr;

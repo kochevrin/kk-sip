@@ -12,6 +12,7 @@
 #include "core/MicrosipImport.h"
 #include "core/Settings.h"
 #include "core/SipUri.h"
+#include "core/UpdateChecker.h"
 #include "sip/SipEngine.h"
 #include "ui/AccountDialog.h"
 #include "ui/AccountSwitcher.h"
@@ -70,6 +71,8 @@ private slots:
     void accountSwitcher();
     void wideView();
     void screenshots();
+    void updateVersions();
+    void closeKeepsRunning();
     void layoutAudit();
 
 private:
@@ -814,6 +817,39 @@ static QStringList layoutProblems(QWidget *root)
                 && checked[i]->geometry().intersects(checked[j]->geometry()))
                 out << QStringLiteral("%1 overlaps %2").arg(describe(checked[i]), describe(checked[j]));
     return out;
+}
+
+void SmokeTest::updateVersions()
+{
+    QVERIFY(UpdateChecker::isNewer(QStringLiteral("v0.3.0"), QStringLiteral("0.2.1")));
+    QVERIFY(UpdateChecker::isNewer(QStringLiteral("0.2.10"), QStringLiteral("0.2.9")));
+    QVERIFY(UpdateChecker::isNewer(QStringLiteral("v1.0"), QStringLiteral("0.9.9")));
+    QVERIFY(!UpdateChecker::isNewer(QStringLiteral("v0.2.1"), QStringLiteral("0.2.1")));
+    QVERIFY(!UpdateChecker::isNewer(QStringLiteral("v0.2.0"), QStringLiteral("0.2.1")));
+    QVERIFY(!UpdateChecker::isNewer(QStringLiteral("nightly"), QStringLiteral("0.2.1")));
+
+    // A newer release shows a link in the status line.
+    auto *checker = m_window->findChild<UpdateChecker *>();
+    auto *link = m_window->findChild<QPushButton *>(QStringLiteral("updateLink"));
+    QVERIFY(checker && link);
+    QVERIFY(!link->isVisible());
+    emit checker->updateAvailable(QStringLiteral("9.9.9"), UpdateChecker::releasesPage());
+    QVERIFY(link->isVisible());
+    QVERIFY(link->text().contains(QLatin1String("9.9.9")));
+    QTest::qWait(100);
+    shot(m_window.get(), QStringLiteral("12-update-available"));
+    link->hide();
+}
+
+void SmokeTest::closeKeepsRunning()
+{
+    Settings::instance().closeToTray = true;
+    QVERIFY(m_window->isVisible());
+    m_window->close(); // the X in the title strip
+    QVERIFY(!m_window->isVisible());
+    QVERIFY(m_engine->regState(m_acc101.id) != RegState::Disabled); // still registered, takes calls
+    m_window->showAndRaise(); // tray click or a second launch
+    QVERIFY(m_window->isVisible());
 }
 
 void SmokeTest::layoutAudit()

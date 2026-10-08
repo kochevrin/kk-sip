@@ -48,10 +48,16 @@ bool editContactDialog(QWidget *parent, Contact &contact)
     for (const AccountConfig &a : Settings::instance().accounts)
         blfAccount->addItem(a.title(), a.id);
     blfAccount->setCurrentIndex(qMax(0, blfAccount->findData(contact.blfAccount)));
-    blfAccount->setEnabled(contact.blf);
-    QObject::connect(blf, &QCheckBox::toggled, blfAccount, &QWidget::setEnabled);
     form->addRow(QString(), blf);
     form->addRow(QObject::tr("Watch via:"), blfAccount);
+    // Which account subscribes only matters with a lamp, and only with several accounts;
+    // a greyed-out combo here looked broken.
+    const bool severalAccounts = Settings::instance().accounts.size() > 1;
+    auto showWatchVia = [&dlg, form, blfAccount, severalAccounts](bool lamp) {
+        form->setRowVisible(blfAccount, lamp && severalAccounts);
+        dlg.adjustSize();
+    };
+    QObject::connect(blf, &QCheckBox::toggled, &dlg, showWatchVia);
     Theme::tidyForm(form);
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, &dlg);
     form->addRow(buttons);
@@ -63,7 +69,8 @@ bool editContactDialog(QWidget *parent, Contact &contact)
     QObject::connect(number, &QLineEdit::textChanged, &dlg, validate);
     validate();
     (contact.name.isEmpty() ? name : number)->setFocus();
-    dlg.resize(300, dlg.sizeHint().height());
+    showWatchVia(contact.blf);
+    dlg.resize(qMax(320, dlg.sizeHint().width()), dlg.sizeHint().height());
 
     if (dlg.exec() != QDialog::Accepted)
         return false;
