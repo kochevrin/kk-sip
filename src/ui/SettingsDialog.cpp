@@ -1,9 +1,11 @@
 #include "ui/SettingsDialog.h"
 
+#include "core/Autostart.h"
 #include "core/MicrosipImport.h"
 #include "sip/SipEngine.h"
 #include "ui/AccountDialog.h"
 #include "ui/Icons.h"
+#include "ui/Theme.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -220,7 +222,7 @@ QWidget *SettingsDialog::createAudioPage()
 
     auto *hint = new QLabel(tr("“System default” follows the PipeWire/PulseAudio default device."), page);
     hint->setWordWrap(true);
-    hint->setEnabled(false);
+    hint->setObjectName(QStringLiteral("muted"));
     form->addRow(hint);
     return page;
 }
@@ -278,28 +280,6 @@ void SettingsDialog::moveCodec(int delta)
 
 // --- General ----------------------------------------------------------------
 
-static QString autostartPath()
-{
-    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
-        + QStringLiteral("/autostart/kk-sip.desktop");
-}
-
-static void setAutostart(bool on)
-{
-    const QString path = autostartPath();
-    if (!on) {
-        QFile::remove(path);
-        return;
-    }
-    QDir().mkpath(QFileInfo(path).absolutePath());
-    QFile f(path);
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        return;
-    f.write("[Desktop Entry]\nType=Application\nName=kk-sip\nIcon=kk-sip\nExec=");
-    f.write(QCoreApplication::applicationFilePath().toUtf8());
-    f.write("\nX-GNOME-Autostart-enabled=true\n");
-}
-
 QWidget *SettingsDialog::createGeneralPage()
 {
     const Settings &s = Settings::instance();
@@ -307,16 +287,25 @@ QWidget *SettingsDialog::createGeneralPage()
     auto *form = new QFormLayout(page);
     m_closeToTray = new QCheckBox(tr("Closing the window keeps kk-sip in the tray"), page);
     m_closeToTray->setChecked(s.closeToTray);
-    m_startHidden = new QCheckBox(tr("Start minimized to tray"), page);
-    m_startHidden->setChecked(s.startHidden);
     m_autostart = new QCheckBox(tr("Start with the system"), page);
-    m_autostart->setChecked(QFile::exists(autostartPath()));
+    m_autostart->setChecked(Autostart::isEnabled());
+    m_startHidden = new QCheckBox(tr("…straight to the tray, without the window"), page);
+    m_startHidden->setChecked(s.startHidden);
+    m_startHidden->setEnabled(m_autostart->isChecked());
+    m_startHidden->setContentsMargins(22, 0, 0, 0);
+    connect(m_autostart, &QCheckBox::toggled, m_startHidden, &QWidget::setEnabled);
     m_debugLog = new QCheckBox(tr("Write SIP debug log (restart needed)"), page);
     m_debugLog->setChecked(s.debugLog);
     m_sipPort = new QSpinBox(page);
     m_sipPort->setRange(0, 65535);
     m_sipPort->setSpecialValueText(tr("random"));
     m_sipPort->setValue(s.sipPort);
+    m_theme = new QComboBox(page);
+    m_theme->addItem(tr("Follow system"), QStringLiteral("system"));
+    m_theme->addItem(tr("Light"), QStringLiteral("light"));
+    m_theme->addItem(tr("Dark"), QStringLiteral("dark"));
+    m_theme->setCurrentIndex(qMax(0, m_theme->findData(s.theme)));
+    form->addRow(tr("Theme:"), m_theme);
     form->addRow(m_closeToTray);
     form->addRow(m_autostart);
     form->addRow(m_startHidden);
@@ -340,8 +329,11 @@ void SettingsDialog::commit()
     s.closeToTray = m_closeToTray->isChecked();
     s.startHidden = m_startHidden->isChecked();
     s.debugLog = m_debugLog->isChecked();
-    if (m_autostart->isChecked() != QFile::exists(autostartPath()))
-        setAutostart(m_autostart->isChecked());
+    if (s.theme != m_theme->currentData().toString()) {
+        s.theme = m_theme->currentData().toString();
+        Theme::apply(Theme::modeFromString(s.theme));
+    }
+    Autostart::setEnabled(m_autostart->isChecked(), s.startHidden);
     s.sipPort = m_sipPort->value();
     s.save();
 }

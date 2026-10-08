@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.kochevrin.kk_sip</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <name>kk-sip</name>
+  <summary>Minimal SIP softphone</summary>
+  <summary xml:lang="ru">Минималистичный SIP-телефон</summary>
+  <developer id="io.github.kochevrin">
+    <name>Konstantin Kochervrin</name>
+  </developer>
+  <description>
+    <p>A small SIP softphone in the spirit of MicroSIP: a compact window, many accounts registered at once with a quick switcher, call history with call back, and a phone book. Nothing else.</p>
+    <p xml:lang="ru">Компактный SIP-телефон по образцу MicroSIP: маленькое окно, много аккаунтов одновременно с быстрым переключением, история звонков с обратным вызовом и телефонная книга. Ничего лишнего.</p>
+    <ul>
+      <li>All accounts receive calls; pick the one for outgoing calls from a drop-down</li>
+      <li>Hold, mute, transfer, DTMF, incoming call popup, tray icon</li>
+      <li>Imports accounts and contacts from MicroSIP</li>
+      <li>Opens sip:, tel: and callto: links</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">kk-sip.desktop</launchable>
+  <url type="homepage">https://github.com/kochevrin/kk-sip</url>
+  <url type="bugtracker">https://github.com/kochevrin/kk-sip/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/kochevrin/kk-sip/main/docs/screenshots/overview.png</image>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Network</category>
+    <category>Telephony</category>
+  </categories>
+  <provides>
+    <binary>kk-sip</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-10-08"/>
+  </releases>
+</component>

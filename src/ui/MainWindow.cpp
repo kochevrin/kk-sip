@@ -11,6 +11,7 @@
 #include "ui/Icons.h"
 #include "ui/IncomingDialog.h"
 #include "ui/SettingsDialog.h"
+#include "ui/Theme.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -83,6 +84,7 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
     layout->addWidget(m_tabs, 1);
 
     m_status = new QLabel(this);
+    m_status->setObjectName(QStringLiteral("statusLabel"));
     m_status->setTextFormat(Qt::PlainText);
     m_status->setTextInteractionFlags(Qt::TextSelectableByMouse);
     QFont sf = m_status->font();
@@ -121,6 +123,10 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
         updateTray();
     });
     connect(m_engine, &SipEngine::incomingCall, this, &MainWindow::onIncoming);
+    connect(Theme::Notifier::instance(), &Theme::Notifier::changed, this, [this] {
+        updateAccountIcons();
+        m_history->reload();
+    });
     connect(m_engine, &SipEngine::callEnded, this, &MainWindow::onCallEnded);
 
     auto *settingsShortcut = new QShortcut(QKeySequence::Preferences, this);

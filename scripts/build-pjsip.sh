@@ -3,10 +3,14 @@
 # distro/AUR package. Re-run is a no-op once the install prefix exists.
 set -euo pipefail
 
+# Environment overrides (used by packaging):
+#   KKSIP_DEPS   where to put sources and the install prefix (default: <repo>/.deps)
+#   PJSIP_SRC    an already unpacked pjproject tree (makepkg, offline builds)
+#   PJSIP_LIBS_ONLY=1  skip pjsua and samples (packages don't need them; tests do)
 PJSIP_VERSION="${PJSIP_VERSION:-2.17}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DEPS="$ROOT/.deps"
-SRC="$DEPS/src/pjproject-$PJSIP_VERSION"
+DEPS="${KKSIP_DEPS:-$ROOT/.deps}"
+SRC="${PJSIP_SRC:-$DEPS/src/pjproject-$PJSIP_VERSION}"
 PREFIX="$DEPS/pjsip"
 
 if [[ -f "$PREFIX/lib/pkgconfig/libpjproject.pc" && "${1:-}" != "--force" ]]; then
@@ -16,6 +20,7 @@ fi
 
 mkdir -p "$DEPS/src"
 if [[ ! -d "$SRC" ]]; then
+    SRC="$DEPS/src/pjproject-$PJSIP_VERSION"
     curl -fL "https://github.com/pjsip/pjproject/archive/refs/tags/$PJSIP_VERSION.tar.gz" \
         | tar -xz -C "$DEPS/src"
 fi
@@ -45,6 +50,10 @@ CFLAGS="-O2 -fPIC" CXXFLAGS="-O2 -fPIC" ./configure \
     --disable-upnp
 
 make dep
-make -j"$(nproc)"
+if [[ "${PJSIP_LIBS_ONLY:-0}" == 1 ]]; then
+    make -j"$(nproc)" lib
+else
+    make -j"$(nproc)"
+fi
 make install
 echo "PJSIP $PJSIP_VERSION installed to $PREFIX"

@@ -5,6 +5,7 @@
 //   KKSIP_PJSUA         pjsua binary used as the remote party
 //   KKSIP_SCREENSHOTS   optional directory for PNG screenshots of the UI
 
+#include "core/Autostart.h"
 #include "core/Database.h"
 #include "core/MicrosipImport.h"
 #include "core/Settings.h"
@@ -16,6 +17,7 @@
 #include "ui/IncomingDialog.h"
 #include "ui/MainWindow.h"
 #include "ui/SettingsDialog.h"
+#include "ui/Theme.h"
 
 #include <QApplication>
 #include <QDir>
@@ -47,6 +49,7 @@ private slots:
     void incomingMissed();
     void manyAccounts();
     void dialSuggestion();
+    void autostart();
     void screenshots();
 
 private:
@@ -72,6 +75,7 @@ void SmokeTest::initTestCase()
                         QStringLiteral("_"), QStringLiteral(":/i18n")))
         QApplication::installTranslator(&translator);
 
+    Theme::apply(Theme::modeFromString(qEnvironmentVariable("KKSIP_THEME", QStringLiteral("dark"))));
     QStandardPaths::setTestModeEnabled(true);
     QDir(Settings::instance().configDir()).removeRecursively();
     QDir(Settings::instance().dataDir()).removeRecursively();
@@ -396,6 +400,27 @@ void SmokeTest::dialSuggestion()
     field->setText(QStringLiteral("05"));
     QVERIFY(!hint->isVisible()); // no contact starts with 05; 405-style substrings don't match
     field->clear();
+}
+
+void SmokeTest::autostart()
+{
+    // Test mode redirects ~/.config to ~/.qttest/config, the real autostart is untouched.
+    Autostart::setEnabled(false, true);
+    QVERIFY(!Autostart::isEnabled());
+    Autostart::setEnabled(true, true);
+    QVERIFY(Autostart::isEnabled());
+    QFile entry(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+                + QStringLiteral("/autostart/kk-sip.desktop"));
+    QVERIFY(entry.open(QIODevice::ReadOnly));
+    const QString text = QString::fromUtf8(entry.readAll());
+    entry.close();
+    QVERIFY(text.contains(QStringLiteral("Exec=") + Autostart::command() + QStringLiteral(" --minimized")));
+    Autostart::setEnabled(true, false);
+    entry.open(QIODevice::ReadOnly);
+    QVERIFY(!QString::fromUtf8(entry.readAll()).contains(QLatin1String("--minimized")));
+    entry.close();
+    Autostart::setEnabled(false, true);
+    QVERIFY(!Autostart::isEnabled());
 }
 
 void SmokeTest::screenshots()

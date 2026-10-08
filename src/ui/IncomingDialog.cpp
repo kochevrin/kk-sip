@@ -36,7 +36,7 @@ IncomingDialog::IncomingDialog(SipEngine *engine, int callId, const QString &cal
     }
     auto *acc = new QLabel(tr("to %1").arg(accountTitle), this);
     acc->setAlignment(Qt::AlignCenter);
-    acc->setEnabled(false);
+    acc->setObjectName(QStringLiteral("muted"));
     layout->addWidget(acc);
     layout->addSpacing(8);
 
@@ -45,10 +45,8 @@ IncomingDialog::IncomingDialog(SipEngine *engine, int callId, const QString &cal
     auto *reject = new QPushButton(Icons::hangupWhite(), tr("Reject"), this);
     answer->setMinimumHeight(36);
     reject->setMinimumHeight(36);
-    answer->setStyleSheet(QStringLiteral(
-        "QPushButton { background: #2eb84b; color: white; font-weight: bold; border-radius: 6px; padding: 0 16px; }"));
-    reject->setStyleSheet(QStringLiteral(
-        "QPushButton { background: #d93f3f; color: white; font-weight: bold; border-radius: 6px; padding: 0 16px; }"));
+    answer->setObjectName(QStringLiteral("answerButton"));
+    reject->setObjectName(QStringLiteral("hangupButton"));
     buttons->addWidget(answer);
     buttons->addWidget(reject);
     layout->addLayout(buttons);

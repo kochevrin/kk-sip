@@ -56,9 +56,10 @@ void Settings::load()
     playbackDevice = ini.value("playbackDevice").toString();
     ringtoneFile = ini.value("ringtone").toString();
     closeToTray = ini.value("closeToTray", true).toBool();
-    startHidden = ini.value("startHidden", false).toBool();
+    startHidden = ini.value("startHidden", true).toBool();
     doNotDisturb = ini.value("doNotDisturb", false).toBool();
     debugLog = ini.value("debugLog", false).toBool();
+    theme = ini.value("theme", "system").toString();
     sipPort = ini.value("sipPort", 0).toInt();
     windowGeometry = ini.value("geometry").toByteArray();
     codecs.clear();
@@ -113,6 +114,7 @@ void Settings::save() const
         ini.setValue("startHidden", startHidden);
         ini.setValue("doNotDisturb", doNotDisturb);
         ini.setValue("debugLog", debugLog);
+        ini.setValue("theme", theme);
         ini.setValue("sipPort", sipPort);
         ini.setValue("geometry", windowGeometry);
         QStringList codecList;

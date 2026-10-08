@@ -15,7 +15,7 @@ CallPanel::CallPanel(SipEngine *engine, NameLookup lookup, QWidget *parent)
     , m_engine(engine)
     , m_lookup(std::move(lookup))
 {
-    setFrameShape(QFrame::StyledPanel);
+    setObjectName(QStringLiteral("callPanel"));
     m_layout = new QVBoxLayout(this);
     m_layout->setContentsMargins(8, 6, 8, 6);
     m_layout->setSpacing(6);
@@ -99,12 +99,8 @@ CallPanel::Row *CallPanel::createRow(int callId)
                                 row->widget);
     row->hangup = smallButton(Icons::hangupWhite(), tr("Hang up"),
                               tr("Hang up"), row->widget);
-    row->hangup->setStyleSheet(QStringLiteral(
-        "QPushButton { background: #d93f3f; color: white; border-radius: 4px; padding: 0 10px; }"
-        "QPushButton:hover { background: #c43434; }"));
-    row->answer->setStyleSheet(QStringLiteral(
-        "QPushButton { background: #2eb84b; color: white; border-radius: 4px; padding: 0 10px; }"
-        "QPushButton:hover { background: #29a744; }"));
+    row->hangup->setObjectName(QStringLiteral("hangupButton"));
+    row->answer->setObjectName(QStringLiteral("answerButton"));
 
     buttons->addWidget(row->answer);
     buttons->addWidget(row->mute);

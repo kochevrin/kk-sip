@@ -1,0 +1,34 @@
+# Maintainer: Konstantin Kochervrin <k.ko4evrin@gmail.com>
+pkgname=kk-sip
+pkgver=0.1.0
+pkgrel=1
+_pjsipver=2.17
+pkgdesc="Minimal MicroSIP-style SIP softphone (Qt 6 + PJSIP)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/kochevrin/kk-sip"
+license=('GPL-2.0-or-later')
+depends=('qt6-base' 'qt6-svg' 'opus' 'openssl' 'alsa-lib' 'util-linux-libs' 'hicolor-icon-theme')
+makedepends=('cmake' 'qt6-tools')
+optdepends=('pipewire-alsa: route calls through PipeWire'
+            'pulseaudio-alsa: route calls through PulseAudio')
+# PJSIP is linked statically: distro builds of pjproject differ in limits (accounts) and codecs.
+source=("$pkgname-$pkgver.tar.gz::https://github.com/kochevrin/kk-sip/archive/refs/tags/v$pkgver.tar.gz"
+        "pjproject-$_pjsipver.tar.gz::https://github.com/pjsip/pjproject/archive/refs/tags/$_pjsipver.tar.gz")
+sha256sums=('SKIP'
+            '065fe06c06788d97c35f563796d59f00ce52fe9558a52d7b490a042a966facce')
+
+build() {
+    cd "$pkgname-$pkgver"
+    KKSIP_DEPS="$srcdir/deps" PJSIP_SRC="$srcdir/pjproject-$_pjsipver" PJSIP_LIBS_ONLY=1 \
+        scripts/build-pjsip.sh
+    cmake -B build -S . \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DKKSIP_PJSIP_PREFIX="$srcdir/deps/pjsip"
+    cmake --build build
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    DESTDIR="$pkgdir" cmake --install build
+}

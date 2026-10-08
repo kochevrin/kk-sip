@@ -46,9 +46,10 @@ public:
     QList<CodecSetting> codecs; // ordered by priority, empty = PJSIP defaults
 
     bool closeToTray = true;
-    bool startHidden = false;
+    bool startHidden = true;   // autostart goes straight to the tray
     bool doNotDisturb = false;
     bool debugLog = false;
+    QString theme = QStringLiteral("system"); // system | light | dark
     int sipPort = 0;        // 0 = random local port
 
     QByteArray windowGeometry;

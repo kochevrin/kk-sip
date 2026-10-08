@@ -30,6 +30,7 @@ add_library(kk-sip-core OBJECT
     src/core/SipUri.h src/core/SipUri.cpp
     src/core/SingleInstance.h src/core/SingleInstance.cpp
     src/core/MicrosipImport.h src/core/MicrosipImport.cpp
+    src/core/Autostart.h src/core/Autostart.cpp
     src/sip/SipEngine.h src/sip/SipEngine.cpp
     src/ui/MainWindow.h src/ui/MainWindow.cpp
     src/ui/DialerTab.h src/ui/DialerTab.cpp
@@ -40,6 +41,7 @@ add_library(kk-sip-core OBJECT
     src/ui/SettingsDialog.h src/ui/SettingsDialog.cpp
     src/ui/AccountDialog.h src/ui/AccountDialog.cpp
     src/ui/Icons.h src/ui/Icons.cpp
+    src/ui/Theme.h src/ui/Theme.cpp
     resources/resources.qrc
 )
 target_include_directories(kk-sip-core PUBLIC src)
@@ -51,11 +53,19 @@ target_link_libraries(kk-sip-core PUBLIC ${PJSIP_STATIC_LDFLAGS})
 qt_add_executable(kk-sip src/main.cpp)
 target_link_libraries(kk-sip PRIVATE kk-sip-core)
 
-qt_add_translations(kk-sip-core
-    TS_FILES translations/kk-sip_ru.ts
-    SOURCE_TARGETS kk-sip kk-sip-core
-    RESOURCE_PREFIX /i18n
-)
+if(Qt6_VERSION VERSION_GREATER_EQUAL 6.7)
+    qt_add_translations(kk-sip-core
+        TS_FILES translations/kk-sip_ru.ts
+        SOURCE_TARGETS kk-sip kk-sip-core
+        RESOURCE_PREFIX /i18n
+    )
+else()
+    # Qt 6.4-6.6 (Ubuntu 24.04, Debian 12): no SOURCE_TARGETS; lupdate then misses main.cpp only.
+    qt_add_translations(kk-sip-core
+        TS_FILES translations/kk-sip_ru.ts
+        RESOURCE_PREFIX /i18n
+    )
+endif()
 
 option(KKSIP_BUILD_TESTS "Build the smoke test (needs a SIP server, see tests/README.md)" OFF)
 if(KKSIP_BUILD_TESTS)
@@ -68,3 +78,23 @@ include(GNUInstallDirs)
 install(TARGETS kk-sip RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES packaging/kk-sip.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 install(FILES resources/icons/kk-sip.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+foreach(size 16 22 24 32 48 64 128 256 512)
+    install(FILES resources/icons/hicolor/${size}x${size}/kk-sip.png
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/${size}x${size}/apps)
+endforeach()
+install(FILES packaging/kk-sip.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo)
+install(FILES LICENSE THIRD-PARTY.md DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/kk-sip)
+
+# .deb via `cpack -G DEB` (packaging/linux/build-ubuntu.sh)
+set(CPACK_PACKAGE_NAME kk-sip)
+set(CPACK_PACKAGE_VENDOR "Konstantin Kochervrin")
+set(CPACK_PACKAGE_CONTACT "Konstantin Kochervrin <k.ko4evrin@gmail.com>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Minimal MicroSIP-style SIP softphone")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/kochevrin/kk-sip")
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_PACKAGE_SECTION comm)
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+# Plugins are loaded at runtime, shlibdeps can't see them.
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6svg6, libqt6sql6-sqlite, qt6-qpa-plugins")
+include(CPack)
+

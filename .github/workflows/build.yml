@@ -1,0 +1,92 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          packaging/linux/build-ubuntu.sh --install-deps --deps-only
+          sudo apt-get install -y --no-install-recommends qt6-qpa-plugins
+
+      - uses: actions/cache@v4
+        with:
+          path: .deps
+          key: pjsip-full-${{ runner.os }}-${{ hashFiles('scripts/build-pjsip.sh') }}
+
+      # Builds PJSIP (with pjsua as the remote party), the app and the smoke test,
+      # then runs it against Asterisk in Docker.
+      - name: Smoke test
+        env:
+          KKSIP_SCREENSHOTS: ${{ github.workspace }}/screenshots
+        run: scripts/smoke-test.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots
+          if-no-files-found: ignore
+
+  ubuntu:
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build .deb and AppImage
+        run: packaging/linux/build-ubuntu.sh --install-deps
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-packages
+          path: dist/*
+
+  arch:
+    needs: test
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed git cmake qt6-base qt6-svg qt6-tools opus openssl alsa-lib util-linux-libs hicolor-icon-theme
+          useradd -m builder
+      - uses: actions/checkout@v4
+      - name: makepkg
+        run: |
+          ver=$(sed -n 's/^pkgver=//p' packaging/arch/PKGBUILD)
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # Use this checkout instead of the tag tarball the PKGBUILD normally downloads.
+          git archive --prefix="kk-sip-$ver/" -o "packaging/arch/kk-sip-$ver.tar.gz" HEAD
+          chown -R builder packaging/arch
+          cd packaging/arch
+          su builder -c "makepkg --noconfirm"
+          mkdir -p "$GITHUB_WORKSPACE/dist" && mv ./*.pkg.tar.zst "$GITHUB_WORKSPACE/dist/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch-package
+          path: dist/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ubuntu, arch]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: kk-sip ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/*

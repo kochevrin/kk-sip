@@ -3,6 +3,7 @@
 #include "core/Settings.h"
 #include "ui/ContactsTab.h"
 #include "ui/Icons.h"
+#include "ui/Theme.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -101,7 +102,7 @@ void HistoryTab::reload()
             (name.isEmpty() ? e.number : name) + QLatin1Char('\n') + details.join(QStringLiteral(" · ")));
         item->setIcon(e.status == HistoryEntry::Missed ? missedIcon : e.incoming ? inIcon : outIcon);
         if (e.status == HistoryEntry::Missed)
-            item->setForeground(QColor(0xd9, 0x3f, 0x3f));
+            item->setForeground(Theme::colors().danger);
         m_list->addItem(item);
     }
 }

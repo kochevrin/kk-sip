@@ -3,13 +3,59 @@
 #include "core/Database.h"
 #include "core/SipUri.h"
 #include "ui/Icons.h"
+#include "ui/Theme.h"
 
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QStyleOptionButton>
+#include <QStylePainter>
 #include <QToolButton>
 #include <QVBoxLayout>
+
+namespace {
+
+// Phone-style key: large digit with small muted letters under it.
+class KeypadButton : public QPushButton {
+public:
+    KeypadButton(const QString &digit, const QString &letters, QWidget *parent)
+        : QPushButton(digit, parent), m_letters(letters) {}
+
+protected:
+    void paintEvent(QPaintEvent *) override
+    {
+        QStylePainter p(this);
+        QStyleOptionButton opt;
+        initStyleOption(&opt);
+        opt.text.clear();
+        p.drawControl(QStyle::CE_PushButtonBevel, opt);
+
+        QFont digitFont = font();
+        digitFont.setPointSizeF(font().pointSizeF() * (height() < 52 ? 1.35 : 1.6));
+        QFont letterFont = font();
+        letterFont.setPointSizeF(font().pointSizeF() * 0.72);
+        const QFontMetrics dm(digitFont);
+        const QFontMetrics lm(letterFont);
+        const int total = dm.ascent() + (m_letters.isEmpty() ? 0 : lm.height());
+        const int top = (height() - total) / 2;
+
+        p.setFont(digitFont);
+        p.setPen(palette().color(QPalette::ButtonText));
+        p.drawText(QRect(0, top, width(), dm.ascent() + 2), Qt::AlignHCenter | Qt::AlignBottom, text());
+        if (!m_letters.isEmpty()) {
+            p.setFont(letterFont);
+            p.setPen(Theme::colors().muted);
+            p.drawText(QRect(0, top + dm.ascent() + 1, width(), lm.height()), Qt::AlignHCenter | Qt::AlignTop,
+                       m_letters);
+        }
+    }
+
+private:
+    QString m_letters;
+};
+
+} // namespace
 
 DialerTab::DialerTab(Database *db, QWidget *parent)
     : QWidget(parent)
@@ -43,7 +89,7 @@ DialerTab::DialerTab(Database *db, QWidget *parent)
     m_suggestion->setFlat(true);
     m_suggestion->setFocusPolicy(Qt::NoFocus);
     m_suggestion->setCursor(Qt::PointingHandCursor);
-    m_suggestion->setStyleSheet(QStringLiteral("QPushButton { text-align: left; padding: 0 4px; }"));
+    m_suggestion->setObjectName(QStringLiteral("suggestion"));
     m_suggestion->setToolTip(tr("Click to use this number"));
     m_suggestion->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     // Keep the slot even when empty so the keypad doesn't jump while typing.
@@ -76,13 +122,11 @@ DialerTab::DialerTab(Database *db, QWidget *parent)
     for (int i = 0; i < 12; ++i) {
         const QString key = QString::fromLatin1(keys[i][0]);
         const QString sub = QString::fromLatin1(keys[i][1]);
-        auto *b = new QPushButton(sub.isEmpty() ? key : key + QLatin1Char('\n') + sub, this);
+        auto *b = new KeypadButton(key, sub, this);
+        b->setObjectName(QStringLiteral("keypadKey"));
         b->setFocusPolicy(Qt::NoFocus);
         b->setMinimumHeight(46);
         b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        QFont bf = b->font();
-        bf.setPointSizeF(bf.pointSizeF() * (sub.isEmpty() ? 1.3 : 1.0));
-        b->setFont(bf);
         connect(b, &QPushButton::clicked, this, [this, key] { emit keyPressed(key); });
         grid->addWidget(b, i / 3, i % 3);
     }
@@ -90,10 +134,7 @@ DialerTab::DialerTab(Database *db, QWidget *parent)
 
     m_callButton = new QPushButton(Icons::callWhite(), tr("Call"), this);
     m_callButton->setMinimumHeight(42);
-    m_callButton->setStyleSheet(QStringLiteral(
-        "QPushButton { background: #2eb84b; color: white; font-weight: bold; border-radius: 6px; }"
-        "QPushButton:hover { background: #29a744; }"
-        "QPushButton:pressed { background: #23903a; }"));
+    m_callButton->setObjectName(QStringLiteral("callButton"));
     connect(m_callButton, &QPushButton::clicked, this, &DialerTab::requestCall);
     connect(m_number, &QLineEdit::returnPressed, this, &DialerTab::requestCall);
     layout->addWidget(m_callButton);

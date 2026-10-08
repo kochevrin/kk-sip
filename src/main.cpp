@@ -1,3 +1,4 @@
+#include "core/Autostart.h"
 #include "core/Database.h"
 #include "core/MicrosipImport.h"
 #include "core/Settings.h"
@@ -5,8 +6,10 @@
 #include "sip/SipEngine.h"
 #include "ui/Icons.h"
 #include "ui/MainWindow.h"
+#include "ui/Theme.h"
 
 #include <QApplication>
+#include <memory>
 #include <QCommandLineParser>
 #include <QDir>
 #include <QFile>
@@ -31,12 +34,13 @@ static int importMicrosip(const QString &folder)
     QTextStream out(stdout);
     const QDir dir(folder);
     if (SingleInstance().forwardToRunning(QStringLiteral("show"))) {
-        out << QApplication::translate("main", "Quit kk-sip first, then run the import again.") << Qt::endl;
+        out << QCoreApplication::translate("main", "Quit kk-sip first, then run the import again.") << Qt::endl;
         return 1;
     }
 
     Settings &settings = Settings::instance();
     settings.load();
+    Theme::apply(Theme::modeFromString(settings.theme));
     Database db;
     QString error;
     if (!db.open(&error)) {
@@ -51,11 +55,11 @@ static int importMicrosip(const QString &folder)
         if (settings.currentAccountId.isEmpty() && !settings.accounts.isEmpty())
             settings.currentAccountId = settings.accounts.first().id;
         settings.save();
-        out << QApplication::translate("main", "Accounts: %1 found, %2 added (disabled until you enter passwords).")
+        out << QCoreApplication::translate("main", "Accounts: %1 found, %2 added (disabled until you enter passwords).")
                    .arg(found.size()).arg(added)
             << Qt::endl;
     } else {
-        out << QApplication::translate("main", "microsip.ini not found in %1").arg(dir.absolutePath()) << Qt::endl;
+        out << QCoreApplication::translate("main", "microsip.ini not found in %1").arg(dir.absolutePath()) << Qt::endl;
     }
 
     const QString xml = findFile(dir, QStringLiteral("contacts.xml"));
@@ -63,44 +67,64 @@ static int importMicrosip(const QString &folder)
     if (!xml.isEmpty() && file.open(QIODevice::ReadOnly)) {
         const QList<Contact> found = MicrosipImport::readContacts(&file);
         const int added = MicrosipImport::mergeContacts(&db, found);
-        out << QApplication::translate("main", "Contacts: %1 found, %2 added.").arg(found.size()).arg(added)
+        out << QCoreApplication::translate("main", "Contacts: %1 found, %2 added.").arg(found.size()).arg(added)
             << Qt::endl;
     } else {
-        out << QApplication::translate("main", "Contacts.xml not found in %1").arg(dir.absolutePath()) << Qt::endl;
+        out << QCoreApplication::translate("main", "Contacts.xml not found in %1").arg(dir.absolutePath()) << Qt::endl;
     }
     return 0;
 }
 
+// --help, --version and --import-microsip must work without a display (ssh, scripts).
+static bool needsGui(int argc, char *argv[])
+{
+    for (int i = 1; i < argc; ++i) {
+        const QByteArray a(argv[i]);
+        if (a == "-h" || a == "--help" || a == "--help-all" || a == "-v" || a == "--version"
+            || a.startsWith("--import-microsip"))
+            return false;
+    }
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
-    QApplication::setApplicationName(QStringLiteral("kk-sip"));
-    QApplication::setApplicationVersion(QStringLiteral(KKSIP_VERSION));
-    QApplication::setDesktopFileName(QStringLiteral("kk-sip"));
-    QApplication::setWindowIcon(Icons::app());
-    QApplication::setQuitOnLastWindowClosed(false);
+    const bool gui = needsGui(argc, argv);
+    std::unique_ptr<QCoreApplication> appHolder(gui ? new QApplication(argc, argv)
+                                                    : new QCoreApplication(argc, argv));
+    QCoreApplication &app = *appHolder;
+    QCoreApplication::setApplicationName(QStringLiteral("kk-sip"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(KKSIP_VERSION));
+    if (gui) {
+        QGuiApplication::setDesktopFileName(QStringLiteral("kk-sip"));
+        QApplication::setWindowIcon(Icons::app());
+        QApplication::setQuitOnLastWindowClosed(false);
+    }
 
     QTranslator qtTranslator;
     if (qtTranslator.load(QLocale(), QStringLiteral("qtbase"), QStringLiteral("_"),
                           QLibraryInfo::path(QLibraryInfo::TranslationsPath)))
-        QApplication::installTranslator(&qtTranslator);
+        QCoreApplication::installTranslator(&qtTranslator);
     QTranslator appTranslator;
     if (appTranslator.load(QLocale(), QStringLiteral("kk-sip"), QStringLiteral("_"), QStringLiteral(":/i18n")))
-        QApplication::installTranslator(&appTranslator);
+        QCoreApplication::installTranslator(&appTranslator);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QApplication::translate("main", "Minimal SIP softphone"));
+    parser.setApplicationDescription(QCoreApplication::translate("main", "Minimal SIP softphone"));
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addPositionalArgument(QStringLiteral("number"),
-                                 QApplication::translate("main", "Number or sip:/tel: link to call"),
+                                 QCoreApplication::translate("main", "Number or sip:/tel: link to call"),
                                  QStringLiteral("[number]"));
     const QCommandLineOption importOption(
         QStringLiteral("import-microsip"),
-        QApplication::translate("main", "Import accounts (microsip.ini) and contacts (Contacts.xml) from a MicroSIP "
+        QCoreApplication::translate("main", "Import accounts (microsip.ini) and contacts (Contacts.xml) from a MicroSIP "
                                         "folder, then exit. kk-sip must not be running."),
         QStringLiteral("folder"));
     parser.addOption(importOption);
+    const QCommandLineOption minimizedOption(
+        QStringLiteral("minimized"), QCoreApplication::translate("main", "Start in the tray without showing the window"));
+    parser.addOption(minimizedOption);
     parser.process(app);
     const QString target = parser.positionalArguments().value(0);
 
@@ -114,26 +138,29 @@ int main(int argc, char *argv[])
 
     Settings &settings = Settings::instance();
     settings.load();
+    Theme::apply(Theme::modeFromString(settings.theme));
 
     Database db;
     QString error;
     if (!db.open(&error)) {
         QMessageBox::critical(nullptr, QStringLiteral("kk-sip"),
-                              QApplication::translate("main", "Cannot open database: %1").arg(error));
+                              QCoreApplication::translate("main", "Cannot open database: %1").arg(error));
         return 1;
     }
 
     SipEngine engine;
     if (!engine.start(&error)) {
         QMessageBox::critical(nullptr, QStringLiteral("kk-sip"),
-                              QApplication::translate("main", "Cannot start SIP stack: %1").arg(error));
+                              QCoreApplication::translate("main", "Cannot start SIP stack: %1").arg(error));
         return 1;
     }
     engine.applyAccounts(settings.accounts);
 
     MainWindow window(&engine, &db);
     QObject::connect(&instance, &SingleInstance::messageReceived, &window, &MainWindow::handleExternal);
-    if (!settings.startHidden || !target.isEmpty())
+    Autostart::refresh(settings.startHidden);
+    // Autostart passes --minimized; a manual launch or a first run without accounts shows the window.
+    if (!parser.isSet(minimizedOption) || !target.isEmpty() || settings.accounts.isEmpty())
         window.show();
     if (!target.isEmpty())
         window.handleExternal(QStringLiteral("dial ") + target);

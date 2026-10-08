@@ -1,9 +1,10 @@
 <p align="center">
-  <img src="resources/icons/kk-sip.svg" alt="kk-sip logo" width="96">
+  <img src="docs/logo.png" alt="kk-sip logo" width="112">
 </p>
 
 # kk-sip
 
+[![Build](https://github.com/kochevrin/kk-sip/actions/workflows/build.yml/badge.svg)](https://github.com/kochevrin/kk-sip/actions/workflows/build.yml)
 [![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](LICENSE)
 
 A minimal SIP softphone for Linux in the spirit of [MicroSIP](https://www.microsip.org):
@@ -30,7 +31,9 @@ uses) and Qt 6.
 - UDP / TCP / TLS, optional SRTP, outbound proxy, separate auth ID and domain
 - Codecs: Opus, G.722, G.711 (PCMA/PCMU), GSM, Speex, iLBC; order and on/off
   are set in Settings
-- Do-not-disturb mode, custom WAV ringtone, start with the system
+- Do-not-disturb mode, custom WAV ringtone
+- Starts with the system straight into the tray (optional)
+- Light and dark theme in the kk family style, follows the system or set by hand
 - Opens `sip:`, `tel:` and `callto:` links (`kk-sip tel:+380...`); a second launch
   hands the number to the running instance
 - English and Russian UI
@@ -40,6 +43,29 @@ uses) and Qt 6.
   &nbsp;
   <img src="docs/screenshots/settings.png" alt="Settings" width="440">
 </p>
+
+## Install
+
+Packages are attached to every [release](https://github.com/kochevrin/kk-sip/releases):
+
+| System | File | Install |
+|---|---|---|
+| Arch, EndeavourOS, Manjaro | `kk-sip-<ver>-1-x86_64.pkg.tar.zst` | `sudo pacman -U kk-sip-*.pkg.tar.zst` |
+| Ubuntu 24.04+, Debian 13+ | `kk-sip_<ver>_amd64.deb` | `sudo apt install ./kk-sip_*_amd64.deb` |
+| Any other distribution | `kk-sip-<ver>-x86_64.AppImage` | `chmod +x kk-sip-*.AppImage` and run it |
+
+After installing, kk-sip shows up in the application menu. To start it with the
+system, use ☰ → Settings → General → *Start with the system*.
+
+Moving from MicroSIP? Copy `microsip.ini` and `Contacts.xml` from the Windows
+machine (`%APPDATA%\MicroSIP`, or the MicroSIP folder for the portable version), then run
+
+```sh
+kk-sip --import-microsip /path/to/that/folder
+```
+
+MicroSIP encrypts passwords with a Windows key, so accounts arrive switched off.
+Pick one and press *Call*, and kk-sip asks for its password.
 
 ## Build
 
@@ -54,9 +80,10 @@ cmake --build build -j"$(nproc)"
 ./build/kk-sip
 ```
 
-Debian / Ubuntu: `sudo apt install build-essential cmake qt6-base-dev
-qt6-tools-dev qt6-l10n-tools libqt6svg6 libopus-dev libssl-dev libasound2-dev
-uuid-dev pkg-config`, then the same steps.
+Debian / Ubuntu: `packaging/linux/build-ubuntu.sh --install-deps` installs the
+dependencies and produces the `.deb` and the AppImage in `dist/`.
+
+Arch package of the latest tagged release: `cd packaging/arch && makepkg -si`.
 
 If you would rather use a system PJSIP (for example the AUR `pjproject`
 package), skip `build-pjsip.sh`. CMake picks up `libpjproject` through
@@ -72,6 +99,7 @@ sudo cmake --install build
 
 | What | Path |
 |---|---|
+| Autostart entry (when enabled) | `~/.config/autostart/kk-sip.desktop` |
 | Settings and accounts | `~/.config/kk-sip/kk-sip.ini` (mode 600; passwords are stored in plain text) |
 | History and contacts | `~/.local/share/kk-sip/kk-sip.db` (SQLite) |
 | SIP debug log (when enabled) | `~/.local/share/kk-sip/pjsip.log` |

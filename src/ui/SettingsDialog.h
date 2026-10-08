@@ -45,4 +45,5 @@ private:
     QCheckBox *m_autostart = nullptr;
     QCheckBox *m_debugLog = nullptr;
     QSpinBox *m_sipPort = nullptr;
+    QComboBox *m_theme = nullptr;
 };

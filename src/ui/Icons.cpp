@@ -1,5 +1,7 @@
 #include "ui/Icons.h"
 
+#include "ui/Theme.h"
+
 #include <QPainter>
 #include <QPixmap>
 
@@ -36,15 +38,15 @@ QIcon status(RegState state)
 {
     switch (state) {
     case RegState::Online:
-        return dot(QColor(0x2e, 0xb8, 0x4b));
+        return dot(Theme::colors().ok);
     case RegState::Registering:
-        return dot(QColor(0xf0, 0xb4, 0x29));
+        return dot(Theme::colors().warn);
     case RegState::Failed:
-        return dot(QColor(0xd9, 0x3f, 0x3f));
+        return dot(Theme::colors().danger);
     case RegState::Disabled:
         break;
     }
-    return dot(QColor(0x9a, 0x9a, 0x9a));
+    return dot(Theme::colors().muted);
 }
 
 QIcon get(const QString &themeName, const QString &fallback)
