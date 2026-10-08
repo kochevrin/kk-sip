@@ -9,6 +9,10 @@ SingleInstance::SingleInstance(QObject *parent)
     : QObject(parent)
     , m_name(QStringLiteral("kk-sip-%1").arg(getuid()))
 {
+    // A second, separate instance (testing, a second profile with its own XDG dirs).
+    const QString instance = qEnvironmentVariable("KKSIP_INSTANCE");
+    if (!instance.isEmpty())
+        m_name += QLatin1Char('-') + instance;
 }
 
 bool SingleInstance::forwardToRunning(const QString &message)

@@ -50,7 +50,10 @@ void Settings::load()
 {
     QSettings ini(iniPath(), QSettings::IniFormat);
 
-    ini.beginGroup(QStringLiteral("general"));
+    // Versions up to 0.1.0 wrote the group as "general", which QSettings stores as
+    // [%General] and then reads back only as "General": the values never loaded.
+    ini.beginGroup(ini.childGroups().contains(QStringLiteral("app")) ? QStringLiteral("app")
+                                                                     : QStringLiteral("General"));
     currentAccountId = ini.value("currentAccount").toString();
     captureDevice = ini.value("captureDevice").toString();
     playbackDevice = ini.value("playbackDevice").toString();
@@ -107,7 +110,7 @@ void Settings::save() const
         QSettings ini(iniPath(), QSettings::IniFormat);
         ini.clear();
 
-        ini.beginGroup(QStringLiteral("general"));
+        ini.beginGroup(QStringLiteral("app"));
         ini.setValue("currentAccount", currentAccountId);
         ini.setValue("captureDevice", captureDevice);
         ini.setValue("playbackDevice", playbackDevice);

@@ -43,6 +43,7 @@ private slots:
     void initTestCase();
     void cleanupTestCase();
     void sipUri();
+    void settingsRoundTrip();
     void microsipImport();
     void audioDevices();
     void registration();
@@ -126,6 +127,45 @@ void SmokeTest::cleanupTestCase()
     m_window.reset();
     if (m_engine)
         m_engine->shutdown();
+}
+
+void SmokeTest::settingsRoundTrip()
+{
+    Settings &s = Settings::instance();
+    const Settings saved = s;
+    s.currentAccountId = m_acc102.id;
+    s.theme = QStringLiteral("light");
+    s.debugLog = true;
+    s.doNotDisturb = true;
+    s.codecs = {{QStringLiteral("PCMA/8000/1"), true}, {QStringLiteral("opus/48000/2"), false}};
+    s.save();
+
+    s.currentAccountId.clear();
+    s.theme.clear();
+    s.debugLog = false;
+    s.doNotDisturb = false;
+    s.codecs.clear();
+    s.load();
+    QCOMPARE(s.currentAccountId, m_acc102.id);
+    QCOMPARE(s.theme, QStringLiteral("light"));
+    QVERIFY(s.debugLog);
+    QVERIFY(s.doNotDisturb);
+    QCOMPARE(s.codecs.size(), 2);
+    QCOMPARE(s.codecs.at(1).id, QStringLiteral("opus/48000/2"));
+    QVERIFY(!s.codecs.at(1).enabled);
+
+    // Files written by 0.1.0 keep their values ([%General] group).
+    const QString path = s.configDir() + QStringLiteral("/kk-sip.ini");
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    f.write("[%General]\ncurrentAccount=legacy\ntheme=dark\n");
+    f.close();
+    s.load();
+    QCOMPARE(s.currentAccountId, QStringLiteral("legacy"));
+    QCOMPARE(s.theme, QStringLiteral("dark"));
+
+    s = saved;
+    s.save();
 }
 
 void SmokeTest::sipUri()
