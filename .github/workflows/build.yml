@@ -139,7 +139,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: brew install ninja pkgconf qt opus openssl@3
+        run: brew install ninja pkgconf qtbase qtsvg qttools qttranslations opus openssl@3
 
       - uses: actions/cache@v4
         with:

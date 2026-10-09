@@ -18,7 +18,9 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 TESTS=OFF
 for arg in "$@"; do
     case "$arg" in
-    --install-deps) brew install cmake ninja pkgconf qt opus openssl@3 ;;
+    # Only the Qt modules kk-sip uses: the "qt" meta package pulls in every module,
+    # and macdeployqt then ships their plugins too.
+    --install-deps) brew install cmake ninja pkgconf qtbase qtsvg qttools qttranslations opus openssl@3 ;;
     --tests) TESTS=ON ;;
     *) echo "unknown option $arg" >&2; exit 1 ;;
     esac
@@ -36,7 +38,7 @@ PJSIP_LIBS_ONLY=1 "$ROOT/scripts/build-pjsip.sh"
 
 BUILD="$ROOT/build-mac"
 cmake -G Ninja -S "$ROOT" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release -DKKSIP_BUILD_TESTS=$TESTS \
-    -DCMAKE_PREFIX_PATH="$(brew --prefix qt)"
+    -DCMAKE_PREFIX_PATH="$BREW"
 cmake --build "$BUILD"
 
 VERSION="$(sed -n 's/^project(kk-sip VERSION \([0-9.]*\).*/\1/p' "$ROOT/CMakeLists.txt")"
@@ -49,7 +51,8 @@ cp "$ROOT/LICENSE" "$ROOT/THIRD-PARTY.md" "$APP/Contents/Resources/"
 
 # Copies Qt frameworks, plugins and the Homebrew dylibs (opus, OpenSSL...) into the bundle.
 MACDEPLOYQT="$(command -v macdeployqt6 || command -v macdeployqt)"
-"$MACDEPLOYQT" "$APP"
+# Each Qt module is its own Homebrew keg; -libpath lets it resolve @rpath across them.
+"$MACDEPLOYQT" "$APP" -libpath="$BREW/lib"
 # Only SQLite is used; the other SQL drivers would drag in client libraries.
 find "$APP/Contents/PlugIns/sqldrivers" -name '*.dylib' ! -name 'libqsqlite.dylib' -delete
 
@@ -62,9 +65,28 @@ for lang in ru uk; do
 done
 printf "\nTranslations = Resources/translations\n" >> "$APP/Contents/Resources/qt.conf"
 
+# Everything the bundle loads must be inside it or part of macOS.
+missing=0
+while IFS= read -r bin; do
+    while IFS= read -r dep; do
+        case "$dep" in
+        /System/* | /usr/lib/*) ;;
+        @rpath/* | @executable_path/../Frameworks/*)
+            [[ -e "$APP/Contents/Frameworks/${dep#*/Frameworks/}" || -e "$APP/Contents/Frameworks/${dep#@rpath/}" ]] \
+                || { echo "missing $dep (needed by ${bin#$APP/})"; missing=1; } ;;
+        @loader_path/*) ;;
+        *) echo "outside the bundle: $dep (needed by ${bin#$APP/})"; missing=1 ;;
+        esac
+    done < <(otool -L "$bin" | tail -n +2 | awk '{print $1}')
+done < <(find "$APP/Contents" -type f \( -name '*.dylib' -o -perm -u+x \) -exec sh -c 'file -b "$1" | grep -q Mach-O' _ {} \; -print)
+[[ $missing == 0 ]] || exit 1
+
 # Apple Silicon refuses to run unsigned code; an ad hoc signature is enough for that.
 codesign --force --deep --sign - "$APP"
 codesign --verify --deep --strict "$APP"
+# Loads every linked framework from the bundle.
+"$APP/Contents/MacOS/kk-sip" --version
+du -sh "$APP"/Contents/Frameworks/* "$APP"/Contents/PlugIns/*/* | sort -h | tail -n 15
 
 # Drag-to-Applications disk image.
 ln -s /Applications "$STAGE/Applications"
