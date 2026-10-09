@@ -171,6 +171,9 @@ bool SipEngine::start(QString *error)
             pj_log_set_level(0); // silence pjlib banner before libInit applies logConfig
         m_ep = std::make_unique<pj::Endpoint>();
         m_ep->libCreate();
+        // A big INVITE (over 1300 bytes) would otherwise go over TCP, which many PBXes
+        // do not listen on: the call hangs for 32 s and fails. Keep the account's transport.
+        pjsip_cfg()->endpt.disable_tcp_switch = PJ_TRUE;
 
         pj::EpConfig cfg;
         cfg.uaConfig.userAgent = "kk-sip/" KKSIP_VERSION;
@@ -562,6 +565,7 @@ int SipEngine::makeCall(const QString &accountId, const QString &input, QString 
     pj::CallOpParam prm(true);
     prm.opt.audioCount = 1;
     prm.opt.videoCount = 0;
+    prm.opt.textCount = 0; // PJSIP offers real-time text (T.140) by default; PBXes don't need it
     try {
         call->makeCall(toStd(target), prm);
     } catch (const pj::Error &e) {
@@ -733,6 +737,7 @@ void SipEngine::answer(int callId)
     prm.statusCode = PJSIP_SC_OK;
     prm.opt.audioCount = 1;
     prm.opt.videoCount = 0;
+    prm.opt.textCount = 0;
     try {
         call->answer(prm);
     } catch (const pj::Error &e) {
@@ -779,6 +784,8 @@ void SipEngine::setHold(int callId, bool hold)
         } else {
             holdOthers(callId);
             prm.opt.flag = PJSUA_CALL_UNHOLD;
+            prm.opt.videoCount = 0;
+            prm.opt.textCount = 0;
             call->reinvite(prm);
         }
         // onHold follows the negotiated media state (connectCallAudio), not the request.
