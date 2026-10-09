@@ -73,6 +73,10 @@ elseif(APPLE)
     qt_add_executable(kk-sip MACOSX_BUNDLE src/main.cpp resources/icons/kk-sip.icns)
     set_target_properties(kk-sip PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/packaging/macos/Info.plist.in)
+    # Only the SVG plugins use QtSvg. macdeployqt can't follow their @rpath across Homebrew
+    # kegs, but bundles QtSvg when the app links it, and the plugins then find it there.
+    find_package(Qt6 REQUIRED COMPONENTS Svg)
+    target_link_libraries(kk-sip PRIVATE Qt6::Svg)
 else()
     qt_add_executable(kk-sip src/main.cpp)
 endif()

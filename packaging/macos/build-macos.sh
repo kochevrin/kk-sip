@@ -51,13 +51,8 @@ cp "$ROOT/LICENSE" "$ROOT/THIRD-PARTY.md" "$APP/Contents/Resources/"
 
 # Copies Qt frameworks, plugins and the Homebrew dylibs (opus, OpenSSL...) into the bundle.
 MACDEPLOYQT="$(command -v macdeployqt6 || command -v macdeployqt)"
-# Each Qt module and library is its own Homebrew keg; macdeployqt resolves @rpath
-# only through the paths in the binary itself plus these.
-LIBPATHS=()
-for keg in qtbase qtsvg brotli; do
-    LIBPATHS+=("-libpath=$(brew --prefix "$keg")/lib")
-done
-"$MACDEPLOYQT" "$APP" "${LIBPATHS[@]}"
+# It reports the SVG plugins' QtSvg as unresolved; it gets bundled anyway, see CMakeLists.txt.
+"$MACDEPLOYQT" "$APP"
 # Only SQLite is used; the other SQL drivers would drag in client libraries.
 find "$APP/Contents/PlugIns/sqldrivers" -name '*.dylib' ! -name 'libqsqlite.dylib' -delete
 
