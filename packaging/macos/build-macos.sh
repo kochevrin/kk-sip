@@ -51,8 +51,13 @@ cp "$ROOT/LICENSE" "$ROOT/THIRD-PARTY.md" "$APP/Contents/Resources/"
 
 # Copies Qt frameworks, plugins and the Homebrew dylibs (opus, OpenSSL...) into the bundle.
 MACDEPLOYQT="$(command -v macdeployqt6 || command -v macdeployqt)"
-# Each Qt module is its own Homebrew keg; -libpath lets it resolve @rpath across them.
-"$MACDEPLOYQT" "$APP" -libpath="$BREW/lib"
+# Each Qt module and library is its own Homebrew keg; macdeployqt resolves @rpath
+# only through the paths in the binary itself plus these.
+LIBPATHS=()
+for keg in qtbase qtsvg brotli; do
+    LIBPATHS+=("-libpath=$(brew --prefix "$keg")/lib")
+done
+"$MACDEPLOYQT" "$APP" "${LIBPATHS[@]}"
 # Only SQLite is used; the other SQL drivers would drag in client libraries.
 find "$APP/Contents/PlugIns/sqldrivers" -name '*.dylib' ! -name 'libqsqlite.dylib' -delete
 
@@ -68,7 +73,9 @@ printf "\nTranslations = Resources/translations\n" >> "$APP/Contents/Resources/q
 # Everything the bundle loads must be inside it or part of macOS.
 missing=0
 while IFS= read -r bin; do
+    self="$(otool -D "$bin" | tail -n +2)" # a dylib's own install name, listed first by otool -L
     while IFS= read -r dep; do
+        [[ "$dep" == "$self" ]] && continue
         case "$dep" in
         /System/* | /usr/lib/*) ;;
         @rpath/* | @executable_path/../Frameworks/*)
