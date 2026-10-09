@@ -133,9 +133,50 @@ jobs:
           path: screenshots-windows
           if-no-files-found: ignore
 
+  macos:
+    runs-on: macos-14 # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install ninja pkgconf qt opus openssl@3
+
+      - uses: actions/cache@v4
+        with:
+          path: .deps
+          key: pjsip-macos-${{ hashFiles('scripts/build-pjsip.sh', 'patches/**') }}
+
+      - name: Build app and disk image
+        run: packaging/macos/build-macos.sh --tests
+
+      # No Asterisk on macOS runners: everything except the calls themselves.
+      - name: Smoke test (offline)
+        env:
+          QT_QPA_PLATFORM: offscreen
+          KKSIP_TEST_SERVER: offline
+          KKSIP_SCREENSHOTS: ${{ github.workspace }}/screenshots-macos
+        run: |
+          rc=0
+          build-mac/kk-sip-smoke -o smoke.txt,txt || rc=$?
+          cat smoke.txt || true
+          echo "exit code $rc"
+          exit $rc
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-package
+          path: dist/*.dmg
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-macos
+          path: screenshots-macos
+          if-no-files-found: ignore
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [ubuntu, arch, windows]
+    needs: [ubuntu, arch, windows, macos]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

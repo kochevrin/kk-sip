@@ -55,7 +55,12 @@ target_include_directories(kk-sip-core PUBLIC src)
 target_compile_definitions(kk-sip-core PUBLIC KKSIP_VERSION="${PROJECT_VERSION}")
 target_link_libraries(kk-sip-core PUBLIC Qt6::Widgets Qt6::Sql Qt6::Network PkgConfig::PJSIP)
 # The bundled PJSIP is static, so its private deps (opus, ssl, asound...) must be linked too.
-target_link_libraries(kk-sip-core PUBLIC ${PJSIP_STATIC_LDFLAGS})
+set(KKSIP_PJSIP_LIBS ${PJSIP_STATIC_LDFLAGS})
+if(APPLE)
+    # pkg-config splits "-framework CoreAudio" in two; CMake would read "CoreAudio" as a library.
+    string(REPLACE "-framework;" "-framework " KKSIP_PJSIP_LIBS "${KKSIP_PJSIP_LIBS}")
+endif()
+target_link_libraries(kk-sip-core PUBLIC ${KKSIP_PJSIP_LIBS})
 
 if(WIN32)
     enable_language(RC)
@@ -63,6 +68,11 @@ if(WIN32)
     qt_add_executable(kk-sip WIN32 src/main.cpp ${CMAKE_CURRENT_BINARY_DIR}/kk-sip.rc)
     # Static libstdc++/libgcc: fewer MinGW runtime DLLs to ship.
     target_link_options(kk-sip PRIVATE -static-libgcc -static-libstdc++)
+elseif(APPLE)
+    set_source_files_properties(resources/icons/kk-sip.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    qt_add_executable(kk-sip MACOSX_BUNDLE src/main.cpp resources/icons/kk-sip.icns)
+    set_target_properties(kk-sip PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/packaging/macos/Info.plist.in)
 else()
     qt_add_executable(kk-sip src/main.cpp)
 endif()
@@ -89,8 +99,9 @@ if(KKSIP_BUILD_TESTS)
     target_link_libraries(kk-sip-smoke PRIVATE kk-sip-core Qt6::Test)
 endif()
 
-# Windows packages are put together by packaging/windows/build-windows.sh.
-if(WIN32)
+# Windows and macOS packages are put together by packaging/windows/build-windows.sh
+# and packaging/macos/build-macos.sh.
+if(WIN32 OR APPLE)
     return()
 endif()
 

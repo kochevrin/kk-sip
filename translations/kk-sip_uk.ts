@@ -868,13 +868,13 @@
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="82"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="290"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="292"/>
         <source>Up</source>
         <translation>Вгору</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="83"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="291"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="293"/>
         <source>Down</source>
         <translation>Вниз</translation>
     </message>
@@ -972,102 +972,107 @@
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="250"/>
+        <source>“System default” uses the input and output chosen in macOS Sound settings.</source>
+        <translation>«Типовий системний» — вхід і вихід, вибрані в налаштуваннях звуку macOS.</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/SettingsDialog.cpp" line="252"/>
         <source>“System default” follows the PipeWire/PulseAudio default device.</source>
         <translation>«Типовий системний» — пристрій, вибраний у PipeWire/PulseAudio.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="319"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="321"/>
         <source>Closing the window keeps kk-sip in the tray</source>
         <translation>Під час закриття вікна залишатися в треї</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="321"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="323"/>
         <source>Start with the system</source>
         <translation>Запускати разом із системою</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="323"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="325"/>
         <source>…straight to the tray, without the window</source>
         <translation>…одразу в трей, без вікна</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="328"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="330"/>
         <source>Check GitHub for new versions</source>
         <translation>Перевіряти нові версії на GitHub</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="329"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="331"/>
         <source>Once a day. kk-sip only tells you about a new version, it never installs anything.</source>
         <translation>Раз на день. kk-sip лише повідомляє про нову версію і нічого не встановлює сам.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="331"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="333"/>
         <source>Write SIP debug log (restart needed)</source>
         <translation>Вести SIP-журнал налагодження (потрібен перезапуск)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="335"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="337"/>
         <source>random</source>
         <translation>випадковий</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="338"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="345"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="340"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="347"/>
         <source>Follow system</source>
         <translation>Як у системі</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="339"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="341"/>
         <source>Light</source>
         <translation>Світла</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="340"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="342"/>
         <source>Dark</source>
         <translation>Темна</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="342"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="344"/>
         <source>Theme:</source>
         <translation>Тема:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="350"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="352"/>
         <source>Applies after a restart</source>
         <translation>Застосовується після перезапуску</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="351"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="353"/>
         <source>Language:</source>
         <translation>Мова:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="352"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="354"/>
         <source>System window frame (restart needed)</source>
         <translation>Системна рамка вікна (потрібен перезапуск)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="355"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="357"/>
         <source>Remember window position</source>
         <translation>Запам’ятовувати положення вікна</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="358"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="360"/>
         <source>On KDE Wayland this adds a KWin window rule for kk-sip.</source>
         <translation>У KDE на Wayland для цього додається правило вікна KWin для kk-sip.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="365"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="367"/>
         <source>Local SIP port (restart needed):</source>
         <translation>Локальний SIP-порт (потрібен перезапуск):</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="394"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="396"/>
         <source>Language</source>
         <translation>Мова</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="394"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="396"/>
         <source>The new language applies after kk-sip restarts.</source>
         <translation>Нова мова застосується після перезапуску kk-sip.</translation>
     </message>
@@ -1075,32 +1080,32 @@
 <context>
     <name>SipEngine</name>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="343"/>
+        <location filename="../src/sip/SipEngine.cpp" line="346"/>
         <source>Too many enabled accounts (limit %1)</source>
         <translation>Забагато ввімкнених облікових записів (максимум %1)</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="350"/>
+        <location filename="../src/sip/SipEngine.cpp" line="353"/>
         <source>Registering…</source>
         <translation>Реєстрація…</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="379"/>
+        <location filename="../src/sip/SipEngine.cpp" line="382"/>
         <source>Disabled</source>
         <translation>Вимкнено</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="380"/>
+        <location filename="../src/sip/SipEngine.cpp" line="383"/>
         <source>Not configured</source>
         <translation>Не налаштовано</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="543"/>
+        <location filename="../src/sip/SipEngine.cpp" line="546"/>
         <source>No account selected</source>
         <translation>Обліковий запис не вибрано</translation>
     </message>
     <message>
-        <location filename="../src/sip/SipEngine.cpp" line="549"/>
+        <location filename="../src/sip/SipEngine.cpp" line="552"/>
         <source>Nothing to call</source>
         <translation>Немає куди дзвонити</translation>
     </message>
@@ -1116,57 +1121,57 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../src/main.cpp" line="54"/>
+        <location filename="../src/main.cpp" line="82"/>
         <source>Quit kk-sip first, then run the import again.</source>
         <translation>Спершу закрийте kk-sip, потім повторіть імпорт.</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="75"/>
+        <location filename="../src/main.cpp" line="103"/>
         <source>Accounts: %1 found, %2 added (disabled until you enter passwords).</source>
         <translation>Облікові записи: знайдено %1, додано %2 (вимкнено, доки не введено паролі).</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="79"/>
+        <location filename="../src/main.cpp" line="107"/>
         <source>microsip.ini not found in %1</source>
         <translation>microsip.ini не знайдено в %1</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="87"/>
+        <location filename="../src/main.cpp" line="115"/>
         <source>Contacts: %1 found, %2 added.</source>
         <translation>Контакти: знайдено %1, додано %2.</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="90"/>
+        <location filename="../src/main.cpp" line="118"/>
         <source>Contacts.xml not found in %1</source>
         <translation>Contacts.xml не знайдено в %1</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="166"/>
+        <location filename="../src/main.cpp" line="194"/>
         <source>Minimal SIP softphone</source>
         <translation>Мінімалістичний SIP-телефон</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="170"/>
+        <location filename="../src/main.cpp" line="198"/>
         <source>Number or sip:/tel: link to call</source>
         <translation>Номер або посилання sip:/tel: для дзвінка</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="174"/>
+        <location filename="../src/main.cpp" line="202"/>
         <source>Import accounts (microsip.ini) and contacts (Contacts.xml) from a MicroSIP folder, then exit. kk-sip must not be running.</source>
         <translation>Імпортувати облікові записи (microsip.ini) і контакти (Contacts.xml) з теки MicroSIP і вийти. kk-sip має бути закрито.</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="179"/>
+        <location filename="../src/main.cpp" line="207"/>
         <source>Start in the tray without showing the window</source>
         <translation>Запуститися в треї, не показуючи вікно</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="200"/>
+        <location filename="../src/main.cpp" line="228"/>
         <source>Cannot open database: %1</source>
         <translation>Не вдалося відкрити базу: %1</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="207"/>
+        <location filename="../src/main.cpp" line="235"/>
         <source>Cannot start SIP stack: %1</source>
         <translation>Не вдалося запустити SIP: %1</translation>
     </message>

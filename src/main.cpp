@@ -36,6 +36,34 @@ static void attachParentConsole()
 }
 #endif
 
+#ifdef Q_OS_MACOS
+#include <QFileOpenEvent>
+
+// macOS hands sip:/tel:/callto: links to the running app as events, not as arguments.
+class LinkOpener : public QObject
+{
+public:
+    explicit LinkOpener(MainWindow *window)
+        : QObject(window)
+        , m_window(window)
+    {
+    }
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        if (event->type() == QEvent::FileOpen) {
+            m_window->handleExternal(QStringLiteral("dial ") + static_cast<QFileOpenEvent *>(event)->url().toString());
+            return true;
+        }
+        return QObject::eventFilter(watched, event);
+    }
+
+private:
+    MainWindow *m_window;
+};
+#endif
+
 static QString findFile(const QDir &dir, const QString &name)
 {
     // MicroSIP writes MicroSIP.ini or microsip.ini depending on version; match case-insensitively.
@@ -211,6 +239,14 @@ int main(int argc, char *argv[])
 
     MainWindow window(&engine, &db);
     QObject::connect(&instance, &SingleInstance::messageReceived, &window, &MainWindow::handleExternal);
+#ifdef Q_OS_MACOS
+    app.installEventFilter(new LinkOpener(&window));
+    // A click on the Dock icon activates the app; bring back the window hidden in the menu bar.
+    QObject::connect(qApp, &QGuiApplication::applicationStateChanged, &window, [&window](Qt::ApplicationState state) {
+        if (state == Qt::ApplicationActive && !window.isVisible())
+            window.showAndRaise();
+    });
+#endif
     Autostart::refresh(settings.startHidden);
     if (WindowPlacement::usesKWinRule())
         WindowPlacement::setKWinRule(settings.rememberPosition, window.size());

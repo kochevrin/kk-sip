@@ -7,7 +7,7 @@
 [![Build](https://github.com/kochevrin/kk-sip/actions/workflows/build.yml/badge.svg)](https://github.com/kochevrin/kk-sip/actions/workflows/build.yml)
 [![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](LICENSE)
 
-A minimal SIP softphone for Linux and Windows in the spirit of [MicroSIP](https://www.microsip.org):
+A minimal SIP softphone for Linux, Windows and macOS in the spirit of [MicroSIP](https://www.microsip.org):
 a small window, simple settings, many accounts, call history and a phone book.
 Nothing else. Built on [PJSIP](https://www.pjsip.org) (the SIP stack MicroSIP
 uses) and Qt 6.
@@ -69,11 +69,26 @@ Packages are attached to every [release](https://github.com/kochevrin/kk-sip/rel
 | Any other distribution | `kk-sip-<ver>-x86_64.AppImage` | `chmod +x kk-sip-*.AppImage` and run it |
 | Windows 10/11 (x64) | `kk-sip-<ver>-windows-x64.msi` | double-click, or `msiexec /i kk-sip-<ver>-windows-x64.msi /qn` |
 | Windows, no install | `kk-sip-<ver>-windows-x64.zip` | unpack anywhere and run `kk-sip.exe` |
+| macOS 14+ (Apple Silicon) | `kk-sip-<ver>-macos-arm64.dmg` | open it and drag kk-sip to Applications, then see below |
 
 The MSI installs for all users into `Program Files\kk-sip`, adds a Start menu
 entry and registers kk-sip for `sip:`, `tel:` and `callto:` links. It installs
 silently, so it can be assigned through Group Policy or pushed with SCCM, Intune or
 Ansible (`win_package`). A newer MSI replaces the older one in place.
+
+The macOS app is not signed with an Apple Developer ID, so Gatekeeper stops the
+first launch ("Apple could not verify kk-sip..."). Once per installed version:
+
+1. Open kk-sip from Applications and close the warning with *Done*.
+2. Open System Settings → Privacy & Security, scroll down to *"kk-sip" was blocked*
+   and click *Open Anyway*, then confirm. (On macOS 14 right-click kk-sip → *Open*
+   works too.)
+
+Or remove the quarantine flag in Terminal instead:
+`xattr -dr com.apple.quarantine /Applications/kk-sip.app`.
+On the first call macOS asks for the microphone; after an update it may ask again.
+Clicking a `sip:`/`tel:` link opens kk-sip; the window closes to the menu bar, and
+the Dock icon brings it back.
 
 After installing, kk-sip shows up in the application menu. To start it with the
 system, use ☰ → Settings → General → *Start with the system*.
@@ -106,6 +121,10 @@ Windows: in an [MSYS2](https://www.msys2.org) UCRT64 shell,
 the app with its DLLs in `dist\stage` plus a portable ZIP; then
 `packaging\windows\build-msi.ps1` (PowerShell, needs the .NET SDK for WiX) makes the MSI.
 
+macOS (Apple Silicon, [Homebrew](https://brew.sh)):
+`packaging/macos/build-macos.sh --install-deps` builds against Homebrew's Qt, opus
+and OpenSSL, bundles them into `dist/stage-mac/kk-sip.app` and makes the `.dmg`.
+
 Debian / Ubuntu: `packaging/linux/build-ubuntu.sh --install-deps` installs the
 dependencies and produces the `.deb` and the AppImage in `dist/`.
 
@@ -123,19 +142,22 @@ sudo cmake --install build
 
 ## Where data lives
 
-| What | Linux | Windows |
-|---|---|---|
-| Autostart (when enabled) | `~/.config/autostart/kk-sip.desktop` | `HKCU\…\CurrentVersion\Run\kk-sip` |
-| Settings and accounts | `~/.config/kk-sip/kk-sip.ini` | `%LOCALAPPDATA%\kk-sip\kk-sip.ini` |
-| History and contacts (SQLite) | `~/.local/share/kk-sip/kk-sip.db` | `%LOCALAPPDATA%\kk-sip\kk-sip.db` |
-| SIP debug log (when enabled) | `~/.local/share/kk-sip/pjsip.log` | `%LOCALAPPDATA%\kk-sip\pjsip.log` |
+| What | Linux | Windows | macOS |
+|---|---|---|---|
+| Autostart (when enabled) | `~/.config/autostart/kk-sip.desktop` | `HKCU\…\CurrentVersion\Run\kk-sip` | `~/Library/LaunchAgents/io.github.kochevrin.kk-sip.plist` |
+| Settings and accounts | `~/.config/kk-sip/kk-sip.ini` | `%LOCALAPPDATA%\kk-sip\kk-sip.ini` | `~/Library/Preferences/kk-sip/kk-sip.ini` |
+| History and contacts (SQLite) | `~/.local/share/kk-sip/kk-sip.db` | `%LOCALAPPDATA%\kk-sip\kk-sip.db` | `~/Library/Application Support/kk-sip/kk-sip.db` |
+| SIP debug log (when enabled) | `~/.local/share/kk-sip/pjsip.log` | `%LOCALAPPDATA%\kk-sip\pjsip.log` | `~/Library/Application Support/kk-sip/pjsip.log` |
 
-Passwords are stored in plain text in the settings file (mode 600 on Linux).
+Passwords are stored in plain text in the settings file (mode 600 on Linux and macOS).
 
 ## Audio
 
 On Windows kk-sip uses the standard Windows audio devices; "System default"
 follows the default device in Sound settings.
+
+On macOS kk-sip uses Core Audio; "System default" is the input and output chosen
+in System Settings → Sound.
 
 On Linux kk-sip talks to ALSA. On a PipeWire or PulseAudio desktop, "System default" uses
 the sound server's ALSA plugin, so calls follow the default device. You can move
@@ -167,7 +189,7 @@ when a watched extension hangs up).
 
 `scripts/smoke-test.sh` runs an end-to-end test against Asterisk in Docker:
 registration, outgoing, busy, incoming, missed calls, hold, mute and DTMF.
-See [tests/README.md](tests/README.md). On Windows CI the same test runs with
+See [tests/README.md](tests/README.md). On Windows and macOS CI the same test runs with
 `KKSIP_TEST_SERVER=offline`, which skips the parts that need a PBX.
 
 ## License
@@ -177,12 +199,12 @@ GPL-2.0-or-later, see [LICENSE](LICENSE). Third-party components are listed in
 
 ---
 
-**Українською.** kk-sip — мінімалістичний SIP-телефон для Linux і Windows на зразок
+**Українською.** kk-sip — мінімалістичний SIP-телефон для Linux, Windows і macOS на зразок
 MicroSIP: маленьке вікно, багато облікових записів одночасно зі швидким перемиканням,
 історія з пошуком і зворотним дзвінком, телефонна книга. Мова інтерфейсу (українська,
 російська, англійська) береться з системи або обирається в «Налаштування → Загальні».
 
-**По-русски.** kk-sip — минималистичный SIP-телефон для Linux и Windows по образцу MicroSIP:
+**По-русски.** kk-sip — минималистичный SIP-телефон для Linux, Windows и macOS по образцу MicroSIP:
 маленькое окно, несколько аккаунтов одновременно с быстрым переключением,
 история с поиском и обратным звонком, телефонная книга. Язык интерфейса (украинский,
 русский, английский) берётся из системы или выбирается в «Настройки → Общие». Контакты и аккаунты можно перенести из MicroSIP:

@@ -7,6 +7,8 @@
 #include <QSaveFile>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QXmlStreamReader>
+#include <QXmlStreamWriter>
 
 namespace Autostart {
 
@@ -46,6 +48,107 @@ void setEnabled(bool on, bool minimized)
     if (minimized)
         line += QStringLiteral(" --minimized");
     run.setValue(valueName(), line);
+}
+
+#elif defined(Q_OS_MACOS)
+
+// A per-user LaunchAgent that runs kk-sip at login.
+static QString label()
+{
+    return QStandardPaths::isTestModeEnabled() ? QStringLiteral("io.github.kochevrin.kk-sip-test")
+                                               : QStringLiteral("io.github.kochevrin.kk-sip");
+}
+
+static QString entryPath()
+{
+    return QDir::homePath() + QStringLiteral("/Library/LaunchAgents/") + label() + QStringLiteral(".plist");
+}
+
+bool isEnabled()
+{
+    return QFile::exists(entryPath());
+}
+
+QString command()
+{
+    // kk-sip.app/Contents/MacOS/kk-sip: register the bundle, so `open` starts it the
+    // way Finder does (Dock icon, microphone permission tied to the app).
+    QDir dir(QCoreApplication::applicationDirPath());
+    if (dir.cdUp() && dir.cdUp() && dir.dirName().endsWith(QLatin1String(".app")))
+        return dir.absolutePath();
+    return QCoreApplication::applicationFilePath();
+}
+
+static QStringList arguments(bool minimized)
+{
+    const QString app = command();
+    if (!app.endsWith(QLatin1String(".app")))
+        return minimized ? QStringList{app, QStringLiteral("--minimized")} : QStringList{app};
+    // -g: start in the background, without taking focus from what the user is doing.
+    QStringList args{QStringLiteral("/usr/bin/open"), QStringLiteral("-g"), QStringLiteral("-a"), app};
+    if (minimized)
+        args << QStringLiteral("--args") << QStringLiteral("--minimized");
+    return args;
+}
+
+QString registeredCommandLine()
+{
+    QFile f(entryPath());
+    if (!f.open(QIODevice::ReadOnly))
+        return {};
+    // The <string>s of the <array> that follows <key>ProgramArguments</key>.
+    QXmlStreamReader xml(&f);
+    QStringList args;
+    bool inArguments = false;
+    while (!xml.atEnd()) {
+        xml.readNext();
+        if (xml.isEndElement() && inArguments && xml.name() == QLatin1String("array"))
+            break;
+        if (!xml.isStartElement())
+            continue;
+        if (xml.name() == QLatin1String("key"))
+            inArguments = xml.readElementText() == QLatin1String("ProgramArguments");
+        else if (inArguments && xml.name() == QLatin1String("string"))
+            args << xml.readElementText();
+    }
+    return args.join(QLatin1Char(' '));
+}
+
+void setEnabled(bool on, bool minimized)
+{
+    const QString path = entryPath();
+    if (!on) {
+        QFile::remove(path);
+        return;
+    }
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QSaveFile f(path);
+    if (!f.open(QIODevice::WriteOnly))
+        return;
+    QXmlStreamWriter xml(&f);
+    xml.setAutoFormatting(true);
+    xml.writeStartDocument();
+    xml.writeDTD(QStringLiteral("<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" "
+                                "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">"));
+    xml.writeStartElement(QStringLiteral("plist"));
+    xml.writeAttribute(QStringLiteral("version"), QStringLiteral("1.0"));
+    xml.writeStartElement(QStringLiteral("dict"));
+    xml.writeTextElement(QStringLiteral("key"), QStringLiteral("Label"));
+    xml.writeTextElement(QStringLiteral("string"), label());
+    xml.writeTextElement(QStringLiteral("key"), QStringLiteral("ProgramArguments"));
+    xml.writeStartElement(QStringLiteral("array"));
+    const QStringList args = arguments(minimized);
+    for (const QString &a : args)
+        xml.writeTextElement(QStringLiteral("string"), a);
+    xml.writeEndElement();
+    xml.writeTextElement(QStringLiteral("key"), QStringLiteral("RunAtLoad"));
+    xml.writeEmptyElement(QStringLiteral("true"));
+    xml.writeTextElement(QStringLiteral("key"), QStringLiteral("LimitLoadToSessionType"));
+    xml.writeTextElement(QStringLiteral("string"), QStringLiteral("Aqua"));
+    xml.writeEndElement();
+    xml.writeEndElement();
+    xml.writeEndDocument();
+    f.commit();
 }
 
 #else

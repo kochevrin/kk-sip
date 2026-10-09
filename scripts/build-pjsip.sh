@@ -67,11 +67,13 @@ CFLAGS="$FLAGS" CXXFLAGS="$FLAGS" ./configure \
     --disable-opencore-amr \
     --disable-upnp
 
+# No nproc on macOS.
+JOBS="$(getconf _NPROCESSORS_ONLN)"
 make dep
 if [[ "${PJSIP_LIBS_ONLY:-0}" == 1 ]]; then
-    make -j"$(nproc)" lib
+    make -j"$JOBS" lib
 else
-    make -j"$(nproc)"
+    make -j"$JOBS"
 fi
 make install
 echo "PJSIP $PJSIP_VERSION installed to $PREFIX"

@@ -244,8 +244,10 @@ QWidget *SettingsDialog::createAudioPage()
     ringRow->addWidget(browse);
     form->addRow(tr("Ringtone:"), ringRow);
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN)
     auto *hint = new QLabel(tr("“System default” follows the default devices in Windows sound settings."), page);
+#elif defined(Q_OS_MACOS)
+    auto *hint = new QLabel(tr("“System default” uses the input and output chosen in macOS Sound settings."), page);
 #else
     auto *hint = new QLabel(tr("“System default” follows the PipeWire/PulseAudio default device."), page);
 #endif

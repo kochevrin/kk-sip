@@ -12,7 +12,10 @@ on the following components.
 | [Qt 6](https://www.qt.io) Widgets, Sql, Network (system libraries) | UI, SQLite storage, single-instance socket | LGPL-3.0 |
 | [Opus](https://opus-codec.org) (system library) | wideband codec | BSD-3-Clause |
 | [OpenSSL](https://www.openssl.org) (system library) | SIP over TLS, SRTP crypto | Apache-2.0 |
-| [alsa-lib](https://www.alsa-project.org) (system library) | sound I/O (through the PipeWire/Pulse ALSA plugin) | LGPL-2.1 |
+| [alsa-lib](https://www.alsa-project.org) (system library, Linux only) | sound I/O (through the PipeWire/Pulse ALSA plugin) | LGPL-2.1 |
+
+The Windows and macOS packages carry Qt, Opus and OpenSSL inside (next to
+`kk-sip.exe`, or in `kk-sip.app/Contents/Frameworks`) as unmodified shared libraries.
 
 ## Used only by tests
 
