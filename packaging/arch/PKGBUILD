@@ -1,6 +1,6 @@
 # Maintainer: Konstantin Kochervrin <k.ko4evrin@gmail.com>
 pkgname=kk-sip
-pkgver=0.2.1
+pkgver=0.2.2
 pkgrel=1
 _pjsipver=2.17
 pkgdesc="Minimal MicroSIP-style SIP softphone (Qt 6 + PJSIP)"
