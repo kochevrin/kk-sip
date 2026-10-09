@@ -16,7 +16,7 @@ optdepends=('pipewire-alsa: route calls through PipeWire'
 # PJSIP is linked statically: distro builds of pjproject differ in limits (accounts) and codecs.
 source=("$pkgname-$pkgver.tar.gz::https://github.com/kochevrin/kk-sip/archive/refs/tags/v$pkgver.tar.gz"
         "pjproject-$_pjsipver.tar.gz::https://github.com/pjsip/pjproject/archive/refs/tags/$_pjsipver.tar.gz")
-sha256sums=('b3b8469bb90bbc7f50d26768bb5b78944e8c0e6f657db75354bbefdb3e6dc041'
+sha256sums=('0ea94c8a334599f954fc67eee65444ef00f507023b432629ffb6247dbb5dae40'
             '065fe06c06788d97c35f563796d59f00ce52fe9558a52d7b490a042a966facce')
 
 build() {
