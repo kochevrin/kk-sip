@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Runs the end-to-end smoke test against a throwaway Asterisk in Docker.
+# Runs the end-to-end smoke test against a throwaway Asterisk in Docker. Pinned to 22.10.1:
+# 22.11.0 and 23.5.0 leave the caller (<remote>) out of the dialog-event NOTIFY of a
+# ringing extension, which the busy lamp test checks.
 # Audio goes to PJSIP's null device, so nothing is played on the speakers.
 #
 #   scripts/smoke-test.sh                 # run tests
@@ -17,7 +19,7 @@ docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 docker run -d --name "$CONTAINER" --network host \
     -v "$ROOT/tests/asterisk/pjsip.conf:/etc/asterisk/pjsip.conf:ro" \
     -v "$ROOT/tests/asterisk/extensions.conf:/etc/asterisk/extensions.conf:ro" \
-    andrius/asterisk:latest >/dev/null
+    andrius/asterisk:22.10.1_debian-trixie >/dev/null
 trap 'docker rm -f "$CONTAINER" >/dev/null 2>&1 || true' EXIT
 
 for _ in $(seq 30); do

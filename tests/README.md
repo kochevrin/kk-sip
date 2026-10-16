@@ -18,7 +18,8 @@ Run it with Docker:
 scripts/smoke-test.sh
 ```
 
-The script starts Asterisk 22 (`andrius/asterisk`) on `127.0.0.1:5070` with the
+The script starts Asterisk 22.10.1 (`andrius/asterisk`, pinned: 22.11.0 and 23.5.0
+no longer say who is calling a ringing extension) on `127.0.0.1:5070` with the
 config in [`asterisk/`](asterisk/): extensions 101–103 (password `secret`),
 600 = echo, 601 = busy. The remote party is the `pjsua` binary that
 `scripts/build-pjsip.sh` builds. Audio uses PJSIP's null device, so the test
