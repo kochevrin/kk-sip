@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 #include <QVariantMap>
 
 // Settings an administrator sets for everyone (docs/provisioning.md):
@@ -19,9 +20,14 @@ QVariantMap read();
 // as not set: Group Policy writes them for text fields the administrator left blank.
 QVariant value(const QVariantMap &policy, const QString &key);
 
-// A string value with %NAME% replaced by environment variables (%USERNAME%, %USER%).
-// The INI reader splits "a, b" into a list; it is joined back.
-QString string(const QVariant &value);
+// A string value with %NAME% replaced by environment variables (%USERNAME%, %USER%) and
+// %AD:name% by the user's attributes in `directory` (core/Directory.h, lower-case names).
+// An %AD:name% the directory does not have makes the whole value empty, so the field is
+// left to the user. The INI reader splits "a, b" into a list; it is joined back.
+QString string(const QVariant &value, const QVariantMap &directory = {});
+
+// The attribute names of every %AD:name% in the policy, in lower case.
+QStringList directoryNames(const QVariantMap &policy);
 
 // Where the file is read from on this platform, empty on Windows (registry only).
 QString filePath();

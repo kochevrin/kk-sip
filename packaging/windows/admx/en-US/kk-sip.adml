@@ -17,7 +17,7 @@ Every field you fill in is locked: the user sees it greyed out and cannot change
 
 The password has no field here on purpose: everything in a GPO is readable by every domain user. Leave it to the user, who is asked for it at the first start (together with the username when that is empty too).
 
-Fields may contain environment variables, for example %USERNAME% as the username when extensions match Windows logins. Values set in Computer Configuration win over User Configuration field by field, so the server can be set for the computer and the username per user.
+Fields may contain environment variables, for example %USERNAME% as the username when extensions match Windows logins, and attributes of the user's own Active Directory account: %AD:ipPhone% takes the extension from the account's IP phone field, %AD:displayName% the full name. When the account has no such attribute, the field is left to the user; the last value read is kept for times when no domain controller is in reach. Values set in Computer Configuration win over User Configuration field by field, so the server can be set for the computer and the username per user.
 
 Server: host or host:port of the PBX. Required.
 Username: extension.

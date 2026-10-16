@@ -29,6 +29,7 @@ qt_standard_project_setup()
 add_library(kk-sip-core OBJECT
     src/core/Settings.h src/core/Settings.cpp
     src/core/Policy.h src/core/Policy.cpp
+    src/core/Directory.h src/core/Directory.cpp
     src/core/Database.h src/core/Database.cpp
     src/core/SipUri.h src/core/SipUri.cpp
     src/core/SingleInstance.h src/core/SingleInstance.cpp
@@ -62,6 +63,10 @@ if(APPLE)
     string(REPLACE "-framework;" "-framework " KKSIP_PJSIP_LIBS "${KKSIP_PJSIP_LIBS}")
 endif()
 target_link_libraries(kk-sip-core PUBLIC ${KKSIP_PJSIP_LIBS})
+if(WIN32)
+    # Active Directory lookups for %AD:ipPhone% in the policy (src/core/Directory.cpp).
+    target_link_libraries(kk-sip-core PUBLIC wldap32)
+endif()
 
 if(WIN32)
     enable_language(RC)

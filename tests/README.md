@@ -10,7 +10,8 @@ dialogs) against a real PBX:
 - missed incoming call and the unread badge on the History tab
 - SIP URI helpers and import of MicroSIP's UTF-16 `microsip.ini`
 - the administrator's policy (`KKSIP_POLICY_FILE`): locked settings and controls, a
-  managed account the user completes, the user's own values coming back without it
+  managed account the user completes, the user's own values coming back without it,
+  `%AD:ipPhone%` from a stand-in directory (`KKSIP_TEST_DIRECTORY`) and its cached answer
 
 Run it with Docker:
 

@@ -84,4 +84,5 @@ private:
     Settings() = default;
     QSet<QString> m_locked;
     QVariantMap m_userValues; // the user's own values of locked settings, kept by save()
+    QVariantMap m_directory;  // last answer from Active Directory for the policy's %AD:name%
 };

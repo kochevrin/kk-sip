@@ -1,5 +1,6 @@
 #include "core/Settings.h"
 
+#include "core/Directory.h"
 #include "core/Policy.h"
 
 #include <QDir>
@@ -59,8 +60,8 @@ bool Settings::anyLocked() const
 // The policy's accounts: every group whose name starts with "Account" and has a Server.
 // Fields the policy sets are locked; the rest come from what the user saved for the
 // same account (`saved`) or stay empty for the user to fill in.
-static QList<AccountConfig> managedAccounts(const QVariantMap &policy, const QList<AccountConfig> &saved,
-                                            QStringList *pending)
+static QList<AccountConfig> managedAccounts(const QVariantMap &policy, const QVariantMap &directory,
+                                            const QList<AccountConfig> &saved, QStringList *pending)
 {
     QStringList groups;
     for (auto it = policy.cbegin(); it != policy.cend(); ++it) {
@@ -91,9 +92,14 @@ static QList<AccountConfig> managedAccounts(const QVariantMap &policy, const QLi
                 a.locked << QLatin1String(name);
             return v;
         };
+        // A value whose %AD:name% the directory lacks stays with the user, unlocked.
         auto text = [&](const char *name, QString &target) {
-            if (const QVariant v = field(name); v.isValid())
-                target = Policy::string(v);
+            const QVariant v = Policy::value(policy, group + QLatin1Char('/') + QLatin1String(name));
+            const QString s = v.isValid() ? Policy::string(v, directory) : QString();
+            if (s.isEmpty())
+                return;
+            target = s;
+            a.locked << QLatin1String(name);
         };
         text("label", a.label);
         text("server", a.server);
@@ -229,8 +235,22 @@ void Settings::load()
 
     // Managed accounts keep the place the user moved them to; new ones go on top, and
     // ones the policy no longer has disappear.
+    // %AD:ipPhone% in the policy: the user's attributes from Active Directory. The last
+    // answer is kept, so a laptop away from the office keeps its number.
+    m_directory.clear();
+    ini.beginGroup(QStringLiteral("directory"));
+    const QStringList cached = ini.childKeys();
+    for (const QString &key : cached)
+        m_directory.insert(key.toLower(), ini.value(key));
+    ini.endGroup();
+    const QStringList directoryNames = Policy::directoryNames(policy);
+    if (directoryNames.isEmpty())
+        m_directory.clear();
+    else if (const std::optional<QVariantMap> fresh = Directory::userAttributes(directoryNames))
+        m_directory = *fresh;
+
     pendingCredentials.clear();
-    const QList<AccountConfig> managed = managedAccounts(policy, saved, &pendingCredentials);
+    const QList<AccountConfig> managed = managedAccounts(policy, m_directory, saved, &pendingCredentials);
     accounts.clear();
     for (const AccountConfig &m : managed)
         if (std::none_of(saved.cbegin(), saved.cend(), [&](const AccountConfig &a) { return a.id == m.id; }))
@@ -307,6 +327,11 @@ void Settings::save() const
                 ini.setValue("managed", true);
         }
         ini.endArray();
+
+        ini.beginGroup(QStringLiteral("directory"));
+        for (auto it = m_directory.cbegin(); it != m_directory.cend(); ++it)
+            ini.setValue(it.key(), it.value());
+        ini.endGroup();
     }
     // Passwords are stored in plain text, so keep the file private.
     QFile::setPermissions(iniPath(), QFileDevice::ReadOwner | QFileDevice::WriteOwner);

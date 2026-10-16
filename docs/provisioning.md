@@ -75,6 +75,13 @@ On the desktop, string values may contain environment variables written as `%NAM
 `User=%USERNAME%` on Windows, `User=%USER%` on Linux and macOS. A variable that is not
 set stays as it is.
 
+On Windows, `%AD:attribute%` takes an attribute of the signed-in user's own Active
+Directory account: `User=%AD:ipPhone%`, `DisplayName=%AD:displayName%`. kk-sip asks a
+domain controller of `%USERDNSDOMAIN%` over LDAP as that user at start (3 seconds at most
+to reach one) and keeps the answer in the user's settings for starts away from the
+office. When the account has no such attribute, the whole field counts as left out, so
+the user fills it in.
+
 ### Android (planned)
 
 The Android app reads the same keys as managed configurations, with these differences:
@@ -114,6 +121,10 @@ Each user needs their own `User`. Ways to get it there, simplest first:
 
 - **Let users type it.** Leave `User` out: the first-start dialog asks for the extension
   and the password together. Nothing to maintain.
+- **From Active Directory.** Fill in each user's extension in Active Directory Users and
+  Computers → user → Telephones → *IP phone* (attribute `ipPhone`; any other attribute
+  works too, such as `telephoneNumber`), and set `User=%AD:ipPhone%` once for everyone.
+  Users without a number there are asked for it.
 - **Extension = login.** When AD logins match extensions (or FreePBX extensions were made
   from the logins), set `User=%USERNAME%`.
 - **Per user in Group Policy.** Set the shared fields in the computer part of a GPO, and

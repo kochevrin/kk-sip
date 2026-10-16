@@ -78,6 +78,7 @@ private slots:
     void closeKeepsRunning();
     void policy();
     void policyRegistry();
+    void policyDirectory();
     void layoutAudit();
 
 private:
@@ -1034,6 +1035,53 @@ void SmokeTest::policyRegistry()
     s = saved;
     s.save();
 #endif
+}
+
+// %AD:ipPhone% from Active Directory; in test mode KKSIP_TEST_DIRECTORY stands for it.
+void SmokeTest::policyDirectory()
+{
+    Settings &s = Settings::instance();
+    const Settings saved = s;
+    QTemporaryDir dir;
+    const QString path = dir.filePath(QStringLiteral("policy.ini"));
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::WriteOnly));
+    f.write("[Account]\n"
+            "Server=pbx.office.lan\n"
+            "User=%AD:ipPhone%\n"
+            "DisplayName=%AD:displayName% (office)\n"
+            "AuthUser=%AD:pager%\n");
+    f.close();
+    qputenv("KKSIP_POLICY_FILE", path.toLocal8Bit());
+    auto managed = [&s] {
+        auto it = std::find_if(s.accounts.cbegin(), s.accounts.cend(), [](const AccountConfig &a) { return a.managed; });
+        return it == s.accounts.cend() ? AccountConfig{} : *it;
+    };
+
+    qputenv("KKSIP_TEST_DIRECTORY", "ipPhone=105;displayName=Anna Petrova");
+    s.load();
+    QCOMPARE(managed().user, QStringLiteral("105"));
+    QCOMPARE(managed().displayName, QStringLiteral("Anna Petrova (office)"));
+    QVERIFY(managed().isLocked("user") && managed().isLocked("displayName"));
+    QVERIFY(!managed().isLocked("authUser")); // no pager in the directory: left to the user
+    s.save();
+
+    // Away from the domain controller: the last answer still holds.
+    qunsetenv("KKSIP_TEST_DIRECTORY");
+    s.load();
+    QCOMPARE(managed().user, QStringLiteral("105"));
+    QVERIFY(managed().isLocked("user"));
+
+    // The number gone from the directory: the field goes back to the user.
+    qputenv("KKSIP_TEST_DIRECTORY", "displayName=Anna Petrova");
+    s.load();
+    QVERIFY(!managed().isLocked("user"));
+    QVERIFY(managed().isLocked("displayName"));
+
+    qunsetenv("KKSIP_TEST_DIRECTORY");
+    qunsetenv("KKSIP_POLICY_FILE");
+    s = saved;
+    s.save();
 }
 
 void SmokeTest::layoutAudit()

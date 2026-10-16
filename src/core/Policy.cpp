@@ -46,30 +46,62 @@ QVariantMap read()
     return out;
 }
 
+static QString raw(const QVariant &value)
+{
+    return value.userType() == QMetaType::QStringList ? value.toStringList().join(QStringLiteral(", "))
+                                                      : value.toString();
+}
+
+// %AD:ipPhone% (directory attribute) or %USERNAME% (environment variable).
+static const QRegularExpression &variable()
+{
+    static const QRegularExpression re(QStringLiteral("%(?:AD:([A-Za-z][A-Za-z0-9-]*)|([A-Za-z_][A-Za-z0-9_]*))%"),
+                                       QRegularExpression::CaseInsensitiveOption);
+    return re;
+}
+
 QVariant value(const QVariantMap &policy, const QString &key)
 {
     const QVariant v = policy.value(key.toLower());
-    if (!v.isValid() || string(v).trimmed().isEmpty())
+    if (!v.isValid() || raw(v).trimmed().isEmpty())
         return {};
     return v;
 }
 
-QString string(const QVariant &value)
+QString string(const QVariant &value, const QVariantMap &directory)
 {
-    const QString s = value.userType() == QMetaType::QStringList ? value.toStringList().join(QStringLiteral(", "))
-                                                                 : value.toString();
-    static const QRegularExpression var(QStringLiteral("%([A-Za-z_][A-Za-z0-9_]*)%"));
+    const QString s = raw(value);
     QString out;
     qsizetype last = 0;
-    for (auto it = var.globalMatch(s); it.hasNext();) {
+    for (auto it = variable().globalMatch(s); it.hasNext();) {
         const QRegularExpressionMatch m = it.next();
         out += s.mid(last, m.capturedStart() - last);
-        const QByteArray name = m.captured(1).toLocal8Bit();
-        out += qEnvironmentVariableIsSet(name.constData()) ? qEnvironmentVariable(name.constData()) : m.captured(0);
+        if (m.hasCaptured(1)) {
+            const QString attribute = directory.value(m.captured(1).toLower()).toString();
+            if (attribute.isEmpty())
+                return {};
+            out += attribute;
+        } else {
+            const QByteArray name = m.captured(2).toLocal8Bit();
+            out += qEnvironmentVariableIsSet(name.constData()) ? qEnvironmentVariable(name.constData()) : m.captured(0);
+        }
         last = m.capturedEnd();
     }
     out += s.mid(last);
     return out.trimmed();
+}
+
+QStringList directoryNames(const QVariantMap &policy)
+{
+    QStringList names;
+    for (auto it = policy.cbegin(); it != policy.cend(); ++it)
+        for (auto m = variable().globalMatch(raw(it.value())); m.hasNext();) {
+            const QString name = m.next().captured(1).toLower();
+            if (!name.isEmpty() && !names.contains(name))
+                names << name;
+        }
+    names.sort();
+    return names;
 }
 
 } // namespace Policy
