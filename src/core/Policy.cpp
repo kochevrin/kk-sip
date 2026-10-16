@@ -37,10 +37,11 @@ QVariantMap read()
     if (!file.isEmpty() && QFileInfo::exists(file))
         merge(out, QSettings(file, QSettings::IniFormat));
 #ifdef Q_OS_WIN
-    if (!QStandardPaths::isTestModeEnabled()) {
-        merge(out, QSettings(QStringLiteral("HKEY_CURRENT_USER\\Software\\Policies\\kk-sip"), QSettings::NativeFormat));
-        merge(out, QSettings(QStringLiteral("HKEY_LOCAL_MACHINE\\Software\\Policies\\kk-sip"), QSettings::NativeFormat));
-    }
+    // Tests write their own key; the machine's policy must not leak into them.
+    const QString key = QStandardPaths::isTestModeEnabled() ? QStringLiteral("\\Software\\Policies\\kk-sip-test")
+                                                            : QStringLiteral("\\Software\\Policies\\kk-sip");
+    merge(out, QSettings(QStringLiteral("HKEY_CURRENT_USER") + key, QSettings::NativeFormat));
+    merge(out, QSettings(QStringLiteral("HKEY_LOCAL_MACHINE") + key, QSettings::NativeFormat));
 #endif
     return out;
 }

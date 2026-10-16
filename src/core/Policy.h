@@ -8,7 +8,8 @@
 //                 (a computer value wins over the user value of the same name)
 //   Linux:        /etc/kk-sip/policy.ini
 //   macOS:        /Library/Application Support/kk-sip/policy.ini
-// Each value set there wins over the user's own and locks its control.
+// Each value set there wins over the user's own and locks its control. Tests (test mode)
+// read KKSIP_POLICY_FILE and the registry key kk-sip-test instead.
 namespace Policy {
 
 // Every value, keys in lower case: "checkupdates", "account2/server".

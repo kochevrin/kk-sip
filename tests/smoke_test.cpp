@@ -77,6 +77,7 @@ private slots:
     void updateVersions();
     void closeKeepsRunning();
     void policy();
+    void policyRegistry();
     void layoutAudit();
 
 private:
@@ -985,6 +986,53 @@ void SmokeTest::policy()
     m_engine->applyCodecs({{QStringLiteral("opus"), true}, {QStringLiteral("G722"), true},
                            {QStringLiteral("PCMA"), true}, {QStringLiteral("PCMU"), true},
                            {QStringLiteral("GSM"), true}});
+}
+
+// Values as Group Policy writes them: REG_DWORD for switches, REG_SZ for text, computer
+// values winning over user values. Test mode reads ...\Policies\kk-sip-test.
+void SmokeTest::policyRegistry()
+{
+#ifndef Q_OS_WIN
+    QSKIP("Windows only");
+#else
+    const QString user = QStringLiteral("HKCU\\Software\\Policies\\kk-sip-test");
+    const QString machine = QStringLiteral("HKLM\\Software\\Policies\\kk-sip-test");
+    auto reg = [](const QStringList &args) { return QProcess::execute(QStringLiteral("reg"), args) == 0; };
+    auto add = [&](const QString &key, const QString &name, const QString &type, const QString &data) {
+        return reg({QStringLiteral("add"), key, QStringLiteral("/v"), name, QStringLiteral("/t"), type,
+                    QStringLiteral("/d"), data, QStringLiteral("/f")});
+    };
+    const QString account = QStringLiteral("\\Account");
+    QVERIFY(add(user, QStringLiteral("CheckUpdates"), QStringLiteral("REG_DWORD"), QStringLiteral("0")));
+    QVERIFY(add(user + account, QStringLiteral("Server"), QStringLiteral("REG_SZ"), QStringLiteral("pbx.office.lan")));
+    QVERIFY(add(user + account, QStringLiteral("User"), QStringLiteral("REG_SZ"), QStringLiteral("%USERNAME%")));
+    QVERIFY(add(user + account, QStringLiteral("Transport"), QStringLiteral("REG_SZ"), QStringLiteral("udp")));
+    QVERIFY(add(user + account, QStringLiteral("SRTP"), QStringLiteral("REG_DWORD"), QStringLiteral("1")));
+    QVERIFY(add(user + account, QStringLiteral("DisplayName"), QStringLiteral("REG_SZ"), QString()));
+    // HKLM needs an administrator: CI has one, a developer's shell may not.
+    const bool asAdmin = add(machine + account, QStringLiteral("Transport"), QStringLiteral("REG_SZ"), QStringLiteral("tcp"));
+
+    Settings &s = Settings::instance();
+    const Settings saved = s;
+    s.load();
+    reg({QStringLiteral("delete"), user, QStringLiteral("/f")});
+    if (asAdmin)
+        reg({QStringLiteral("delete"), machine, QStringLiteral("/f")});
+
+    QVERIFY(s.isLocked("checkUpdates"));
+    QVERIFY(!s.checkUpdates);
+    QVERIFY(!s.accounts.isEmpty());
+    const AccountConfig a = s.accounts.first();
+    QCOMPARE(a.id, QStringLiteral("policy-account"));
+    QCOMPARE(a.server, QStringLiteral("pbx.office.lan"));
+    QCOMPARE(a.user, qEnvironmentVariable("USERNAME"));
+    QVERIFY(a.srtp && a.isLocked("srtp"));
+    QVERIFY(!a.isLocked("displayName"));
+    QCOMPARE(a.transport, asAdmin ? QStringLiteral("tcp") : QStringLiteral("udp"));
+
+    s = saved;
+    s.save();
+#endif
 }
 
 void SmokeTest::layoutAudit()
