@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Group Policy template for kk-sip (docs/provisioning.md). Copy kk-sip.admx into
+  PolicyDefinitions and the .adml files into its en-US, uk-UA and ru-RU folders.
+  Every policy writes under Software\Policies\kk-sip, except "Start at logon", which also
+  uses Explorer's own policy Run key so kk-sip starts at the very first logon.
+-->
+<policyDefinitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   revision="1.0" schemaVersion="1.0"
+                   xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <policyNamespaces>
+    <target prefix="kksip" namespace="Kochevrin.Policies.KkSip" />
+  </policyNamespaces>
+  <resources minRequiredRevision="1.0" />
+  <supportedOn>
+    <definitions>
+      <definition name="SUPPORTED_KkSip_0_3" displayName="$(string.SUPPORTED_KkSip_0_3)" />
+    </definitions>
+  </supportedOn>
+  <categories>
+    <category name="KkSip" displayName="$(string.KkSip)" />
+  </categories>
+  <policies>
+    <policy name="Account" class="Both" displayName="$(string.Account)" explainText="$(string.Account_Help)"
+            presentation="$(presentation.Account)" key="Software\Policies\kk-sip\Account">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <elements>
+        <text id="Server" valueName="Server" required="true" maxLength="255" />
+        <enum id="Transport" valueName="Transport" required="true">
+          <item displayName="$(string.Transport_Udp)"><value><string>udp</string></value></item>
+          <item displayName="$(string.Transport_Tcp)"><value><string>tcp</string></value></item>
+          <item displayName="$(string.Transport_Tls)"><value><string>tls</string></value></item>
+        </enum>
+        <text id="User" valueName="User" maxLength="255" />
+        <text id="AuthUser" valueName="AuthUser" maxLength="255" />
+        <text id="DisplayName" valueName="DisplayName" maxLength="255" />
+        <text id="Label" valueName="Label" maxLength="255" />
+        <text id="Domain" valueName="Domain" maxLength="255" />
+        <text id="Proxy" valueName="Proxy" maxLength="255" />
+        <boolean id="SRTP" valueName="SRTP">
+          <trueValue><decimal value="1" /></trueValue>
+          <falseValue><decimal value="0" /></falseValue>
+        </boolean>
+        <boolean id="NatRewrite" valueName="NatRewrite">
+          <trueValue><decimal value="1" /></trueValue>
+          <falseValue><decimal value="0" /></falseValue>
+        </boolean>
+        <decimal id="RegExpiry" valueName="RegExpiry" minValue="60" maxValue="3600" />
+      </elements>
+    </policy>
+
+    <policy name="Account2" class="Both" displayName="$(string.Account2)" explainText="$(string.Account_Help)"
+            presentation="$(presentation.Account)" key="Software\Policies\kk-sip\Account2">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <elements>
+        <text id="Server" valueName="Server" required="true" maxLength="255" />
+        <enum id="Transport" valueName="Transport" required="true">
+          <item displayName="$(string.Transport_Udp)"><value><string>udp</string></value></item>
+          <item displayName="$(string.Transport_Tcp)"><value><string>tcp</string></value></item>
+          <item displayName="$(string.Transport_Tls)"><value><string>tls</string></value></item>
+        </enum>
+        <text id="User" valueName="User" maxLength="255" />
+        <text id="AuthUser" valueName="AuthUser" maxLength="255" />
+        <text id="DisplayName" valueName="DisplayName" maxLength="255" />
+        <text id="Label" valueName="Label" maxLength="255" />
+        <text id="Domain" valueName="Domain" maxLength="255" />
+        <text id="Proxy" valueName="Proxy" maxLength="255" />
+        <boolean id="SRTP" valueName="SRTP">
+          <trueValue><decimal value="1" /></trueValue>
+          <falseValue><decimal value="0" /></falseValue>
+        </boolean>
+        <boolean id="NatRewrite" valueName="NatRewrite">
+          <trueValue><decimal value="1" /></trueValue>
+          <falseValue><decimal value="0" /></falseValue>
+        </boolean>
+        <decimal id="RegExpiry" valueName="RegExpiry" minValue="60" maxValue="3600" />
+      </elements>
+    </policy>
+
+    <policy name="Autostart" class="Both" displayName="$(string.Autostart)" explainText="$(string.Autostart_Help)"
+            presentation="$(presentation.Autostart)" key="Software\Policies\kk-sip" valueName="Autostart">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <enabledValue><decimal value="1" /></enabledValue>
+      <disabledValue><decimal value="0" /></disabledValue>
+      <elements>
+        <text id="Command" key="Software\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run" valueName="kk-sip"
+              required="true" maxLength="1024" />
+      </elements>
+    </policy>
+
+    <policy name="CloseToTray" class="Both" displayName="$(string.CloseToTray)" explainText="$(string.CloseToTray_Help)"
+            key="Software\Policies\kk-sip" valueName="CloseToTray">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <enabledValue><decimal value="1" /></enabledValue>
+      <disabledValue><decimal value="0" /></disabledValue>
+    </policy>
+
+    <policy name="CheckUpdates" class="Both" displayName="$(string.CheckUpdates)" explainText="$(string.CheckUpdates_Help)"
+            key="Software\Policies\kk-sip" valueName="CheckUpdates">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <enabledValue><decimal value="1" /></enabledValue>
+      <disabledValue><decimal value="0" /></disabledValue>
+    </policy>
+
+    <policy name="Language" class="Both" displayName="$(string.Language)" explainText="$(string.Language_Help)"
+            presentation="$(presentation.Language)" key="Software\Policies\kk-sip">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <elements>
+        <enum id="Language" valueName="Language" required="true">
+          <item displayName="$(string.Language_System)"><value><string>system</string></value></item>
+          <item displayName="$(string.Language_En)"><value><string>en</string></value></item>
+          <item displayName="$(string.Language_Uk)"><value><string>uk</string></value></item>
+          <item displayName="$(string.Language_Ru)"><value><string>ru</string></value></item>
+        </enum>
+      </elements>
+    </policy>
+
+    <policy name="Codecs" class="Both" displayName="$(string.Codecs)" explainText="$(string.Codecs_Help)"
+            presentation="$(presentation.Codecs)" key="Software\Policies\kk-sip">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <elements>
+        <text id="Codecs" valueName="Codecs" required="true" maxLength="1024" />
+      </elements>
+    </policy>
+
+    <policy name="SipPort" class="Both" displayName="$(string.SipPort)" explainText="$(string.SipPort_Help)"
+            presentation="$(presentation.SipPort)" key="Software\Policies\kk-sip">
+      <parentCategory ref="KkSip" />
+      <supportedOn ref="SUPPORTED_KkSip_0_3" />
+      <elements>
+        <decimal id="SipPort" valueName="SipPort" required="true" minValue="0" maxValue="65535" />
+      </elements>
+    </policy>
+  </policies>
+</policyDefinitions>

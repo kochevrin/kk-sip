@@ -233,6 +233,8 @@ MainWindow::MainWindow(SipEngine *engine, Database *db, QWidget *parent)
 
     if (Settings::instance().accounts.isEmpty())
         QTimer::singleShot(300, this, &MainWindow::openSettings);
+    else if (!Settings::instance().pendingCredentials.isEmpty())
+        QTimer::singleShot(300, this, &MainWindow::askCredentials);
 
     setupUpdates();
 }
@@ -434,7 +436,7 @@ void MainWindow::setAccountEnabled(const QString &id, bool on)
     const AccountConfig *cfg = accountConfig(id);
     if (!cfg || cfg->enabled == on)
         return;
-    if (on && cfg->password.isEmpty()) {
+    if (on && (cfg->user.isEmpty() || cfg->password.isEmpty())) {
         ensureEnabled(id); // asks for the password
         return;
     }
@@ -460,7 +462,9 @@ void MainWindow::updateStatus()
     QString text = id.isEmpty() ? tr("Add an account in Settings") : m_engine->regText(id);
     const AccountConfig *cfg = accountConfig(id);
     if (cfg && !cfg->enabled)
-        text = cfg->password.isEmpty() ? tr("No password: press Call to enter it") : tr("Account is off: press Call to turn it on");
+        text = cfg->user.isEmpty()       ? tr("No username: press Call to enter it")
+               : cfg->password.isEmpty() ? tr("No password: press Call to enter it")
+                                         : tr("Account is off: press Call to turn it on");
     if (m_engine->doNotDisturb())
         text = tr("Do not disturb") + QStringLiteral(" · ") + text;
     m_status->setText(text);
@@ -543,6 +547,19 @@ bool MainWindow::ensureEnabled(const QString &id)
     reloadAccountBox();
     updateStatus();
     return true;
+}
+
+// Accounts the administrator just set up: ask for what the policy leaves to the user
+// (password, maybe the extension) right away, also when kk-sip started in the tray.
+// Asked once; afterwards the status line says how to finish.
+void MainWindow::askCredentials()
+{
+    Settings &s = Settings::instance();
+    const QStringList ids = s.pendingCredentials;
+    s.pendingCredentials.clear();
+    for (const QString &id : ids)
+        ensureEnabled(id);
+    s.save();
 }
 
 void MainWindow::updateBlfTargets()
@@ -747,6 +764,8 @@ void MainWindow::showAndRaise()
 
 void MainWindow::handleExternal(const QString &message)
 {
+    if (message.isEmpty()) // a second copy started minimized
+        return;
     if (message.startsWith(QLatin1String("dial "))) {
         showAndRaise();
         dial(SipUri::fromLink(message.mid(5)));

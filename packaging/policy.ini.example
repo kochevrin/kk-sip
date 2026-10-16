@@ -1,0 +1,41 @@
+; kk-sip policy: settings the administrator sets for every user (docs/provisioning.md).
+; Comments start with a semicolon.
+;   Linux: /etc/kk-sip/policy.ini
+;   macOS: /Library/Application Support/kk-sip/policy.ini
+; Every value set here wins over the user's own and is greyed out in Settings;
+; leave a key out (or empty) to let the user decide. kk-sip reads it at start.
+
+; Start at logon, straight into the tray.
+Autostart=true
+; Closing the window keeps kk-sip running in the tray.
+CloseToTray=true
+; Updates come from the administrator, not from GitHub.
+CheckUpdates=false
+; system, en, uk or ru
+;Language=uk
+; In order of preference; codecs not listed are off. Quoted because of the commas.
+Codecs="opus, G722, PCMA, PCMU"
+; Local SIP port, 0 = random.
+;SipPort=0
+
+; Every [Account...] section is an account; Server is required. Fields left out
+; (here: Password, DisplayName) are filled in by the user at the first start.
+[Account]
+Server=pbx.office.lan
+Transport=udp
+; %USER% = the Linux/macOS login. Leave User out to let users type their extension.
+User=%USER%
+;AuthUser=
+;Label=Office
+;Domain=
+;Proxy=
+;SRTP=false
+;NatRewrite=false
+;RegExpiry=300
+; Readable by every local user: only on single-user machines.
+;Password=
+
+;[Account2]
+;Server=pbx.office.lan
+;User=600
+;Label=Reception

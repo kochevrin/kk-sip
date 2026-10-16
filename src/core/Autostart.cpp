@@ -50,6 +50,27 @@ void setEnabled(bool on, bool minimized)
     run.setValue(valueName(), line);
 }
 
+// "Start kk-sip at user logon" in kk-sip.admx, or Windows' own "Run these programs at
+// user logon", with a command that runs kk-sip.exe.
+static bool groupPolicyStartsKkSip()
+{
+    for (const char *root : {"HKEY_LOCAL_MACHINE", "HKEY_CURRENT_USER"}) {
+        const QSettings run(QLatin1String(root)
+                                + QLatin1String("\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run"),
+                            QSettings::NativeFormat);
+        const QStringList names = run.childKeys();
+        for (const QString &name : names)
+            if (run.value(name).toString().contains(QLatin1String("kk-sip.exe"), Qt::CaseInsensitive))
+                return true;
+    }
+    return false;
+}
+
+void applyPolicy(bool on, bool minimized)
+{
+    setEnabled(on && !groupPolicyStartsKkSip(), minimized);
+}
+
 #elif defined(Q_OS_MACOS)
 
 // A per-user LaunchAgent that runs kk-sip at login.
@@ -226,6 +247,13 @@ void setEnabled(bool on, bool minimized)
     f.commit();
 }
 
+#endif
+
+#ifndef Q_OS_WIN
+void applyPolicy(bool on, bool minimized)
+{
+    setEnabled(on, minimized);
+}
 #endif
 
 void refresh(bool minimized)

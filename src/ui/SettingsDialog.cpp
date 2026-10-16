@@ -44,12 +44,29 @@ SettingsDialog::SettingsDialog(SipEngine *engine, QWidget *parent)
     tabs->addTab(createCodecsPage(), tr("Codecs"));
     tabs->addTab(createGeneralPage(), tr("General"));
     layout->addWidget(tabs);
+    if (Settings::instance().anyLocked()) {
+        auto *managed = new QLabel(tr("Some settings are set by your administrator."), this);
+        managed->setWordWrap(true);
+        managed->setObjectName(QStringLiteral("muted"));
+        layout->addWidget(managed);
+    }
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
     layout->addWidget(buttons);
     resize(440, 420);
+}
+
+// Greys out the controls of a setting the administrator's policy sets.
+static void lockIf(const char *key, std::initializer_list<QWidget *> widgets)
+{
+    if (!Settings::instance().isLocked(key))
+        return;
+    for (QWidget *w : widgets) {
+        w->setEnabled(false);
+        w->setToolTip(SettingsDialog::tr("Set by your administrator"));
+    }
 }
 
 // --- Accounts ---------------------------------------------------------------
@@ -78,7 +95,7 @@ QWidget *SettingsDialog::createAccountsPage()
     auto *side = new QVBoxLayout;
     auto *add = toolButton(QStringLiteral("list-add"), tr("Add…"), page);
     auto *edit = toolButton(QStringLiteral("document-edit"), tr("Edit…"), page);
-    auto *remove = toolButton(QStringLiteral("list-remove"), tr("Remove"), page);
+    auto *remove = m_remove = toolButton(QStringLiteral("list-remove"), tr("Remove"), page);
     auto *up = toolButton(QStringLiteral("go-up"), tr("Up"), page);
     auto *down = toolButton(QStringLiteral("go-down"), tr("Down"), page);
     auto *import = toolButton(QStringLiteral("document-import"), tr("From MicroSIP…"), page);
@@ -96,6 +113,12 @@ QWidget *SettingsDialog::createAccountsPage()
     connect(down, &QToolButton::clicked, this, [this] { moveAccount(1); });
     connect(import, &QToolButton::clicked, this, &SettingsDialog::importMicrosip);
     connect(m_accountList, &QListWidget::itemActivated, this, &SettingsDialog::editAccount);
+    // The administrator's accounts come back at the next start; they can only be turned off.
+    connect(m_accountList, &QListWidget::currentRowChanged, this, [this](int row) {
+        const bool managed = row >= 0 && row < m_accounts.size() && m_accounts.at(row).managed;
+        m_remove->setEnabled(!managed);
+        m_remove->setToolTip(managed ? tr("Set by your administrator") : tr("Remove"));
+    });
 
     reloadAccounts();
     connect(m_engine, &SipEngine::regStateChanged, this, &SettingsDialog::reloadAccounts);
@@ -120,9 +143,11 @@ void SettingsDialog::reloadAccounts()
         item->setData(ListDelegate::HasLampSlotRole, true);
         item->setData(ListDelegate::LampRole, lamp);
         const QString status = a.enabled ? m_engine->regText(a.id)
-                                         : (a.password.isEmpty() ? tr("off, no password") : tr("off"));
-        item->setData(ListDelegate::SubtitleRole,
-                      a.user + QLatin1Char('@') + a.sipDomain() + QStringLiteral(" · ") + status);
+                                         : (a.complete() ? tr("off") : tr("off, no password"));
+        QString subtitle = a.user + QLatin1Char('@') + a.sipDomain() + QStringLiteral(" · ") + status;
+        if (a.managed)
+            subtitle += QStringLiteral(" · ") + tr("managed");
+        item->setData(ListDelegate::SubtitleRole, subtitle);
         if (!a.enabled)
             item->setForeground(tc.muted);
         m_accountList->addItem(item);
@@ -155,7 +180,7 @@ void SettingsDialog::editAccount()
 void SettingsDialog::removeAccount()
 {
     const int row = m_accountList->currentRow();
-    if (row < 0 || row >= m_accounts.size())
+    if (row < 0 || row >= m_accounts.size() || m_accounts.at(row).managed)
         return;
     if (QMessageBox::question(this, tr("Remove account"), tr("Remove account %1?").arg(m_accounts.at(row).title()))
         != QMessageBox::Yes)
@@ -297,6 +322,7 @@ QWidget *SettingsDialog::createCodecsPage()
     layout->addLayout(side);
     connect(up, &QToolButton::clicked, this, [this] { moveCodec(-1); });
     connect(down, &QToolButton::clicked, this, [this] { moveCodec(1); });
+    lockIf("codecs", {m_codecList, up, down});
     return page;
 }
 
@@ -321,7 +347,7 @@ QWidget *SettingsDialog::createGeneralPage()
     m_closeToTray = new QCheckBox(tr("Closing the window keeps kk-sip in the tray"), page);
     m_closeToTray->setChecked(s.closeToTray);
     m_autostart = new QCheckBox(tr("Start with the system"), page);
-    m_autostart->setChecked(Autostart::isEnabled());
+    m_autostart->setChecked(s.isLocked("autostart") ? s.autostart : Autostart::isEnabled());
     m_startHidden = new QCheckBox(tr("…straight to the tray, without the window"), page);
     m_startHidden->setChecked(s.startHidden);
     m_startHidden->setEnabled(m_autostart->isChecked());
@@ -365,6 +391,11 @@ QWidget *SettingsDialog::createGeneralPage()
     form->addRow(m_checkUpdates);
     form->addRow(m_debugLog);
     form->addRow(tr("Local SIP port (restart needed):"), m_sipPort);
+    lockIf("closeToTray", {m_closeToTray});
+    lockIf("autostart", {m_autostart, m_startHidden});
+    lockIf("checkUpdates", {m_checkUpdates});
+    lockIf("language", {m_language});
+    lockIf("sipPort", {m_sipPort});
     Theme::tidyForm(form);
     return page;
 }
@@ -376,10 +407,12 @@ void SettingsDialog::commit()
     s.captureDevice = m_capture->currentData().toString();
     s.playbackDevice = m_playback->currentData().toString();
     s.ringtoneFile = m_ringtone->text().trimmed();
-    s.codecs.clear();
-    for (int i = 0; i < m_codecList->count(); ++i) {
-        QListWidgetItem *item = m_codecList->item(i);
-        s.codecs.append({item->text(), item->checkState() == Qt::Checked});
+    if (!s.isLocked("codecs")) {
+        s.codecs.clear();
+        for (int i = 0; i < m_codecList->count(); ++i) {
+            QListWidgetItem *item = m_codecList->item(i);
+            s.codecs.append({item->text(), item->checkState() == Qt::Checked});
+        }
     }
     s.closeToTray = m_closeToTray->isChecked();
     s.startHidden = m_startHidden->isChecked();
@@ -399,7 +432,8 @@ void SettingsDialog::commit()
         s.theme = m_theme->currentData().toString();
         Theme::apply(Theme::modeFromString(s.theme));
     }
-    Autostart::setEnabled(m_autostart->isChecked(), s.startHidden);
+    if (!s.isLocked("autostart"))
+        Autostart::setEnabled(m_autostart->isChecked(), s.startHidden);
     s.sipPort = m_sipPort->value();
     s.save();
 }

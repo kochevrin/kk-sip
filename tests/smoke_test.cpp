@@ -26,6 +26,9 @@
 #include "ui/Theme.h"
 
 #include <QAbstractButton>
+#include <QCheckBox>
+#include <QListWidget>
+#include <QSettings>
 #include <QAbstractSpinBox>
 #include <QApplication>
 #include <QComboBox>
@@ -73,6 +76,7 @@ private slots:
     void screenshots();
     void updateVersions();
     void closeKeepsRunning();
+    void policy();
     void layoutAudit();
 
 private:
@@ -850,6 +854,137 @@ void SmokeTest::closeKeepsRunning()
     QVERIFY(m_engine->regState(m_acc101.id) != RegState::Disabled); // still registered, takes calls
     m_window->showAndRaise(); // tray click or a second launch
     QVERIFY(m_window->isVisible());
+}
+
+void SmokeTest::policy()
+{
+    // The administrator's policy (docs/provisioning.md); in test mode it comes from
+    // KKSIP_POLICY_FILE instead of /etc or the registry.
+    Settings &s = Settings::instance();
+    const Settings saved = s;
+    s.checkUpdates = true;
+    s.language.clear();
+    s.save();
+    QTemporaryDir dir;
+    const QString path = dir.filePath(QStringLiteral("policy.ini"));
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::WriteOnly));
+    f.write("checkupdates=false\n"
+            "Language=uk\n"
+            "Codecs=PCMA, opus\n"
+            "Autostart=1\n"
+            "\n"
+            "[Account]\n"
+            "Server=pbx.office.lan\n"
+            "Transport=TCP\n"
+            "User=%KKSIP_TEST_EXT%\n"
+            "DisplayName=\n"
+            "SRTP=0\n"
+            "\n"
+            "[Account2]\n"
+            "Label=no server, ignored\n");
+    f.close();
+    qputenv("KKSIP_POLICY_FILE", path.toLocal8Bit());
+    qputenv("KKSIP_TEST_EXT", "104");
+    s.load();
+
+    QVERIFY(s.isLocked("checkUpdates"));
+    QVERIFY(!s.checkUpdates);
+    QCOMPARE(s.language, QStringLiteral("uk"));
+    QVERIFY(s.isLocked("autostart") && s.autostart);
+    QVERIFY(!s.isLocked("closeToTray"));
+    QCOMPARE(s.codecs.size(), 2);
+    QCOMPARE(s.codecs.at(0).id, QStringLiteral("PCMA"));
+    QCOMPARE(s.accounts.size(), saved.accounts.size() + 1);
+    AccountConfig managed = s.accounts.first(); // new managed accounts go on top
+    QCOMPARE(managed.id, QStringLiteral("policy-account"));
+    QVERIFY(managed.managed);
+    QCOMPARE(managed.server, QStringLiteral("pbx.office.lan"));
+    QCOMPARE(managed.transport, QStringLiteral("tcp"));
+    QCOMPARE(managed.user, QStringLiteral("104"));
+    QVERIFY(managed.isLocked("user") && managed.isLocked("srtp"));
+    QVERIFY(!managed.isLocked("password") && !managed.isLocked("displayName")); // empty = left to the user
+    QVERIFY(!managed.enabled);                                                // no password yet
+    QCOMPARE(s.pendingCredentials, QStringList{managed.id});
+
+    // Codecs named by the policy, in its order; the rest are off.
+    m_engine->applyCodecs(s.codecs);
+    const QList<CodecEntry> active = m_engine->codecs();
+    QVERIFY(active.at(0).id.startsWith(QLatin1String("PCMA/")));
+    QVERIFY(active.at(1).id.startsWith(QLatin1String("opus/")));
+    QCOMPARE(active.at(2).priority, 0);
+
+    // The UI greys out what the policy sets.
+    {
+        AccountDialog dlg(managed, m_window.get());
+        dlg.show();
+        QTest::qWait(100);
+        shot(&dlg, QStringLiteral("13-managed-account"));
+        const QList<QLineEdit *> edits = dlg.findChildren<QLineEdit *>();
+        auto edit = [&](const QString &text) {
+            auto it = std::find_if(edits.cbegin(), edits.cend(), [&](QLineEdit *e) { return e->text() == text; });
+            return it == edits.cend() ? nullptr : *it;
+        };
+        QVERIFY(edit(QStringLiteral("pbx.office.lan")) && !edit(QStringLiteral("pbx.office.lan"))->isEnabled());
+        QVERIFY(edit(QStringLiteral("104")) && !edit(QStringLiteral("104"))->isEnabled());
+        QVERIFY(std::all_of(edits.cbegin(), edits.cend(), [](QLineEdit *e) {
+            return e->echoMode() != QLineEdit::Password || e->isEnabled();
+        }));
+    }
+    {
+        SettingsDialog dlg(m_engine.get(), m_window.get());
+        dlg.show();
+        const QList<QToolButton *> buttons = dlg.findChildren<QToolButton *>();
+        auto remove = std::find_if(buttons.cbegin(), buttons.cend(),
+                                   [](QToolButton *b) { return b->text() == SettingsDialog::tr("Remove"); });
+        QVERIFY(remove != buttons.cend());
+        auto *list = (*remove)->parentWidget()->findChild<QListWidget *>(); // the accounts page
+        QVERIFY(list);
+        list->setCurrentRow(1);
+        QVERIFY((*remove)->isEnabled());
+        list->setCurrentRow(0);
+        QVERIFY(!(*remove)->isEnabled());
+        QTest::qWait(100);
+        shot(&dlg, QStringLiteral("14-managed-settings"));
+        auto *tabs = dlg.findChild<QTabWidget *>();
+        tabs->setCurrentIndex(tabs->count() - 1);
+        QTest::qWait(100);
+        shot(&dlg, QStringLiteral("14a-managed-settings-general"));
+        const QList<QCheckBox *> boxes = dlg.findChildren<QCheckBox *>();
+        for (QCheckBox *b : boxes)
+            if (b->text() == SettingsDialog::tr("Check GitHub for new versions"))
+                QVERIFY(!b->isEnabled() && !b->isChecked());
+    }
+
+    // What the user fills in stays theirs; the policy's values never reach their file.
+    s.accounts.first().password = QStringLiteral("pw");
+    s.accounts.first().enabled = true;
+    s.accounts.move(0, s.accounts.size() - 1); // moved down by the user
+    s.save();
+    {
+        const QSettings ini(s.configDir() + QStringLiteral("/kk-sip.ini"), QSettings::IniFormat);
+        QCOMPARE(ini.value("app/checkUpdates").toBool(), true);
+        QVERIFY(ini.value("app/language").toString().isEmpty()); // not the policy's "uk"
+    }
+    s.load();
+    QCOMPARE(s.accounts.last().id, QStringLiteral("policy-account"));
+    QCOMPARE(s.accounts.last().password, QStringLiteral("pw"));
+    QVERIFY(s.accounts.last().enabled);
+    QVERIFY(s.pendingCredentials.isEmpty());
+
+    // Policy gone: the user's own values are back, the managed account is gone.
+    qunsetenv("KKSIP_POLICY_FILE");
+    s.load();
+    QVERIFY(!s.anyLocked());
+    QVERIFY(s.checkUpdates);
+    QVERIFY(s.language.isEmpty());
+    QCOMPARE(s.accounts.size(), saved.accounts.size());
+
+    s = saved;
+    s.save();
+    m_engine->applyCodecs({{QStringLiteral("opus"), true}, {QStringLiteral("G722"), true},
+                           {QStringLiteral("PCMA"), true}, {QStringLiteral("PCMU"), true},
+                           {QStringLiteral("GSM"), true}});
 }
 
 void SmokeTest::layoutAudit()

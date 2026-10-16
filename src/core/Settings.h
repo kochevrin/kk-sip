@@ -1,8 +1,10 @@
 #pragma once
 
 #include <QList>
+#include <QSet>
 #include <QString>
 #include <QStringList>
+#include <QVariantMap>
 
 struct AccountConfig {
     QString id;           // stable internal id, never shown
@@ -19,8 +21,12 @@ struct AccountConfig {
     bool natRewrite = false; // rewrite Via/Contact/SDP from what the server sees (MicroSIP "allowRewrite")
     bool enabled = true;
     int regExpiry = 300;
+    bool managed = false;  // comes from the administrator's policy (core/Policy.h)
+    QStringList locked;    // fields the policy sets, by their ini names ("server", "user"...)
 
     QString title() const;
+    bool isLocked(const char *field) const { return locked.contains(QLatin1String(field)); }
+    bool complete() const { return !server.isEmpty() && !user.isEmpty() && !password.isEmpty(); }
     QString sipDomain() const { return domain.isEmpty() ? server : domain; }
     bool sameSipConfig(const AccountConfig &o) const;
 };
@@ -30,7 +36,8 @@ struct CodecSetting {
     bool enabled = true;
 };
 
-// Persistent app settings in ~/.config/kk-sip/kk-sip.ini.
+// Persistent app settings in ~/.config/kk-sip/kk-sip.ini, with the administrator's
+// policy (core/Policy.h) laid over them by load().
 class Settings {
 public:
     static Settings &instance();
@@ -59,8 +66,15 @@ public:
     bool checkUpdates = true;   // ask GitHub once a day whether a newer release exists
     bool trayHintShown = false; // told once that closing the window keeps kk-sip in the tray
     int sipPort = 0;        // 0 = random local port
+    bool autostart = false; // only from the policy: whether it starts kk-sip at logon
 
     QByteArray windowGeometry;
+
+    // Settings the policy sets, by their ini names ("checkUpdates", "autostart"...).
+    bool isLocked(const char *key) const { return m_locked.contains(QLatin1String(key)); }
+    bool anyLocked() const;
+    // Managed accounts that appeared with this load() and still miss a user or password.
+    QStringList pendingCredentials;
 
     QString configDir() const;
     QString dataDir() const;
@@ -68,4 +82,6 @@ public:
 
 private:
     Settings() = default;
+    QSet<QString> m_locked;
+    QVariantMap m_userValues; // the user's own values of locked settings, kept by save()
 };

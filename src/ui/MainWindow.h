@@ -67,6 +67,7 @@ private:
     QString currentAccountId() const;
     const AccountConfig *accountConfig(const QString &id) const;
     bool ensureEnabled(const QString &id);
+    void askCredentials();
     void setAccountEnabled(const QString &id, bool on);
     QString accountTitle(const QString &id) const;
     QString nameFor(const QString &number, const QString &sipName = {}) const;

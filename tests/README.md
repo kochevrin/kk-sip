@@ -9,6 +9,8 @@ dialogs) against a real PBX:
 - incoming call on the second account: popup, answer, caller name taken from contacts
 - missed incoming call and the unread badge on the History tab
 - SIP URI helpers and import of MicroSIP's UTF-16 `microsip.ini`
+- the administrator's policy (`KKSIP_POLICY_FILE`): locked settings and controls, a
+  managed account the user completes, the user's own values coming back without it
 
 Run it with Docker:
 

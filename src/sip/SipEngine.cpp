@@ -1013,12 +1013,29 @@ QList<CodecEntry> SipEngine::codecs() const
     return out;
 }
 
-void SipEngine::applyCodecs(const QList<CodecSetting> &codecs)
+void SipEngine::applyCodecs(const QList<CodecSetting> &list)
 {
-    if (!m_ep || codecs.isEmpty())
+    if (!m_ep || list.isEmpty())
         return;
+    // A name covers every variant ("opus", "speex/16000" from a policy), and codecs the
+    // list leaves out are switched off.
+    const QList<CodecEntry> available = codecs();
+    QList<CodecSetting> full;
+    auto listed = [&full](const QString &id) {
+        return std::any_of(full.cbegin(), full.cend(), [&](const CodecSetting &c) { return c.id == id; });
+    };
+    for (const CodecSetting &c : list)
+        for (const CodecEntry &e : available)
+            if ((e.id.compare(c.id, Qt::CaseInsensitive) == 0
+                 || e.id.startsWith(c.id + QLatin1Char('/'), Qt::CaseInsensitive))
+                && !listed(e.id))
+                full.append({e.id, c.enabled});
+    for (const CodecEntry &e : available)
+        if (!listed(e.id))
+            full.append({e.id, false});
+
     int prio = 254;
-    for (const CodecSetting &c : codecs) {
+    for (const CodecSetting &c : std::as_const(full)) {
         try {
             m_ep->codecSetPriority(toStd(c.id), pj_uint8_t(c.enabled ? qMax(1, prio) : 0));
         } catch (const pj::Error &) {

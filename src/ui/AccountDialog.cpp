@@ -7,9 +7,11 @@
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
+#include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSpinBox>
+#include <utility>
 
 AccountDialog::AccountDialog(const AccountConfig &account, QWidget *parent)
     : QDialog(parent)
@@ -65,6 +67,23 @@ AccountDialog::AccountDialog(const AccountConfig &account, QWidget *parent)
     m_expiry->setSuffix(tr(" s"));
     m_expiry->setValue(account.regExpiry);
 
+    if (account.managed) {
+        auto *note = new QLabel(tr("Set up by your administrator: the greyed-out fields can't be changed."), this);
+        note->setWordWrap(true);
+        note->setObjectName(QStringLiteral("muted"));
+        form->addRow(note);
+        const std::pair<const char *, QWidget *> fields[] = {
+            {"label", m_label},         {"server", m_server},           {"domain", m_domain},
+            {"proxy", m_proxy},         {"user", m_user},               {"authUser", m_authUser},
+            {"password", m_password},   {"displayName", m_displayName}, {"transport", m_transport},
+            {"srtp", m_srtp},           {"natRewrite", m_natRewrite},   {"regExpiry", m_expiry}};
+        for (const auto &[field, widget] : fields) {
+            if (account.isLocked(field)) {
+                widget->setEnabled(false);
+                widget->setToolTip(tr("Set by your administrator"));
+            }
+        }
+    }
     form->addRow(tr("Account name:"), m_label);
     form->addRow(tr("SIP server:"), m_server);
     form->addRow(tr("Username:"), m_user);
@@ -91,7 +110,9 @@ AccountDialog::AccountDialog(const AccountConfig &account, QWidget *parent)
 
     // Wider than the form needs, but never narrower: a fixed minimum would cut long labels.
     resize(qMax(380, sizeHint().width()), sizeHint().height());
-    if (!account.server.isEmpty() && account.password.isEmpty())
+    if (!account.server.isEmpty() && account.user.isEmpty())
+        m_user->setFocus();
+    else if (!account.server.isEmpty() && account.password.isEmpty())
         m_password->setFocus();
 }
 

@@ -9,6 +9,7 @@ class QComboBox;
 class QLineEdit;
 class QListWidget;
 class QSpinBox;
+class QToolButton;
 class SipEngine;
 
 class SettingsDialog : public QDialog {
@@ -36,6 +37,7 @@ private:
     QList<AccountConfig> m_accounts;
 
     QListWidget *m_accountList = nullptr;
+    QToolButton *m_remove = nullptr;
     QComboBox *m_capture = nullptr;
     QComboBox *m_playback = nullptr;
     QLineEdit *m_ringtone = nullptr;

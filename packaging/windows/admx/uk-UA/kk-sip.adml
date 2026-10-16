@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           revision="1.0" schemaVersion="1.0"
+                           xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <displayName>kk-sip</displayName>
+  <description>Налаштування SIP-телефона kk-sip</description>
+  <resources>
+    <stringTable>
+      <string id="SUPPORTED_KkSip_0_3">kk-sip 0.3.0 або новіший</string>
+      <string id="KkSip">kk-sip</string>
+
+      <string id="Account">Обліковий запис SIP</string>
+      <string id="Account2">Другий обліковий запис SIP</string>
+      <string id="Account_Help">Додає до kk-sip обліковий запис SIP, над власними обліковими записами користувача.
+
+Кожне заповнене тут поле заблоковане: користувач бачить його сірим і не може змінити. Порожні поля заповнює сам користувач, вони зберігаються в його профілі. Користувач може вимикати й вмикати обліковий запис, але не може його видалити.
+
+Поля для пароля тут навмисно немає: усе, що є в GPO, може прочитати будь-який користувач домену. Залиште пароль користувачеві: kk-sip попросить його під час першого запуску (разом з ім’ям користувача, якщо й воно порожнє).
+
+Поля можуть містити змінні середовища, наприклад %USERNAME% як ім’я користувача, якщо внутрішні номери збігаються з логінами Windows. Значення з «Конфігурації комп’ютера» переважають «Конфігурацію користувача» для кожного поля окремо, тож сервер можна задати для комп’ютера, а ім’я користувача — для кожного користувача.
+
+Сервер: адреса або адреса:порт АТС. Обов’язкове поле.
+Ім’я користувача: внутрішній номер.
+Логін (auth ID): якщо для автентифікації потрібне інше ім’я.
+Відображуване ім’я: ім’я абонента, що надсилається з дзвінками.
+Назва облікового запису: назва в перемикачі облікових записів.
+SIP-домен, SIP-проксі: якщо вони відрізняються від сервера.
+Повторна реєстрація: секунди, від 60 до 3600.
+
+Якщо політику вимкнено або не налаштовано, обліковий запис не додається, а доданий раніше зникає під час наступного запуску kk-sip.</string>
+      <string id="Transport_Udp">UDP</string>
+      <string id="Transport_Tcp">TCP</string>
+      <string id="Transport_Tls">TLS</string>
+
+      <string id="Autostart">Запускати kk-sip під час входу користувача</string>
+      <string id="Autostart_Help">Якщо політику ввімкнено, Windows запускає kk-sip під час кожного входу одразу в область сповіщень, починаючи з першого входу, ще до того, як користувач сам відкрив kk-sip. Команда записується в ключ політики Windows «Запускати ці програми під час входу користувача»; змініть шлях, якщо kk-sip встановлено деінде. Користувач не може вимкнути автозапуск.
+
+Якщо політику вимкнено, kk-sip не запускається під час входу, і користувач не може ввімкнути автозапуск.
+
+Якщо політику не налаштовано, вирішує користувач у «Налаштування → Загальні».</string>
+
+      <string id="CloseToTray">Не закривати kk-sip разом з вікном</string>
+      <string id="CloseToTray_Help">Якщо політику ввімкнено, після закриття вікна kk-sip працює далі в області сповіщень і приймає дзвінки. Якщо вимкнено, закриття вікна завершує kk-sip.
+
+Якщо політику не налаштовано, вирішує користувач у «Налаштування → Загальні» (за замовчуванням увімкнено).</string>
+
+      <string id="CheckUpdates">Перевіряти нові версії на GitHub</string>
+      <string id="CheckUpdates_Help">kk-sip може раз на день питати GitHub, чи вийшла нова версія, і показувати посилання на неї. Сам він нічого не завантажує й не встановлює.
+
+Вимкніть політику, якщо оновлення розгортає адміністратор. Якщо політику не налаштовано, вирішує користувач у «Налаштування → Загальні» (за замовчуванням увімкнено).</string>
+
+      <string id="Language">Мова інтерфейсу</string>
+      <string id="Language_Help">Задає мову kk-sip і блокує вибір у «Налаштування → Загальні». «Як у Windows» бере першу з мов інтерфейсу Windows, яку знає kk-sip (англійська, українська, російська).
+
+Якщо політику не налаштовано, мову обирає користувач.</string>
+      <string id="Language_System">Як у Windows</string>
+      <string id="Language_En">English</string>
+      <string id="Language_Uk">Українська</string>
+      <string id="Language_Ru">Русский</string>
+
+      <string id="Codecs">Аудіокодеки</string>
+      <string id="Codecs_Help">Кодеки, які пропонує kk-sip, у порядку пріоритету, через кому, наприклад: opus, G722, PCMA, PCMU
+
+Кодеки, яких немає в списку, вимикаються. Назва охоплює всі варіанти кодека («speex» — це speex/8000, speex/16000 і speex/32000); «speex/16000» обирає один. Відомі назви: opus, G722, PCMA, PCMU, GSM, speex, iLBC.
+
+Якщо політику не налаштовано, кодеки задає користувач у «Налаштування → Кодеки».</string>
+
+      <string id="SipPort">Локальний порт SIP</string>
+      <string id="SipPort_Help">Локальний порт UDP/TCP, який kk-sip використовує для SIP. 0 — випадковий вільний порт (за замовчуванням).
+
+Фіксований порт спрощує правила брандмауера, але на термінальному сервері його отримає лише kk-sip першого користувача: там фіксований порт не задавайте.</string>
+    </stringTable>
+
+    <presentationTable>
+      <presentation id="Account">
+        <textBox refId="Server"><label>Сервер:</label></textBox>
+        <dropdownList refId="Transport" noSort="true" defaultItem="0">Транспорт:</dropdownList>
+        <textBox refId="User"><label>Ім’я користувача (внутрішній номер):</label></textBox>
+        <textBox refId="AuthUser"><label>Логін (auth ID):</label></textBox>
+        <textBox refId="DisplayName"><label>Відображуване ім’я:</label></textBox>
+        <textBox refId="Label"><label>Назва облікового запису:</label></textBox>
+        <textBox refId="Domain"><label>SIP-домен:</label></textBox>
+        <textBox refId="Proxy"><label>SIP-проксі:</label></textBox>
+        <checkBox refId="SRTP" defaultChecked="false">Шифрувати медіа (SRTP)</checkBox>
+        <checkBox refId="NatRewrite" defaultChecked="false">Пристосовувати адреси до NAT (переписувати Contact/Via/SDP)</checkBox>
+        <decimalTextBox refId="RegExpiry" defaultValue="300" spinStep="60">Повторна реєстрація кожні (секунд):</decimalTextBox>
+      </presentation>
+      <presentation id="Autostart">
+        <textBox refId="Command">
+          <label>Команда:</label>
+          <defaultValue>"C:\Program Files\kk-sip\kk-sip.exe" --minimized</defaultValue>
+        </textBox>
+      </presentation>
+      <presentation id="Language">
+        <dropdownList refId="Language" noSort="true" defaultItem="0">Мова:</dropdownList>
+      </presentation>
+      <presentation id="Codecs">
+        <textBox refId="Codecs">
+          <label>Кодеки:</label>
+          <defaultValue>opus, G722, PCMA, PCMU</defaultValue>
+        </textBox>
+      </presentation>
+      <presentation id="SipPort">
+        <decimalTextBox refId="SipPort" defaultValue="0">Порт (0 — випадковий):</decimalTextBox>
+      </presentation>
+    </presentationTable>
+  </resources>
+</policyDefinitionResources>

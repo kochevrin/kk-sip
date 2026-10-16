@@ -28,6 +28,7 @@ qt_standard_project_setup()
 # Everything except main() lives in an object library so the smoke test can reuse it.
 add_library(kk-sip-core OBJECT
     src/core/Settings.h src/core/Settings.cpp
+    src/core/Policy.h src/core/Policy.cpp
     src/core/Database.h src/core/Database.cpp
     src/core/SipUri.h src/core/SipUri.cpp
     src/core/SingleInstance.h src/core/SingleInstance.cpp

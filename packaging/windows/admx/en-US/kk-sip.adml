@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           revision="1.0" schemaVersion="1.0"
+                           xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
+  <displayName>kk-sip</displayName>
+  <description>Settings for the kk-sip softphone</description>
+  <resources>
+    <stringTable>
+      <string id="SUPPORTED_KkSip_0_3">kk-sip 0.3.0 or later</string>
+      <string id="KkSip">kk-sip</string>
+
+      <string id="Account">SIP account</string>
+      <string id="Account2">Second SIP account</string>
+      <string id="Account_Help">Adds a SIP account to kk-sip, above the user's own accounts.
+
+Every field you fill in is locked: the user sees it greyed out and cannot change it. Fields you leave empty are filled in by the user and kept in their profile. The user can turn the account off and on, but cannot remove it.
+
+The password has no field here on purpose: everything in a GPO is readable by every domain user. Leave it to the user, who is asked for it at the first start (together with the username when that is empty too).
+
+Fields may contain environment variables, for example %USERNAME% as the username when extensions match Windows logins. Values set in Computer Configuration win over User Configuration field by field, so the server can be set for the computer and the username per user.
+
+Server: host or host:port of the PBX. Required.
+Username: extension.
+Login (auth ID): when authentication uses a different name.
+Display name: caller name sent with calls.
+Account name: name in the account switcher.
+SIP domain, SIP proxy: when they differ from the server.
+Re-register every: seconds, 60 to 3600.
+
+If you disable or do not configure this policy, the account is not added, and an account added before disappears at the next start of kk-sip.</string>
+      <string id="Transport_Udp">UDP</string>
+      <string id="Transport_Tcp">TCP</string>
+      <string id="Transport_Tls">TLS</string>
+
+      <string id="Autostart">Start kk-sip at user logon</string>
+      <string id="Autostart_Help">If you enable this policy, Windows starts kk-sip at every logon, straight into the notification area, from the first logon on, also before the user has opened kk-sip. The command goes into Windows' "Run these programs at user logon" policy key; change the path if kk-sip is installed elsewhere. The user cannot turn autostart off.
+
+If you disable this policy, kk-sip does not start at logon and the user cannot turn autostart on.
+
+If you do not configure this policy, the user decides in Settings → General.</string>
+
+      <string id="CloseToTray">Keep kk-sip running when its window is closed</string>
+      <string id="CloseToTray_Help">If you enable this policy, closing the window keeps kk-sip running in the notification area, so it still takes calls. If you disable it, closing the window quits kk-sip.
+
+If you do not configure this policy, the user decides in Settings → General (on by default).</string>
+
+      <string id="CheckUpdates">Check GitHub for new versions</string>
+      <string id="CheckUpdates_Help">kk-sip can ask GitHub once a day whether a newer release exists and then shows a link to it. It never downloads or installs anything itself.
+
+Disable this policy when updates are deployed by the administrator. If you do not configure it, the user decides in Settings → General (on by default).</string>
+
+      <string id="Language">Interface language</string>
+      <string id="Language_Help">Sets the language of kk-sip and locks the choice in Settings → General. "Follow Windows" uses the first of the Windows display languages that kk-sip has (English, Ukrainian, Russian).
+
+If you do not configure this policy, the user chooses.</string>
+      <string id="Language_System">Follow Windows</string>
+      <string id="Language_En">English</string>
+      <string id="Language_Uk">Українська</string>
+      <string id="Language_Ru">Русский</string>
+
+      <string id="Codecs">Audio codecs</string>
+      <string id="Codecs_Help">Codecs kk-sip offers, in order of preference, separated by commas, for example: opus, G722, PCMA, PCMU
+
+Codecs that are not listed are switched off. A name covers all its variants ("speex" means speex/8000, speex/16000 and speex/32000); "speex/16000" picks one. Known names: opus, G722, PCMA, PCMU, GSM, speex, iLBC.
+
+If you do not configure this policy, the user sets codecs in Settings → Codecs.</string>
+
+      <string id="SipPort">Local SIP port</string>
+      <string id="SipPort_Help">The local UDP/TCP port kk-sip uses for SIP. 0 means a random free port, which is the default.
+
+A fixed port helps with firewall rules, but on a terminal server only the first user's kk-sip gets it: do not set a fixed port there.</string>
+    </stringTable>
+
+    <presentationTable>
+      <presentation id="Account">
+        <textBox refId="Server"><label>Server:</label></textBox>
+        <dropdownList refId="Transport" noSort="true" defaultItem="0">Transport:</dropdownList>
+        <textBox refId="User"><label>Username (extension):</label></textBox>
+        <textBox refId="AuthUser"><label>Login (auth ID):</label></textBox>
+        <textBox refId="DisplayName"><label>Display name:</label></textBox>
+        <textBox refId="Label"><label>Account name:</label></textBox>
+        <textBox refId="Domain"><label>SIP domain:</label></textBox>
+        <textBox refId="Proxy"><label>SIP proxy:</label></textBox>
+        <checkBox refId="SRTP" defaultChecked="false">Encrypt media (SRTP)</checkBox>
+        <checkBox refId="NatRewrite" defaultChecked="false">Adapt addresses to NAT (rewrite Contact/Via/SDP)</checkBox>
+        <decimalTextBox refId="RegExpiry" defaultValue="300" spinStep="60">Re-register every (seconds):</decimalTextBox>
+      </presentation>
+      <presentation id="Autostart">
+        <textBox refId="Command">
+          <label>Command:</label>
+          <defaultValue>"C:\Program Files\kk-sip\kk-sip.exe" --minimized</defaultValue>
+        </textBox>
+      </presentation>
+      <presentation id="Language">
+        <dropdownList refId="Language" noSort="true" defaultItem="0">Language:</dropdownList>
+      </presentation>
+      <presentation id="Codecs">
+        <textBox refId="Codecs">
+          <label>Codecs:</label>
+          <defaultValue>opus, G722, PCMA, PCMU</defaultValue>
+        </textBox>
+      </presentation>
+      <presentation id="SipPort">
+        <decimalTextBox refId="SipPort" defaultValue="0">Port (0 = random):</decimalTextBox>
+      </presentation>
+    </presentationTable>
+  </resources>
+</policyDefinitionResources>

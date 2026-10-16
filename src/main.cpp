@@ -212,8 +212,12 @@ int main(int argc, char *argv[])
     if (parser.isSet(importOption))
         return importMicrosip(parser.value(importOption));
 
+    // A second autostart (our own entry and one from Group Policy) must not pop up the window.
     SingleInstance instance;
-    if (instance.forwardToRunning(target.isEmpty() ? QStringLiteral("show") : QStringLiteral("dial ") + target))
+    const QString message = !target.isEmpty()                ? QStringLiteral("dial ") + target
+                            : parser.isSet(minimizedOption) ? QString()
+                                                            : QStringLiteral("show");
+    if (instance.forwardToRunning(message))
         return 0;
     instance.listen();
 
@@ -247,7 +251,10 @@ int main(int argc, char *argv[])
             window.showAndRaise();
     });
 #endif
-    Autostart::refresh(settings.startHidden);
+    if (settings.isLocked("autostart"))
+        Autostart::applyPolicy(settings.autostart, settings.startHidden);
+    else
+        Autostart::refresh(settings.startHidden);
     if (WindowPlacement::usesKWinRule())
         WindowPlacement::setKWinRule(settings.rememberPosition, window.size());
     // Autostart passes --minimized; a manual launch or a first run without accounts shows the window.

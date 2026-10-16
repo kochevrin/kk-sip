@@ -47,6 +47,10 @@ uses) and Qt 6.
 - Opens `sip:`, `tel:` and `callto:` links (`kk-sip tel:+380...`); a second launch
   hands the number to the running instance
 - English, Ukrainian and Russian UI: follows the system or set in Settings → General
+- **Central configuration for companies**: the PBX account, codecs, start at logon and
+  update checks set for everyone through Group Policy (ADMX templates in English,
+  Ukrainian and Russian), the registry or `/etc/kk-sip/policy.ini`; users only type
+  their password once. See [docs/provisioning.md](docs/provisioning.md)
 
 <p align="center">
   <img src="docs/screenshots/wide.png" alt="Wide view, light theme" width="680">
@@ -74,7 +78,9 @@ Packages are attached to every [release](https://github.com/kochevrin/kk-sip/rel
 The MSI installs for all users into `Program Files\kk-sip`, adds a Start menu
 entry and registers kk-sip for `sip:`, `tel:` and `callto:` links. It installs
 silently, so it can be assigned through Group Policy or pushed with SCCM, Intune or
-Ansible (`win_package`). A newer MSI replaces the older one in place.
+Ansible (`win_package`). A newer MSI replaces the older one in place. To set kk-sip
+up for a whole office (account, autostart, codecs), use the Group Policy templates in
+`kk-sip-<ver>-policy-templates.zip`; see [docs/provisioning.md](docs/provisioning.md).
 
 The macOS app is not signed with an Apple Developer ID, so Gatekeeper stops the
 first launch ("Apple could not verify kk-sip..."). Once per installed version:
@@ -147,6 +153,7 @@ sudo cmake --install build
 | Autostart (when enabled) | `~/.config/autostart/kk-sip.desktop` | `HKCU\…\CurrentVersion\Run\kk-sip` | `~/Library/LaunchAgents/io.github.kochevrin.kk-sip.plist` |
 | Settings and accounts | `~/.config/kk-sip/kk-sip.ini` | `%LOCALAPPDATA%\kk-sip\kk-sip.ini` | `~/Library/Preferences/kk-sip/kk-sip.ini` |
 | History and contacts (SQLite) | `~/.local/share/kk-sip/kk-sip.db` | `%LOCALAPPDATA%\kk-sip\kk-sip.db` | `~/Library/Application Support/kk-sip/kk-sip.db` |
+| Administrator's policy (optional) | `/etc/kk-sip/policy.ini` | `HKLM\` and `HKCU\SOFTWARE\Policies\kk-sip` | `/Library/Application Support/kk-sip/policy.ini` |
 | SIP debug log (when enabled) | `~/.local/share/kk-sip/pjsip.log` | `%LOCALAPPDATA%\kk-sip\pjsip.log` | `~/Library/Application Support/kk-sip/pjsip.log` |
 
 Passwords are stored in plain text in the settings file (mode 600 on Linux and macOS).
