@@ -17,6 +17,18 @@ on the following components.
 The Windows and macOS packages carry Qt, Opus and OpenSSL inside (next to
 `kk-sip.exe`, or in `kk-sip.app/Contents/Frameworks`) as unmodified shared libraries.
 
+## Android app
+
+The APK links the same PJSIP (built by `android/scripts/build-pjsip.sh`, with its
+Android audio device instead of the system libraries above) into `libkksip.so`, and
+uses these libraries from Google's Maven repository:
+
+| Component | Role | License |
+|---|---|---|
+| [AndroidX](https://developer.android.com/jetpack/androidx): Core, Core-Telecom, Activity, Lifecycle | system integration, self-managed calls | Apache-2.0 |
+| [Jetpack Compose](https://developer.android.com/jetpack/compose) and Material 3 | UI | Apache-2.0 |
+| [Kotlin](https://kotlinlang.org) standard library and coroutines | language runtime | Apache-2.0 |
+
 ## Used only by tests
 
 | Component | Role | License |

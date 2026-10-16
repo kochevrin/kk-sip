@@ -84,12 +84,15 @@ The Android app reads the same keys as managed configurations, with these differ
   may carry an optional string `Group` (`Account`, `Account2`, `AccountQueue`); without it
   the first bundle is `Account`, the second `Account2` and so on. The group gives the
   account the same internal id (`policy-` + group in lower case) on every platform.
-- `Autostart`, `CloseToTray`, `SipPort` and `RegExpiry` do not apply (no tray, outgoing
-  calls only) and are ignored.
+- `Autostart`, `CloseToTray`, `SipPort` and `RegExpiry` are ignored: there is no tray,
+  the port is always random, and a phone renews its registration on its own schedule
+  (every 10 minutes, waking up for it) so it keeps receiving calls while it sleeps.
 - No `%NAME%` expansion. Use the MDM's own per-user placeholders instead, for example
   Intune's `{{username}}`.
-- Phones without an MDM can import a file in the INI format above (from a file or a
-  QR code). Imported values become the user's own settings, not locked ones.
+- Phones without an MDM import a file in the INI format above, from a file or a QR code
+  (this part is done). Imported values become the user's own settings, not locked ones,
+  and an account may carry `Enabled=false` to arrive switched off.
+  `android/scripts/export-accounts.py` writes both from a desktop's own settings.
 
 ## Passwords
 

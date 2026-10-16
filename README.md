@@ -74,6 +74,7 @@ Packages are attached to every [release](https://github.com/kochevrin/kk-sip/rel
 | Windows 10/11 (x64) | `kk-sip-<ver>-windows-x64.msi` | double-click, or `msiexec /i kk-sip-<ver>-windows-x64.msi /qn` |
 | Windows, no install | `kk-sip-<ver>-windows-x64.zip` | unpack anywhere and run `kk-sip.exe` |
 | macOS 14+ (Apple Silicon) | `kk-sip-<ver>-macos-arm64.dmg` | open it and drag kk-sip to Applications, then see below |
+| Android 8+ (64-bit ARM) | `kk-sip-<ver>-android.apk` | open it on the phone and allow installing from that app; see [Android](#android) |
 
 The MSI installs for all users into `Program Files\kk-sip`, adds a Start menu
 entry and registers kk-sip for `sip:`, `tel:` and `callto:` links. It installs
@@ -108,6 +109,30 @@ kk-sip --import-microsip /path/to/that/folder
 
 MicroSIP encrypts passwords with a Windows key, so accounts arrive switched off.
 Pick one and press *Call*, and kk-sip asks for its password.
+
+## Android
+
+The Android app (in [`android/`](android)) shares the desktop's look, accounts and
+history idea, and works like the phone's own dialer: calls go through the system's
+call handling (headsets, car, watch; navigation and music only duck), an incoming
+call shows as a banner with *Answer*/*Decline* while the phone is in use and full
+screen when it is locked. *Settings → Receive calls* keeps the accounts registered
+in the background (with a quiet notification); without it kk-sip only makes calls.
+The PBX has to be reachable: on the office Wi-Fi or over a VPN on the phone.
+
+To bring the desktop accounts over, run on the computer
+
+```sh
+android/scripts/export-accounts.py ~/Downloads/kk-sip-phone
+```
+
+It writes `kk-sip-accounts.png`, a QR code: scan it with the phone's camera and
+kk-sip opens with the accounts to import (as on the desktop, switched-off accounts
+stay off). `kk-sip-accounts.ini` is the same as a file for *Import accounts from a
+file*. Both contain the SIP passwords, so delete them afterwards.
+
+Build: `android/scripts/build-pjsip.sh` (needs `ANDROID_NDK_ROOT`), then
+`./gradlew assembleDebug` in `android/`.
 
 ## Build
 

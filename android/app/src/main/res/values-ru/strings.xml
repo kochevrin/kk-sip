@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Terms follow the desktop translation (translations/kk-sip_ru.ts). -->
+<resources>
+    <string name="channel_incoming">Входящие вызовы</string>
+    <string name="channel_call">Текущий вызов</string>
+    <string name="channel_status">Приём звонков</string>
+    <string name="channel_missed">Пропущенные вызовы</string>
+
+    <string name="status_online">Принимаю звонки</string>
+    <string name="status_connecting">Подключение к АТС…</string>
+    <string name="status_failed">Нет связи с АТС</string>
+    <string name="stop_receiving">Выключить</string>
+    <string name="missed_call">Пропущенный вызов</string>
+    <string name="call_back">Перезвонить</string>
+
+    <string name="keypad">Набор</string>
+    <string name="recents">История</string>
+    <string name="settings">Настройки</string>
+    <string name="back">Назад</string>
+    <string name="call">Позвонить</string>
+    <string name="delete">Удалить</string>
+    <string name="copy_number">Копировать номер</string>
+    <string name="call_from">Звонить с аккаунта</string>
+    <string name="no_recents">Звонков пока нет</string>
+    <string name="today">Сегодня</string>
+    <string name="yesterday">Вчера</string>
+    <string name="permission_mic">Для звонков kk-sip нужен микрофон</string>
+
+    <string name="incoming_call">Входящий вызов</string>
+    <string name="to_account">на %1$s</string>
+    <string name="answer">Ответить</string>
+    <string name="decline">Отклонить</string>
+    <string name="calling">Вызов…</string>
+    <string name="ringing">Звонит…</string>
+    <string name="connecting">Соединение…</string>
+    <string name="on_hold">На удержании</string>
+    <string name="call_ended">Завершён</string>
+    <string name="hang_up">Положить трубку</string>
+    <string name="mute">Микрофон</string>
+    <string name="speaker">Динамик</string>
+    <string name="audio">Звук</string>
+    <string name="hold">Удержание</string>
+    <string name="hide">Скрыть</string>
+    <string name="route_phone">Телефон</string>
+    <string name="route_headset">Гарнитура</string>
+
+    <string name="accounts">Аккаунты</string>
+    <string name="add_account">Добавить аккаунт</string>
+    <string name="calls">Звонки</string>
+    <string name="receive_calls">Принимать звонки</string>
+    <string name="receive_calls_hint">Держит связь с АТС в фоне, с тихим уведомлением. Немного расходует батарею.</string>
+    <string name="reg_online">В сети</string>
+    <string name="reg_connecting">Регистрация…</string>
+    <string name="reg_failed">Нет связи</string>
+    <string name="reg_off">Не в сети</string>
+    <string name="hint_notifications">Уведомления выключены</string>
+    <string name="hint_notifications_text">Без них не будет входящих звонков и плашки вызова. Нажмите, чтобы включить.</string>
+    <string name="hint_fullscreen">Полноэкранные вызовы выключены</string>
+    <string name="hint_fullscreen_text">На заблокированном телефоне звонок будет только уведомлением. Нажмите, чтобы разрешить.</string>
+    <string name="hint_battery">Включена оптимизация батареи</string>
+    <string name="hint_battery_text">Телефон может отключить kk-sip во сне, и звонки потеряются. Нажмите, чтобы разрешить работу в фоне.</string>
+    <string name="hint_alarms">Будильники и напоминания выключены</string>
+    <string name="hint_alarms_text">kk-sip вовремя просыпается, чтобы оставаться на связи с АТС. Нажмите, чтобы разрешить.</string>
+
+    <string name="account">Аккаунт</string>
+    <string name="new_account">Новый аккаунт</string>
+    <string name="delete_account">Удалить аккаунт</string>
+    <string name="server">SIP-сервер</string>
+    <string name="server_hint">pbx.example.com или 10.0.0.5:5060</string>
+    <string name="user">Внутренний номер</string>
+    <string name="password">Пароль</string>
+    <string name="display_name">Отображаемое имя</string>
+    <string name="advanced">Дополнительно</string>
+    <string name="label">Название</string>
+    <string name="domain">SIP-домен</string>
+    <string name="proxy">SIP-прокси</string>
+    <string name="auth_user">Логин (auth ID)</string>
+    <string name="transport">Транспорт</string>
+    <string name="srtp">Шифровать звук (SRTP)</string>
+    <string name="nat_rewrite">Подстраивать адреса под NAT</string>
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+
+    <string name="welcome_text">Софтфон для АТС компании. Перенесите аккаунты из kk-sip на компьютере или добавьте аккаунт вручную.</string>
+    <string name="welcome_qr">Есть QR-код из kk-sip на компьютере? Отсканируйте его камерой телефона.</string>
+    <string name="import_from_file">Импорт аккаунтов из файла</string>
+    <string name="import_nothing">Аккаунтов там не найдено</string>
+    <string name="imported_n">Импортировано аккаунтов: %1$d</string>
+    <string name="do_import">Импортировать</string>
+    <string name="account_off">выключен</string>
+    <string name="account_enabled">Аккаунт включён</string>
+    <plurals name="import_title">
+        <item quantity="one">Импортировать %d аккаунт?</item>
+        <item quantity="few">Импортировать %d аккаунта?</item>
+        <item quantity="many">Импортировать %d аккаунтов?</item>
+        <item quantity="other">Импортировать %d аккаунта?</item>
+    </plurals>
+</resources>
