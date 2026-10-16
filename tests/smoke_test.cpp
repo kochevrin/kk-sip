@@ -542,7 +542,8 @@ void SmokeTest::busyLamp()
         qWarning() << "call to 103 ended:" << c.lastCode << c.lastReason;
     }
     QVERIFY(rang);
-    QVERIFY(m_engine->blf(anna.id).peer.contains(QLatin1String("101")));
+    // Who is calling may come with a later NOTIFY than the ringing state itself.
+    QVERIFY(QTest::qWaitFor([&] { return m_engine->blf(anna.id).peer.contains(QLatin1String("101")); }, 3000));
     tabs->setCurrentIndex(2);
     QTest::qWait(150);
     shot(m_window.get(), QStringLiteral("07c-contacts-blf-ringing"));
