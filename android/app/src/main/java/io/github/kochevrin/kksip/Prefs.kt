@@ -15,4 +15,14 @@ class Prefs(context: Context) {
     var batteryAsked: Boolean
         get() = p.getBoolean("batteryAsked", false)
         set(v) = p.edit().putBoolean("batteryAsked", v).apply()
+
+    /** Full PJSIP log into a file the user can share (Settings → Debug log). */
+    var debugLog: Boolean
+        get() = p.getBoolean("debugLog", false)
+        set(v) = p.edit().putBoolean("debugLog", v).apply()
+
+    /** The first start asked for the call permissions already. */
+    var permissionsAsked: Boolean
+        get() = p.getBoolean("permissionsAsked", false)
+        set(v) = p.edit().putBoolean("permissionsAsked", v).apply()
 }

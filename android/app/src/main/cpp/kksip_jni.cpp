@@ -174,6 +174,26 @@ public:
 
     void onCallMediaState(pj::OnCallMediaStateParam &) override { connectAudio(); }
 
+    // The app sends an in-dialog OPTIONS now and then (checkCall). A 481 means the PBX
+    // has already ended the call and its BYE never reached us (lost in a NAT or VPN):
+    // end ours too instead of sitting in a dead call.
+    void onCallTsxState(pj::OnCallTsxStateParam &prm) override
+    {
+        if (prm.e.type != PJSIP_EVENT_TSX_STATE)
+            return;
+        const pj::SipTransaction &tsx = prm.e.body.tsxState.tsx;
+        if (tsx.role != PJSIP_ROLE_UAC || tsx.method != "OPTIONS" || tsx.state < PJSIP_TSX_STATE_COMPLETED)
+            return;
+        if (tsx.statusCode == PJSIP_SC_CALL_TSX_DOES_NOT_EXIST) {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "call %d is gone on the PBX side, hanging up", getId());
+            pj::CallOpParam op(true);
+            try {
+                hangup(op);
+            } catch (const pj::Error &) {
+            }
+        }
+    }
+
     // Blind transfer: the far end reports progress with NOTIFYs. Once it has the new
     // party (2xx), our leg is done; hang it up like the desktop does.
     void onCallTransferStatus(pj::OnCallTransferStatusParam &prm) override
@@ -202,12 +222,15 @@ public:
         }
         bool active = false;
         bool localHold = false;
+        bool remoteHold = false;
         for (unsigned i = 0; i < ci.media.size(); ++i) {
             const pj::CallMediaInfo &mi = ci.media[i];
             if (mi.type != PJMEDIA_TYPE_AUDIO)
                 continue;
             if (mi.status == PJSUA_CALL_MEDIA_LOCAL_HOLD)
                 localHold = true;
+            if (mi.status == PJSUA_CALL_MEDIA_REMOTE_HOLD)
+                remoteHold = true;
             if (mi.status != PJSUA_CALL_MEDIA_ACTIVE && mi.status != PJSUA_CALL_MEDIA_REMOTE_HOLD)
                 continue;
             try {
@@ -226,7 +249,7 @@ public:
         JNIEnv *env = jniEnv();
         if (env && g_listener)
             env->CallVoidMethod(g_listener, g_onCallMedia, jint(ci.id), jboolean(active),
-                                jboolean(localHold));
+                                jboolean(localHold), jboolean(remoteHold));
     }
 };
 
@@ -345,7 +368,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *)
 // Returns null on success or the error text.
 JNIEXPORT jstring JNICALL
 Java_io_github_kochevrin_kksip_sip_Native_start(JNIEnv *env, jobject, jstring userAgent,
-                                                jobject listener, jboolean debugLog, jint sipPort)
+                                                jobject listener, jboolean debugLog, jint sipPort,
+                                                jstring logFile)
 {
     if (g_engine)
         return nullptr;
@@ -355,7 +379,7 @@ Java_io_github_kochevrin_kksip_sip_Native_start(JNIEnv *env, jobject, jstring us
     g_listener = env->NewGlobalRef(listener);
     jclass cls = env->GetObjectClass(listener);
     g_onCallState = env->GetMethodID(cls, "onCallState", "(IIILjava/lang/String;Ljava/lang/String;)V");
-    g_onCallMedia = env->GetMethodID(cls, "onCallMedia", "(IZZ)V");
+    g_onCallMedia = env->GetMethodID(cls, "onCallMedia", "(IZZZ)V");
     g_onRegState = env->GetMethodID(cls, "onRegState", "(Ljava/lang/String;ILjava/lang/String;I)V");
     g_onIncomingCall = env->GetMethodID(cls, "onIncomingCall", "(ILjava/lang/String;Ljava/lang/String;)V");
     g_onTransferStatus = env->GetMethodID(cls, "onTransferStatus", "(IIZ)V");
@@ -379,6 +403,17 @@ Java_io_github_kochevrin_kksip_sip_Native_start(JNIEnv *env, jobject, jstring us
         cfg.logConfig.level = debugLog ? 5 : 2;
         cfg.logConfig.msgLogging = debugLog;
         cfg.logConfig.decor = 0;
+        // The user's "Debug log": everything, SIP messages included, into a file they can
+        // share. PJSIP appends; the app trims the file before it grows too big.
+        const std::string logPath = toStd(env, logFile);
+        if (!logPath.empty()) {
+            cfg.logConfig.filename = logPath;
+            cfg.logConfig.fileFlags = PJ_O_APPEND;
+            cfg.logConfig.level = 5;
+            cfg.logConfig.msgLogging = 1;
+            cfg.logConfig.decor = PJ_LOG_HAS_TIME | PJ_LOG_HAS_MICRO_SEC | PJ_LOG_HAS_SENDER | PJ_LOG_HAS_NEWLINE
+                | PJ_LOG_HAS_INDENT | PJ_LOG_HAS_THREAD_SWC;
+        }
         engine->ep->libInit(cfg);
 
         pj::TransportConfig tcfg;
@@ -649,6 +684,29 @@ Java_io_github_kochevrin_kksip_sip_Native_setHold(JNIEnv *, jobject, jint id, jb
         }
     } catch (const pj::Error &e) {
         __android_log_print(ANDROID_LOG_WARN, TAG, "hold: %s", e.info().c_str());
+    }
+}
+
+// Liveness check during a call: sends an in-dialog OPTIONS (keeps NAT bindings open; a
+// 481 answer ends the call, see onCallTsxState) and returns how many RTP packets have
+// arrived so far, or -1.
+JNIEXPORT jlong JNICALL
+Java_io_github_kochevrin_kksip_sip_Native_checkCall(JNIEnv *, jobject, jint id)
+{
+    KkCall *call = findCall(id);
+    if (!call)
+        return -1;
+    try {
+        pj::CallSendRequestParam prm;
+        prm.method = "OPTIONS";
+        call->sendRequest(prm);
+    } catch (const pj::Error &e) {
+        __android_log_print(ANDROID_LOG_WARN, TAG, "keepalive: %s", e.info().c_str());
+    }
+    try {
+        return jlong(call->getStreamStat(0).rtcp.rxStat.pkt);
+    } catch (const pj::Error &) {
+        return -1;
     }
 }
 

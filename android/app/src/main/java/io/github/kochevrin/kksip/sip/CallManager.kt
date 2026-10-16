@@ -49,6 +49,7 @@ data class CallUi(
     val muted: Boolean = false,
     val onHold: Boolean = false,
     val earlyMedia: Boolean = false, // the far end plays its own ringback or announcement
+    val remoteHold: Boolean = false, // the other side put us on hold
     val startedAt: Long = System.currentTimeMillis(),
     val answered: Boolean = false, // an incoming call the user picked up
     val transferTo: String = "", // blind transfer under way to this number
@@ -74,6 +75,11 @@ object CallManager : SipListener, TelecomCall.Listener {
     private const val ENDED_LINGER_MS = 2000L
     // The PBX cancels unanswered calls itself; this only catches a caller that vanished.
     private const val RING_TIMEOUT_MS = 90_000L
+    // During a call: an in-dialog OPTIONS this often keeps NAT/VPN bindings open so the
+    // PBX's BYE gets through, and no RTP for NO_RTP_MS means the call is dead anyway.
+    private const val CHECK_MS = 15_000L
+    private const val NO_RTP_MS = 30_000L
+    private const val LOG_MAX_BYTES = 4L * 1024 * 1024
     const val REG_EXPIRY = 600 // seconds; RegAlarm renews it while the phone sleeps
     private val DEBUG_SIP_PORT = if (BuildConfig.DEBUG) 5062 else 0 // emulator tests redirect to it
 
@@ -270,6 +276,7 @@ object CallManager : SipListener, TelecomCall.Listener {
         if (running) return true
         val err = Native.start(
             "kk-sip-android/${BuildConfig.VERSION_NAME}", this, BuildConfig.DEBUG, DEBUG_SIP_PORT,
+            if (prefs.debugLog) logFile().also(::trimLog).path else "",
         )
         if (err != null) {
             Log.e(TAG, "start: $err")
@@ -280,6 +287,53 @@ object CallManager : SipListener, TelecomCall.Listener {
         applied.clear()
         sip.post(pump)
         return true
+    }
+
+    /** The debug log, kept in the app's files; shared from Settings. */
+    fun logFile() = java.io.File(app.filesDir, "logs/pjsip.log").also { it.parentFile?.mkdirs() }
+
+    private fun trimLog(f: java.io.File) {
+        if (f.length() > LOG_MAX_BYTES) f.delete()
+    }
+
+    /** Turning the debug log on or off restarts PJSIP, unless a call is up (then: after it). */
+    fun setDebugLog(on: Boolean) {
+        prefs.debugLog = on
+        sip.post {
+            if (_call.value == null) stopEngine()
+            if (engineWanted()) { ensureStarted(); applyAccounts(_accounts.value.filter { it.isUsable }, _receiveCalls.value) }
+        }
+    }
+
+    // --- call liveness (SIP thread) -----------------------------------------------------
+
+    private var lastRx = -1L
+    private var lastRxChange = 0L
+
+    private val liveness = object : Runnable {
+        override fun run() {
+            val c = _call.value
+            if (!running || c == null || c.id < 0 || c.phase != Phase.Active) return
+            val rx = Native.checkCall(c.id)
+            val now = SystemClock.elapsedRealtime()
+            if (rx != lastRx) { lastRx = rx; lastRxChange = now }
+            // No audio for a long while and nobody is on hold: the call died without a BYE.
+            if (rx >= 0 && !c.onHold && !c.remoteHold && now - lastRxChange > NO_RTP_MS) {
+                Log.w(TAG, "call ${c.id}: no RTP for ${(now - lastRxChange) / 1000}s, hanging up")
+                Native.hangup(c.id, 0)
+                return
+            }
+            sip.postDelayed(this, CHECK_MS)
+        }
+    }
+
+    private fun startLiveness() {
+        sip.post {
+            lastRx = -1L
+            lastRxChange = SystemClock.elapsedRealtime()
+            sip.removeCallbacks(liveness)
+            sip.postDelayed(liveness, CHECK_MS)
+        }
     }
 
     private fun stopEngine() {
@@ -578,6 +632,7 @@ object CallManager : SipListener, TelecomCall.Listener {
             if (c?.id != callId) return@post
             when (c.phase) {
                 Phase.Active -> {
+                    startLiveness()
                     telecom?.setActive()
                     ringWake?.takeIf { it.isHeld }?.release()
                 }
@@ -607,11 +662,13 @@ object CallManager : SipListener, TelecomCall.Listener {
         }
     }
 
-    override fun onCallMedia(callId: Int, active: Boolean, localHold: Boolean) {
+    override fun onCallMedia(callId: Int, active: Boolean, localHold: Boolean, remoteHold: Boolean) {
         _call.update { c ->
             if (c?.id != callId) c
-            else c.copy(onHold = localHold, earlyMedia = active && c.phase != Phase.Active)
+            else c.copy(onHold = localHold, remoteHold = remoteHold, earlyMedia = active && c.phase != Phase.Active)
         }
+        // Coming back from hold: give the audio a fresh grace period.
+        lastRxChange = SystemClock.elapsedRealtime()
         main.post { updateAudioState() }
     }
 

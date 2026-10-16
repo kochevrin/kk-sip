@@ -4,7 +4,7 @@ package io.github.kochevrin.kksip.sip
 interface SipListener {
     /** [state] is pjsip_inv_state: 1 calling, 2 incoming, 3 early, 4 connecting, 5 confirmed, 6 disconnected. */
     fun onCallState(callId: Int, state: Int, code: Int, reason: String, remote: String)
-    fun onCallMedia(callId: Int, active: Boolean, localHold: Boolean)
+    fun onCallMedia(callId: Int, active: Boolean, localHold: Boolean, remoteHold: Boolean)
     /** [expires] is 0 when the account is not registered. */
     fun onRegState(accountId: String, code: Int, reason: String, expires: Int)
     /** The call rings; libkksip sends 180 Ringing after this returns, unless it was answered. */
@@ -19,8 +19,11 @@ object Native {
         System.loadLibrary("kksip")
     }
 
-    /** Returns null on success or the error text. [sipPort] 0 = random. */
-    external fun start(userAgent: String, listener: SipListener, debugLog: Boolean, sipPort: Int): String?
+    /**
+     * Returns null on success or the error text. [sipPort] 0 = random. [logFile] non-empty
+     * writes the full PJSIP log, SIP messages included, to that file.
+     */
+    external fun start(userAgent: String, listener: SipListener, debugLog: Boolean, sipPort: Int, logFile: String): String?
     external fun stop()
     external fun handleEvents(msec: Int)
 
@@ -43,6 +46,8 @@ object Native {
     external fun setMute(callId: Int, mute: Boolean)
     external fun setHold(callId: Int, hold: Boolean)
     external fun dtmf(callId: Int, digits: String)
+    /** In-dialog OPTIONS (NAT keepalive, detects a call the PBX already ended); returns RTP packets received, or -1. */
+    external fun checkCall(callId: Int): Long
     /** Blind transfer; null when the REFER went out, else the error text. */
     external fun transfer(callId: Int, target: String): String?
 }

@@ -172,6 +172,30 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
         else { afterGrant = action; permissions.launch(needed.toTypedArray()) }
     }
 
+    // First start: ask for what calls need right away, as the phone app does.
+    val firstPermissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
+    LaunchedEffect(Unit) {
+        val prefs = Prefs(context)
+        if (prefs.permissionsAsked) return@LaunchedEffect
+        prefs.permissionsAsked = true
+        val needed = buildList {
+            add(Manifest.permission.RECORD_AUDIO)
+            if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
+            if (Build.VERSION.SDK_INT >= 31) add(Manifest.permission.BLUETOOTH_CONNECT)
+        }.filterNot { hasPermission(context, it) }
+        if (needed.isNotEmpty()) firstPermissions.launch(needed.toTypedArray())
+    }
+
+    // The QR scanner needs the camera, asked for when the user opens it.
+    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        if (ok) route = "scan" else Toast.makeText(context, R.string.permission_camera, Toast.LENGTH_LONG).show()
+    }
+    fun openScanner() {
+        if (hasPermission(context, Manifest.permission.CAMERA)) route = "scan"
+        else cameraPermission.launch(Manifest.permission.CAMERA)
+    }
+    var debugLog by remember { mutableStateOf(Prefs(context).debugLog) }
+
     fun dial(target: String, accountId: String?) {
         val account = usable.firstOrNull { it.id == accountId } ?: current ?: return
         if (target.isBlank()) return
@@ -261,7 +285,7 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
     val ui = when {
         c != null && c.phase == Phase.Incoming -> Ui("incoming", c)
         c != null -> Ui("call", c)
-        accounts.isEmpty() && !route.startsWith("account:") -> Ui("welcome")
+        accounts.isEmpty() && !route.startsWith("account:") && route != "scan" -> Ui("welcome")
         else -> Ui(route)
     }
 
@@ -304,9 +328,24 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
             )
 
             s.key == "welcome" -> WelcomeScreen(
+                onScan = ::openScanner,
                 onImport = { pickFile.launch(arrayOf("*/*")) },
                 onManual = { route = "account:new" },
             )
+
+            s.key == "scan" -> {
+                val back = if (accounts.isEmpty()) "main" else "settings"
+                BackHandler { route = back }
+                io.github.kochevrin.kksip.ui.QrScanScreen(
+                    onResult = { text ->
+                        route = back
+                        val ini = runCatching { IniImport.fromLink(Uri.parse(text.trim())) }.getOrNull()
+                        if (ini != null) offerImport(ini)
+                        else Toast.makeText(context, R.string.not_kksip_qr, Toast.LENGTH_LONG).show()
+                    },
+                    onClose = { route = back },
+                )
+            }
 
             s.key.startsWith("account:") -> {
                 val id = s.key.removePrefix("account:")
@@ -333,6 +372,10 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
                     onEdit = { route = "account:${it.id}" },
                     onAdd = { route = "account:new" },
                     onImport = { pickFile.launch(arrayOf("*/*")) },
+                    onScan = ::openScanner,
+                    debugLog = debugLog,
+                    onDebugLog = { debugLog = it; CallManager.setDebugLog(it) },
+                    onShareLog = { shareLog(context) },
                     onReceiveCalls = { on ->
                         if (on) withCallPermissions {
                             CallManager.setReceiveCalls(true)
@@ -359,6 +402,21 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
             }
         }
     }
+}
+
+/** Hands the debug log to any app (mail, messenger) through a content URI. */
+private fun shareLog(context: android.content.Context) {
+    val f = CallManager.logFile()
+    if (!f.exists() || f.length() == 0L) {
+        Toast.makeText(context, R.string.log_empty, Toast.LENGTH_LONG).show()
+        return
+    }
+    val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.logs", f)
+    val send = Intent(Intent.ACTION_SEND).setType("text/plain")
+        .putExtra(Intent.EXTRA_STREAM, uri)
+        .putExtra(Intent.EXTRA_SUBJECT, "kk-sip ${BuildConfig.VERSION_NAME} log")
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    context.startActivity(Intent.createChooser(send, context.getString(R.string.share_log)))
 }
 
 private fun hasPermission(context: android.content.Context, p: String) =

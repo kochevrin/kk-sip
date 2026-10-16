@@ -114,4 +114,14 @@
     <string name="transfer_to">Переадресувати на номер</string>
     <string name="transferring_to">Переадресація на %1$s…</string>
     <string name="transfer_failed">Не вдалося переадресувати (%1$d)</string>
+
+    <string name="scan_qr">Сканувати QR-код</string>
+    <string name="scan_hint">Наведіть камеру на QR-код з kk-sip на комп’ютері</string>
+    <string name="not_kksip_qr">Це QR-код не від kk-sip</string>
+    <string name="permission_camera">Камера потрібна, щоб відсканувати QR-код</string>
+    <string name="troubleshooting">Діагностика</string>
+    <string name="debug_log">Журнал налагодження</string>
+    <string name="debug_log_hint">Записує у файл усе, чим kk-sip обмінюється з АТС. Увімкніть, повторіть проблему й поділіться журналом.</string>
+    <string name="share_log">Поділитися журналом</string>
+    <string name="log_empty">Журнал порожній: увімкніть журнал налагодження і зробіть дзвінок</string>
 </resources>

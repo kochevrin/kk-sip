@@ -121,4 +121,15 @@
     <string name="transfer_to">Transfer to number</string>
     <string name="transferring_to">Transferring to %1$s…</string>
     <string name="transfer_failed">Transfer failed (%1$d)</string>
+
+    <!-- QR, permissions, debug log -->
+    <string name="scan_qr">Scan the QR code</string>
+    <string name="scan_hint">Point the camera at the QR code from kk-sip on the computer</string>
+    <string name="not_kksip_qr">This QR code is not from kk-sip</string>
+    <string name="permission_camera">The camera is needed to scan the QR code</string>
+    <string name="troubleshooting">Troubleshooting</string>
+    <string name="debug_log">Debug log</string>
+    <string name="debug_log_hint">Writes everything kk-sip says to the PBX into a file. Turn it on, reproduce the problem, then share the log.</string>
+    <string name="share_log">Share the log</string>
+    <string name="log_empty">The log is empty: turn on the debug log and make a call first</string>
 </resources>

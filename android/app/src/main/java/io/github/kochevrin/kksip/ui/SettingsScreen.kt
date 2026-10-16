@@ -54,7 +54,11 @@ fun SettingsScreen(
     onEdit: (Account) -> Unit,
     onAdd: () -> Unit,
     onImport: () -> Unit,
+    onScan: () -> Unit,
     onReceiveCalls: (Boolean) -> Unit,
+    debugLog: Boolean,
+    onDebugLog: (Boolean) -> Unit,
+    onShareLog: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     Column(Modifier.fillMaxSize().background(colors.background).safeDrawingPadding()) {
@@ -105,6 +109,15 @@ fun SettingsScreen(
                     Spacer(Modifier.width(12.dp))
                     Text(stringResource(R.string.import_from_file), color = LocalCallColors.current.link)
                 }
+                HorizontalDivider(color = colors.outlineVariant)
+                Row(
+                    Modifier.fillMaxWidth().clickable(onClick = onScan).padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(painterResource(R.drawable.ic_qr), null, tint = LocalCallColors.current.link)
+                    Spacer(Modifier.width(12.dp))
+                    Text(stringResource(R.string.scan_qr), color = LocalCallColors.current.link)
+                }
             }
 
             Section(stringResource(R.string.calls)) {
@@ -135,6 +148,30 @@ fun SettingsScreen(
                             Text(h.text, color = colors.onSurfaceVariant, fontSize = 13.sp)
                         }
                     }
+                }
+            }
+
+            Section(stringResource(R.string.troubleshooting)) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { onDebugLog(!debugLog) }.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.debug_log), color = colors.onSurface)
+                        Text(stringResource(R.string.debug_log_hint), color = colors.onSurfaceVariant, fontSize = 13.sp)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Switch(
+                        debugLog, onDebugLog,
+                        colors = SwitchDefaults.colors(checkedTrackColor = colors.primary, checkedThumbColor = colors.onPrimary),
+                    )
+                }
+                HorizontalDivider(color = colors.outlineVariant)
+                Row(
+                    Modifier.fillMaxWidth().clickable(onClick = onShareLog).padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.share_log), color = LocalCallColors.current.link)
                 }
             }
 

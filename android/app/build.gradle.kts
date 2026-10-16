@@ -100,4 +100,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-process:2.11.0")
     implementation("androidx.core:core-telecom:1.0.1")
+    // QR import: camera preview and a pure-Java decoder (no Google Play services).
+    implementation("androidx.camera:camera-camera2:1.6.1")
+    implementation("androidx.camera:camera-lifecycle:1.6.1")
+    implementation("androidx.camera:camera-view:1.6.1")
+    implementation("com.google.zxing:core:3.5.3")
 }
