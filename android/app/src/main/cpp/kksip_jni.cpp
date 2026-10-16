@@ -24,6 +24,7 @@ jmethodID g_onCallState = nullptr;
 jmethodID g_onCallMedia = nullptr;
 jmethodID g_onRegState = nullptr;
 jmethodID g_onIncomingCall = nullptr;
+jmethodID g_onTransferStatus = nullptr;
 std::string g_lastError;
 
 std::string toStd(JNIEnv *env, jstring s)
@@ -172,6 +173,24 @@ public:
     }
 
     void onCallMediaState(pj::OnCallMediaStateParam &) override { connectAudio(); }
+
+    // Blind transfer: the far end reports progress with NOTIFYs. Once it has the new
+    // party (2xx), our leg is done; hang it up like the desktop does.
+    void onCallTransferStatus(pj::OnCallTransferStatusParam &prm) override
+    {
+        JNIEnv *env = jniEnv();
+        if (env && g_listener)
+            env->CallVoidMethod(g_listener, g_onTransferStatus, jint(getId()), jint(prm.statusCode),
+                                jboolean(prm.finalNotify));
+        if (prm.finalNotify && int(prm.statusCode) / 100 == 2) {
+            prm.cont = false;
+            pj::CallOpParam op(true);
+            try {
+                hangup(op);
+            } catch (const pj::Error &) {
+            }
+        }
+    }
 
     void connectAudio()
     {
@@ -339,6 +358,7 @@ Java_io_github_kochevrin_kksip_sip_Native_start(JNIEnv *env, jobject, jstring us
     g_onCallMedia = env->GetMethodID(cls, "onCallMedia", "(IZZ)V");
     g_onRegState = env->GetMethodID(cls, "onRegState", "(Ljava/lang/String;ILjava/lang/String;I)V");
     g_onIncomingCall = env->GetMethodID(cls, "onIncomingCall", "(ILjava/lang/String;Ljava/lang/String;)V");
+    g_onTransferStatus = env->GetMethodID(cls, "onTransferStatus", "(IIZ)V");
     env->DeleteLocalRef(cls);
 
     auto *engine = new Engine;
@@ -630,6 +650,22 @@ Java_io_github_kochevrin_kksip_sip_Native_setHold(JNIEnv *, jobject, jint id, jb
     } catch (const pj::Error &e) {
         __android_log_print(ANDROID_LOG_WARN, TAG, "hold: %s", e.info().c_str());
     }
+}
+
+// Blind transfer to target (a SIP URI). Returns null when the REFER went out.
+JNIEXPORT jstring JNICALL
+Java_io_github_kochevrin_kksip_sip_Native_transfer(JNIEnv *env, jobject, jint id, jstring target)
+{
+    KkCall *call = findCall(id);
+    if (!call)
+        return toJava(env, "No call");
+    pj::CallOpParam prm(true);
+    try {
+        call->xfer(toStd(env, target), prm);
+    } catch (const pj::Error &e) {
+        return toJava(env, e.reason.empty() ? e.info() : e.reason);
+    }
+    return nullptr;
 }
 
 JNIEXPORT void JNICALL

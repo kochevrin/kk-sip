@@ -43,10 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kochevrin.kksip.R
 import io.github.kochevrin.kksip.data.CallRecord
+import io.github.kochevrin.kksip.data.Contact
+import io.github.kochevrin.kksip.data.ContactBook
+import androidx.compose.runtime.remember
 import io.github.kochevrin.kksip.sip.Account
 import io.github.kochevrin.kksip.sip.RegStatus
 
-enum class Tab { Keypad, Recents }
+enum class Tab { Keypad, Recents, Contacts }
 
 /** Dial pad and recents under one bar: the account switcher on top, tabs below. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,6 +64,8 @@ fun MainScreen(
     number: String,
     onNumber: (String) -> Unit,
     records: List<CallRecord>,
+    contacts: List<Contact>,
+    contactActions: ContactActions,
     onDial: (String, String?) -> Unit, // number, account id
     onDeleteRecord: (CallRecord) -> Unit,
     onSelectAccount: (String) -> Unit,
@@ -121,6 +126,11 @@ fun MainScreen(
                     icon = { Icon(painterResource(R.drawable.ic_history), null) },
                     label = { Text(stringResource(R.string.recents)) }, colors = itemColors,
                 )
+                NavigationBarItem(
+                    selected = tab == Tab.Contacts, onClick = { onTab(Tab.Contacts) },
+                    icon = { Icon(painterResource(R.drawable.ic_contacts), null) },
+                    label = { Text(stringResource(R.string.contacts)) }, colors = itemColors,
+                )
             }
         },
     ) { padding ->
@@ -134,11 +144,21 @@ fun MainScreen(
                 Tab.Keypad -> DialerScreen(
                     number = number, onNumber = onNumber, canCall = account != null,
                     onCall = { onDial(number, null) },
+                    hint = remember(number, contacts) { contactHint(number, contacts) },
                 )
                 Tab.Recents -> RecentsScreen(
                     records = records,
                     onCall = { onDial(it.number, it.accountId) },
                     onDelete = onDeleteRecord,
+                )
+                Tab.Contacts -> ContactsScreen(
+                    contacts = contacts,
+                    onCall = { onDial(it.number, null) },
+                    onSave = contactActions.save,
+                    onDelete = contactActions.delete,
+                    onImportCsv = contactActions.importCsv,
+                    onExportCsv = contactActions.exportCsv,
+                    onPickFromPhone = contactActions.pickFromPhone,
                 )
             }
         }
@@ -184,4 +204,21 @@ fun MainScreen(
             }
         }
     }
+}
+
+/** What the Contacts tab can ask the activity for (storage, files, the phone's contacts). */
+class ContactActions(
+    val save: (Contact) -> Unit,
+    val delete: (Contact) -> Unit,
+    val importCsv: () -> Unit,
+    val exportCsv: () -> Unit,
+    val pickFromPhone: () -> Unit,
+)
+
+/** The contact the typed digits point at, shown under the number like on the desktop. */
+private fun contactHint(number: String, contacts: List<Contact>): Contact? {
+    val d = ContactBook.digits(number)
+    if (d.length < 2) return null
+    return contacts.firstOrNull { ContactBook.digits(it.number) == d }
+        ?: contacts.firstOrNull { ContactBook.digits(it.number).contains(d) }
 }

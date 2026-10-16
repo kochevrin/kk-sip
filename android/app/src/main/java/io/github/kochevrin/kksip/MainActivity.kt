@@ -134,6 +134,7 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
     val call by CallManager.call.collectAsStateWithLifecycle()
     val error by CallManager.error.collectAsStateWithLifecycle()
     val records by CallManager.log.records.collectAsStateWithLifecycle()
+    val contacts by CallManager.contacts.contacts.collectAsStateWithLifecycle()
     val usable = accounts.filter { it.isUsable }
     val current = usable.firstOrNull { it.id == currentId } ?: usable.firstOrNull()
 
@@ -189,6 +190,49 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
             runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } }.getOrNull()
         )
     }
+    // Contacts: CSV in and out (the desktop's format), and picking from the phone's book.
+    val importCsv = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val text = uri?.let { u ->
+            runCatching { context.contentResolver.openInputStream(u)?.use { it.readBytes().toString(Charsets.UTF_8) } }.getOrNull()
+        } ?: return@rememberLauncherForActivityResult
+        val found = io.github.kochevrin.kksip.data.ContactBook.parseCsv(text)
+        CallManager.contacts.merge(found) { added ->
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                Toast.makeText(context, context.getString(R.string.contacts_imported, added, found.size), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    val exportCsv = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        if (uri != null) runCatching {
+            context.contentResolver.openOutputStream(uri)?.use {
+                it.write(io.github.kochevrin.kksip.data.ContactBook.toCsv(contacts).toByteArray())
+            }
+        }
+    }
+    // The system picker hands over just the chosen number; no permission to read the book.
+    val pickPhoneContact = rememberLauncherForActivityResult(PickPhoneNumber()) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        context.contentResolver.query(
+            uri,
+            arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER),
+            null, null, null,
+        )?.use { c ->
+            if (c.moveToFirst()) CallManager.contacts.save(
+                io.github.kochevrin.kksip.data.Contact(0, c.getString(0).orEmpty(), SipUri.cleanNumber(c.getString(1).orEmpty()))
+            )
+        }
+    }
+    val contactActions = remember {
+        io.github.kochevrin.kksip.ui.ContactActions(
+            save = { CallManager.contacts.save(it) },
+            delete = { CallManager.contacts.delete(it.id) },
+            importCsv = { importCsv.launch(arrayOf("text/*", "application/octet-stream")) },
+            exportCsv = { exportCsv.launch("contacts.csv") },
+            pickFromPhone = { pickPhoneContact.launch(Unit) },
+        )
+    }
+
     pendingImport?.let { r ->
         ImportDialog(
             accounts = r.accounts,
@@ -256,6 +300,7 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
                 onRoute = CallManager::setRoute,
                 onHold = CallManager::toggleHold,
                 onDtmf = CallManager::dtmf,
+                onTransfer = CallManager::transfer,
             )
 
             s.key == "welcome" -> WelcomeScreen(
@@ -304,6 +349,8 @@ private fun AppRoot(request: MutableState<MainActivity.Request?>) {
                     account = current, accounts = usable, reg = reg, receiveCalls = receiveCalls,
                     number = number, onNumber = { number = it },
                     records = records,
+                    contacts = contacts,
+                    contactActions = contactActions,
                     onDial = ::dial,
                     onDeleteRecord = { CallManager.log.delete(it.id) },
                     onSelectAccount = CallManager::selectAccount,
@@ -369,4 +416,13 @@ private fun setupHints(context: android.content.Context, receiveCalls: Boolean):
         }
     }
     return hints
+}
+
+/** ACTION_PICK on phone numbers: the result URI is readable without READ_CONTACTS. */
+private class PickPhoneNumber : androidx.activity.result.contract.ActivityResultContract<Unit, Uri?>() {
+    override fun createIntent(context: android.content.Context, input: Unit) =
+        Intent(Intent.ACTION_PICK).setType(android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE)
+
+    override fun parseResult(resultCode: Int, intent: Intent?): Uri? =
+        intent?.data?.takeIf { resultCode == android.app.Activity.RESULT_OK }
 }

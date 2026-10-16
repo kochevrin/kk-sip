@@ -51,6 +51,7 @@ data class CallUi(
     val earlyMedia: Boolean = false, // the far end plays its own ringback or announcement
     val startedAt: Long = System.currentTimeMillis(),
     val answered: Boolean = false, // an incoming call the user picked up
+    val transferTo: String = "", // blind transfer under way to this number
     val route: Route = Route(RouteType.Earpiece, ""),
     val routes: List<Route> = emptyList(),
 ) {
@@ -80,6 +81,8 @@ object CallManager : SipListener, TelecomCall.Listener {
     private lateinit var prefs: Prefs
     private lateinit var store: AccountStore
     lateinit var log: CallLog
+        private set
+    lateinit var contacts: io.github.kochevrin.kksip.data.ContactBook
         private set
     private val sipThread = HandlerThread("sip").apply { start() }
     private val sip = Handler(sipThread.looper)
@@ -131,6 +134,7 @@ object CallManager : SipListener, TelecomCall.Listener {
         prefs = Prefs(app)
         store = AccountStore(app)
         log = CallLog(app)
+        contacts = io.github.kochevrin.kksip.data.ContactBook(app)
         _accounts.value = store.load()
         _currentId.value = store.currentId
         _receiveCalls.value = prefs.receiveCalls
@@ -304,8 +308,9 @@ object CallManager : SipListener, TelecomCall.Listener {
         val target = SipUri.toTarget(input, account)
         if (target.isEmpty()) return
         val number = SipUri.parse(target).user
-        _call.value = CallUi(id = -1, accountId = account.id, number = number)
-        startCallSession(number, "", incoming = false)
+        val name = contacts.nameFor(number)
+        _call.value = CallUi(id = -1, accountId = account.id, number = number, name = name)
+        startCallSession(number, name, incoming = false)
         sip.post {
             if (!ensureStarted()) { main.post { finish() }; return@post }
             applyAccounts(_accounts.value.filter { it.isUsable }, _receiveCalls.value)
@@ -390,6 +395,23 @@ object CallManager : SipListener, TelecomCall.Listener {
     fun setRoute(route: Route) {
         val e = endpoints.firstOrNull { routeOf(it) == route } ?: return
         telecom?.requestEndpoint(e)
+    }
+
+    /** Blind transfer, like the desktop's "Transfer to number…". */
+    fun transfer(input: String) {
+        val c = _call.value ?: return
+        if (c.id < 0 || c.phase != Phase.Active) return
+        val account = _accounts.value.firstOrNull { it.id == c.accountId } ?: return
+        val target = SipUri.toTarget(input, account)
+        if (target.isEmpty()) return
+        _call.value = c.copy(transferTo = SipUri.parse(target).user)
+        sip.post {
+            val err = Native.transfer(c.id, target)
+            if (err != null) {
+                _error.value = err
+                _call.update { it?.copy(transferTo = "") }
+            }
+        }
     }
 
     fun dtmf(digit: Char) {
@@ -509,13 +531,15 @@ object CallManager : SipListener, TelecomCall.Listener {
             Native.hangup(callId, 486)
             return
         }
+        // The phone book wins over the caller's own display name, as on the desktop.
+        val name = contacts.nameFor(parsed.user).ifEmpty { parsed.displayName }
         _call.value = CallUi(
-            id = callId, accountId = accountId, number = parsed.user, name = parsed.displayName,
+            id = callId, accountId = accountId, number = parsed.user, name = name,
             incoming = true, phase = Phase.Incoming,
         )
         main.post {
             ringWake?.acquire(RING_TIMEOUT_MS)
-            startCallSession(parsed.user, parsed.displayName, incoming = true)
+            startCallSession(parsed.user, name, incoming = true)
             main.postDelayed({
                 val c = _call.value
                 if (c?.id == callId && c.phase == Phase.Incoming) {
@@ -544,7 +568,7 @@ object CallManager : SipListener, TelecomCall.Listener {
                 phase = phase,
                 code = code,
                 reason = reason,
-                name = parsed.displayName.ifEmpty { c.name },
+                name = c.name.ifEmpty { parsed.displayName },
                 connectedAt = if (phase == Phase.Active && c.connectedAt == 0L)
                     SystemClock.elapsedRealtime() else c.connectedAt,
             )
@@ -572,6 +596,14 @@ object CallManager : SipListener, TelecomCall.Listener {
             }
             updateAudioState()
             SipService.sync(app)
+        }
+    }
+
+    override fun onTransferStatus(callId: Int, code: Int, final: Boolean) {
+        Log.i(TAG, "transfer $callId $code final=$final")
+        if (final && code / 100 != 2) {
+            _error.value = app.getString(io.github.kochevrin.kksip.R.string.transfer_failed, code)
+            _call.update { c -> if (c?.id == callId) c.copy(transferTo = "") else c }
         }
     }
 

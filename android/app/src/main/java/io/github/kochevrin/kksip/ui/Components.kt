@@ -10,6 +10,10 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -153,9 +157,14 @@ fun ToggleButton(icon: Int, label: String, checked: Boolean, enabled: Boolean = 
             Icon(painterResource(icon), label, Modifier.size(28.dp), tint = fg)
         }
         Spacer(Modifier.height(6.dp))
-        Text(
-            label, fontSize = 13.sp, maxLines = 1,
-            color = if (enabled) colors.onSurfaceVariant else colors.onSurfaceVariant.copy(alpha = 0.38f),
+        // Long words (uk "Переадресація") shrink to fit instead of being cut.
+        BasicText(
+            label, maxLines = 1,
+            style = TextStyle(
+                color = if (enabled) colors.onSurfaceVariant else colors.onSurfaceVariant.copy(alpha = 0.38f),
+                textAlign = TextAlign.Center,
+            ),
+            autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = 13.sp),
         )
     }
 }

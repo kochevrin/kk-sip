@@ -129,7 +129,9 @@ android/scripts/export-accounts.py ~/Downloads/kk-sip-phone
 It writes `kk-sip-accounts.png`, a QR code: scan it with the phone's camera and
 kk-sip opens with the accounts to import (as on the desktop, switched-off accounts
 stay off). `kk-sip-accounts.ini` is the same as a file for *Import accounts from a
-file*. Both contain the SIP passwords, so delete them afterwards.
+file*. Both contain the SIP passwords, so delete them afterwards. The phone book comes
+along as `kk-sip-contacts.csv` (Contacts → ⋮ → Import), the same CSV the desktop
+imports and exports.
 
 Build: `android/scripts/build-pjsip.sh` (needs `ANDROID_NDK_ROOT`), then
 `./gradlew assembleDebug` in `android/`.

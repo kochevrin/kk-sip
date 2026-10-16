@@ -95,4 +95,23 @@
         <item quantity="many">Імпортувати %d облікових записів?</item>
         <item quantity="other">Імпортувати %d облікового запису?</item>
     </plurals>
+
+    <string name="contacts">Контакти</string>
+    <string name="search">Пошук</string>
+    <string name="add_contact">Додати контакт</string>
+    <string name="edit_contact">Змінити контакт</string>
+    <string name="edit">Змінити</string>
+    <string name="more">Ще</string>
+    <string name="from_phone_contacts">Додати з контактів телефона</string>
+    <string name="import_csv">Імпорт (CSV)</string>
+    <string name="export_csv">Експорт у CSV</string>
+    <string name="no_contacts">Контактів поки немає</string>
+    <string name="nothing_found">Нічого не знайдено</string>
+    <string name="name">Ім’я</string>
+    <string name="number">Номер</string>
+    <string name="contacts_imported">Імпортовано контактів: %1$d з %2$d</string>
+    <string name="transfer">Переадресація</string>
+    <string name="transfer_to">Переадресувати на номер</string>
+    <string name="transferring_to">Переадресація на %1$s…</string>
+    <string name="transfer_failed">Не вдалося переадресувати (%1$d)</string>
 </resources>

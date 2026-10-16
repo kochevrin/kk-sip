@@ -95,4 +95,23 @@
         <item quantity="many">Импортировать %d аккаунтов?</item>
         <item quantity="other">Импортировать %d аккаунта?</item>
     </plurals>
+
+    <string name="contacts">Контакты</string>
+    <string name="search">Поиск</string>
+    <string name="add_contact">Добавить контакт</string>
+    <string name="edit_contact">Изменить контакт</string>
+    <string name="edit">Изменить</string>
+    <string name="more">Ещё</string>
+    <string name="from_phone_contacts">Добавить из контактов телефона</string>
+    <string name="import_csv">Импорт (CSV)</string>
+    <string name="export_csv">Экспорт в CSV</string>
+    <string name="no_contacts">Контактов пока нет</string>
+    <string name="nothing_found">Ничего не найдено</string>
+    <string name="name">Имя</string>
+    <string name="number">Номер</string>
+    <string name="contacts_imported">Импортировано контактов: %1$d из %2$d</string>
+    <string name="transfer">Перевод</string>
+    <string name="transfer_to">Перевести на номер</string>
+    <string name="transferring_to">Перевод на %1$s…</string>
+    <string name="transfer_failed">Не удалось перевести (%1$d)</string>
 </resources>

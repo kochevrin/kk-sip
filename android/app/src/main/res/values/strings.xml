@@ -101,4 +101,24 @@
         <item quantity="one">Import %d account?</item>
         <item quantity="other">Import %d accounts?</item>
     </plurals>
+
+    <!-- Contacts, transfer -->
+    <string name="contacts">Contacts</string>
+    <string name="search">Search</string>
+    <string name="add_contact">Add contact</string>
+    <string name="edit_contact">Edit contact</string>
+    <string name="edit">Edit</string>
+    <string name="more">More</string>
+    <string name="from_phone_contacts">Add from phone contacts</string>
+    <string name="import_csv">Import (CSV)</string>
+    <string name="export_csv">Export to CSV</string>
+    <string name="no_contacts">No contacts yet</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="name">Name</string>
+    <string name="number">Number</string>
+    <string name="contacts_imported">Imported %1$d of %2$d contacts</string>
+    <string name="transfer">Transfer</string>
+    <string name="transfer_to">Transfer to number</string>
+    <string name="transferring_to">Transferring to %1$s…</string>
+    <string name="transfer_failed">Transfer failed (%1$d)</string>
 </resources>

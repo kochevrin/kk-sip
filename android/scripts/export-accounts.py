@@ -6,10 +6,11 @@ Reads the desktop settings (~/.config/kk-sip/kk-sip.ini) and writes, into OUTDIR
                         open it in the app: Settings -> Import accounts from a file
   kk-sip-accounts.png   a QR code with kksip://import?d=...; scan it with the phone's
                         camera and kk-sip opens with the accounts (needs qrencode)
+  kk-sip-contacts.csv   the phone book, when there is one: Contacts -> More -> Import
 
 Both hold the SIP passwords: delete them once the phone has the accounts.
 
-  export-accounts.py [OUTDIR] [--ini PATH] [--enabled-only]
+  export-accounts.py [OUTDIR] [--ini PATH] [--db PATH] [--enabled-only]
 """
 import argparse
 import base64
@@ -17,6 +18,7 @@ import configparser
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import zlib
@@ -93,10 +95,28 @@ def to_ini(accounts):
     return "\n".join(lines)
 
 
+def export_contacts(db_path, out_path):
+    """The desktop phone book as the CSV both apps read: name,number."""
+    if not os.path.exists(db_path):
+        return 0
+    con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    rows = con.execute("SELECT name, number FROM contacts ORDER BY name").fetchall()
+    con.close()
+    if not rows:
+        return 0
+    q = lambda s: '"' + (s or "").replace('"', '""') + '"'
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write("name,number\n")
+        for name, number in rows:
+            f.write(f"{q(name)},{q(number)}\n")
+    return len(rows)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("outdir", nargs="?", default=".")
     ap.add_argument("--ini", default=os.path.expanduser("~/.config/kk-sip/kk-sip.ini"))
+    ap.add_argument("--db", default=os.path.expanduser("~/.local/share/kk-sip/kk-sip.db"))
     ap.add_argument("--enabled-only", action="store_true")
     args = ap.parse_args()
 
@@ -117,6 +137,10 @@ def main():
     link = "kksip://import?d=" + base64.urlsafe_b64encode(packed).decode().rstrip("=")
     enabled = sum(a["enabled"].lower() in ("true", "1") for a in accounts)
     print(f"{len(accounts)} accounts ({enabled} on) -> {ini_path}")
+
+    n = export_contacts(args.db, os.path.join(args.outdir, "kk-sip-contacts.csv"))
+    if n:
+        print(f"{n} contacts -> {os.path.join(args.outdir, 'kk-sip-contacts.csv')}")
 
     if len(link) > 2900:  # a QR code holds at most ~2950 bytes
         print(f"QR skipped: {len(link)} bytes is too much for one code; use the file or --enabled-only")

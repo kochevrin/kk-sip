@@ -127,9 +127,11 @@ fun CallScreen(
     onRoute: (Route) -> Unit,
     onHold: () -> Unit,
     onDtmf: (Char) -> Unit,
+    onTransfer: (String) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     var showKeypad by rememberSaveable { mutableStateOf(false) }
+    var askTransfer by rememberSaveable { mutableStateOf(false) }
     var dtmfTyped by rememberSaveable { mutableStateOf("") }
 
     var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
@@ -143,8 +145,11 @@ fun CallScreen(
         Phase.Incoming, Phase.Connecting -> stringResource(R.string.connecting)
         Phase.Calling -> stringResource(R.string.calling)
         Phase.Ringing -> stringResource(R.string.ringing)
-        Phase.Active -> if (call.onHold) stringResource(R.string.on_hold)
-        else DateUtils.formatElapsedTime((now - call.connectedAt).coerceAtLeast(0) / 1000)
+        Phase.Active -> when {
+            call.transferTo.isNotEmpty() -> stringResource(R.string.transferring_to, call.transferTo)
+            call.onHold -> stringResource(R.string.on_hold)
+            else -> DateUtils.formatElapsedTime((now - call.connectedAt).coerceAtLeast(0) / 1000)
+        }
         Phase.Ended -> if (call.code >= 300 && call.reason.isNotEmpty()) "${call.reason} (${call.code})"
         else stringResource(R.string.call_ended)
     }
@@ -178,7 +183,7 @@ fun CallScreen(
                 }
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         ToggleButton(
                             if (call.muted) R.drawable.ic_mic_off else R.drawable.ic_mic,
                             stringResource(R.string.mute), call.muted, live, onMute,
@@ -186,11 +191,13 @@ fun CallScreen(
                         ToggleButton(R.drawable.ic_dialpad, stringResource(R.string.keypad), false, active) {
                             showKeypad = true
                         }
+                        AudioButton(call, live, onSpeaker, onRoute)
                     }
                     Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        AudioButton(call, live, onSpeaker, onRoute)
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         ToggleButton(R.drawable.ic_pause, stringResource(R.string.hold), call.onHold, active, onHold)
+                        ToggleButton(R.drawable.ic_transfer, stringResource(R.string.transfer), false,
+                            active && call.transferTo.isEmpty()) { askTransfer = true }
                     }
                 }
             }
@@ -205,6 +212,29 @@ fun CallScreen(
         )
         Spacer(Modifier.height(24.dp))
     }
+
+    if (askTransfer) TransferDialog(onTransfer = { askTransfer = false; onTransfer(it) }, onCancel = { askTransfer = false })
+}
+
+/** "Transfer to number": a blind transfer, the desktop's way. */
+@Composable
+private fun TransferDialog(onTransfer: (String) -> Unit, onCancel: () -> Unit) {
+    var number by rememberSaveable { mutableStateOf("") }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onCancel,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text(stringResource(R.string.transfer_to)) },
+        text = {
+            androidx.compose.material3.OutlinedTextField(
+                number, { number = it }, label = { Text(stringResource(R.string.number)) }, singleLine = true,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone,
+                ),
+            )
+        },
+        confirmButton = { KkTextButton(stringResource(R.string.transfer)) { if (number.isNotBlank()) onTransfer(number.trim()) } },
+        dismissButton = { KkTextButton(stringResource(R.string.cancel), onClick = onCancel) },
+    )
 }
 
 /** Speaker on/off; with a headset connected it becomes a route picker like the system dialer's. */

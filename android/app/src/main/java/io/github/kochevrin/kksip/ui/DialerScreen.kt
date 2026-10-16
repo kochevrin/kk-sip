@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.kochevrin.kksip.R
+import io.github.kochevrin.kksip.data.Contact
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -41,6 +42,7 @@ fun DialerScreen(
     onNumber: (String) -> Unit,
     canCall: Boolean,
     onCall: () -> Unit,
+    hint: Contact? = null,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -71,7 +73,20 @@ fun DialerScreen(
             )
             Backspace(number.isNotEmpty(), onClick = { onNumber(number.dropLast(1)) }, onLongClick = { onNumber("") })
         }
-        Spacer(Modifier.height(16.dp))
+        // The contact these digits belong to; a tap takes its full number.
+        Box(Modifier.height(28.dp), contentAlignment = Alignment.Center) {
+            androidx.compose.animation.AnimatedVisibility(hint != null, enter = fadeIn(), exit = fadeOut()) {
+                val h = hint ?: return@AnimatedVisibility
+                Text(
+                    if (h.name.isNotEmpty()) "${h.name} · ${h.number}" else h.number,
+                    color = LocalCallColors.current.link, fontSize = 14.sp, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.clip(CircleShape).combinedClickable(onClick = { onNumber(h.number) })
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
         Keypad(onKey = { onNumber(number + it) })
         Spacer(Modifier.height(20.dp))
         RoundButton(

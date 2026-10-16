@@ -9,6 +9,8 @@ interface SipListener {
     fun onRegState(accountId: String, code: Int, reason: String, expires: Int)
     /** The call rings; libkksip sends 180 Ringing after this returns, unless it was answered. */
     fun onIncomingCall(callId: Int, accountId: String, remote: String)
+    /** Progress of a blind transfer; on a final 2xx libkksip hangs our leg up itself. */
+    fun onTransferStatus(callId: Int, code: Int, final: Boolean)
 }
 
 /** JNI entry points (app/src/main/cpp/kksip_jni.cpp). Call only from the SIP thread. */
@@ -41,4 +43,6 @@ object Native {
     external fun setMute(callId: Int, mute: Boolean)
     external fun setHold(callId: Int, hold: Boolean)
     external fun dtmf(callId: Int, digits: String)
+    /** Blind transfer; null when the REFER went out, else the error text. */
+    external fun transfer(callId: Int, target: String): String?
 }
