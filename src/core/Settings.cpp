@@ -13,7 +13,6 @@
 #include <QThread>
 #include <QUuid>
 #include <algorithm>
-#include <memory>
 #include <optional>
 
 #ifdef Q_OS_WIN
@@ -104,6 +103,35 @@ static QString passwordFromStore(const QString &stored)
     return {}; // encrypted under another account or on another computer: asked again
 }
 
+// Reads the first line of a password file; outlives the wait when the file server hangs.
+// A QThread of its own: std::future (also behind QThread::create) and std::shared_ptr
+// clash with the libstdc++ DLL in the MinGW build.
+namespace {
+class PasswordFileReader : public QThread {
+public:
+    explicit PasswordFileReader(const QString &path) : m_path(path) {}
+    QSemaphore done;
+    std::optional<QString> line; // only read after `done`
+
+private:
+    void run() override
+    {
+        QFile file(m_path);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString text = QString::fromUtf8(file.read(4096)).section(QLatin1Char('\n'), 0, 0);
+            if (text.startsWith(QChar(0xfeff))) // Notepad's byte order mark
+                text.remove(0, 1);
+            if (text.endsWith(QLatin1Char('\r')))
+                text.chop(1);
+            if (!text.isEmpty())
+                line = text;
+        }
+        done.release();
+    }
+    const QString m_path;
+};
+} // namespace
+
 // The first line of the administrator's password file (an account's PasswordFile), or
 // std::nullopt when it cannot be read: no such file, no access, no file server in reach.
 // Opening a file on a server out of reach can hang for half a minute, so the read gets
@@ -114,30 +142,12 @@ static std::optional<QString> readPasswordFile(const QString &path)
     const bool remember = !QStandardPaths::isTestModeEnabled(); // tests change the file between loads
     if (remember && read.contains(path))
         return read.value(path);
-    // Shared with a thread that may outlive the wait; `line` is only read after `done`.
-    struct Answer {
-        QSemaphore done;
-        std::optional<QString> line;
-    };
-    auto answer = std::make_shared<Answer>();
-    QThread *reader = QThread::create([answer, path] {
-        QFile file(path);
-        if (file.open(QIODevice::ReadOnly)) {
-            QString text = QString::fromUtf8(file.read(4096)).section(QLatin1Char('\n'), 0, 0);
-            if (text.startsWith(QChar(0xfeff))) // Notepad's byte order mark
-                text.remove(0, 1);
-            if (text.endsWith(QLatin1Char('\r')))
-                text.chop(1);
-            if (!text.isEmpty())
-                answer->line = text;
-        }
-        answer->done.release();
-    });
+    auto *reader = new PasswordFileReader(path);
     QObject::connect(reader, &QThread::finished, reader, &QObject::deleteLater);
     reader->start();
     std::optional<QString> line;
-    if (answer->done.tryAcquire(1, 3000))
-        line = answer->line;
+    if (reader->done.tryAcquire(1, 3000))
+        line = reader->line; // still there: its deleteLater() waits for the event loop
     if (remember)
         read.insert(path, line);
     return line;
