@@ -1,5 +1,6 @@
 # Makes dist\kk-sip-<version>-windows-x64.msi from dist\stage (build-windows.sh)
-# and dist\kk-sip-<version>-policy-templates.zip with the ADMX/ADML files.
+# and dist\kk-sip-<version>-policy-templates.zip with the ADMX/ADML files, plus
+# dist\kk-sip-passwords.ps1 for password files (docs/provisioning.md).
 # Needs the .NET SDK; installs the WiX 5 command line tool if missing.
 $ErrorActionPreference = 'Stop'
 $root = Resolve-Path "$PSScriptRoot\..\.."
@@ -22,3 +23,10 @@ Write-Host "MSI: $msi"
 $admx = "$root\dist\kk-sip-$version-policy-templates.zip"
 Compress-Archive -Path "$root\packaging\windows\admx\*" -DestinationPath $admx -Force
 Write-Host "ADMX: $admx"
+
+# Released as it is; it never runs here, so at least make sure it parses.
+$passwords = "$root\packaging\windows\kk-sip-passwords.ps1"
+$errors = $null
+[Management.Automation.Language.Parser]::ParseFile($passwords, [ref]$null, [ref]$errors) | Out-Null
+if ($errors) { throw "kk-sip-passwords.ps1: $($errors[0])" }
+Copy-Item $passwords "$root\dist\kk-sip-passwords.ps1"

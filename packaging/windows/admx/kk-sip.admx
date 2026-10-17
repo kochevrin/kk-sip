@@ -38,6 +38,7 @@
         <text id="Label" valueName="Label" maxLength="255" />
         <text id="Domain" valueName="Domain" maxLength="255" />
         <text id="Proxy" valueName="Proxy" maxLength="255" />
+        <text id="PasswordFile" valueName="PasswordFile" maxLength="1024" />
         <boolean id="SRTP" valueName="SRTP">
           <trueValue><decimal value="1" /></trueValue>
           <falseValue><decimal value="0" /></falseValue>
@@ -67,6 +68,7 @@
         <text id="Label" valueName="Label" maxLength="255" />
         <text id="Domain" valueName="Domain" maxLength="255" />
         <text id="Proxy" valueName="Proxy" maxLength="255" />
+        <text id="PasswordFile" valueName="PasswordFile" maxLength="1024" />
         <boolean id="SRTP" valueName="SRTP">
           <trueValue><decimal value="1" /></trueValue>
           <falseValue><decimal value="0" /></falseValue>

@@ -223,6 +223,9 @@ int main(int argc, char *argv[])
 
     Settings &settings = Settings::instance();
     settings.load();
+    // Keeps what load() fetched (Active Directory, password files) for starts away from
+    // the office, and encrypts passwords saved by older versions.
+    settings.save();
     Theme::apply(Theme::modeFromString(settings.theme));
 
     Database db;

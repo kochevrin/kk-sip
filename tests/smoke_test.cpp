@@ -79,6 +79,7 @@ private slots:
     void policy();
     void policyRegistry();
     void policyDirectory();
+    void policyPasswordFile();
     void layoutAudit();
 
 private:
@@ -1079,6 +1080,73 @@ void SmokeTest::policyDirectory()
     QVERIFY(managed().isLocked("displayName"));
 
     qunsetenv("KKSIP_TEST_DIRECTORY");
+    qunsetenv("KKSIP_POLICY_FILE");
+    s = saved;
+    s.save();
+}
+
+// PasswordFile: the administrator's file only this user may read, kept for starts
+// without the file server.
+void SmokeTest::policyPasswordFile()
+{
+    Settings &s = Settings::instance();
+    const Settings saved = s;
+    QTemporaryDir dir;
+    const QString path = dir.filePath(QStringLiteral("policy.ini"));
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::WriteOnly));
+    f.write("[Account]\n"
+            "Server=pbx.office.lan\n"
+            "User=106\n"
+            "PasswordFile=" + dir.path().toUtf8() + "/%KKSIP_TEST_LOGIN%.txt\n");
+    f.close();
+    qputenv("KKSIP_POLICY_FILE", path.toLocal8Bit());
+    qputenv("KKSIP_TEST_LOGIN", "anna");
+    auto write = [&](const QByteArray &content) {
+        QFile p(dir.filePath(QStringLiteral("anna.txt")));
+        return p.open(QIODevice::WriteOnly) && p.write(content) == content.size();
+    };
+    auto managed = [&s] {
+        auto it = std::find_if(s.accounts.cbegin(), s.accounts.cend(), [](const AccountConfig &a) { return a.managed; });
+        return it == s.accounts.cend() ? AccountConfig{} : *it;
+    };
+
+    QVERIFY(write("\xef\xbb\xbfs3cret 1\r\nsecond line\r\n")); // Notepad: byte order mark, CRLF
+    s.load();
+    QCOMPARE(managed().password, QStringLiteral("s3cret 1"));
+    QVERIFY(managed().isLocked("password"));
+    QVERIFY(managed().enabled);
+    QVERIFY(s.pendingCredentials.isEmpty());
+    s.save();
+    {
+        QSettings ini(s.configDir() + QStringLiteral("/kk-sip.ini"), QSettings::IniFormat);
+        QString stored;
+        const int n = ini.beginReadArray(QStringLiteral("accounts"));
+        for (int i = 0; i < n; ++i) {
+            ini.setArrayIndex(i);
+            if (ini.value("id").toString() == QLatin1String("policy-account"))
+                stored = ini.value("password").toString();
+        }
+        ini.endArray();
+#ifdef Q_OS_WIN
+        QVERIFY(stored.startsWith(QLatin1String("dpapi:"))); // encrypted for this Windows user
+#else
+        QCOMPARE(stored, QStringLiteral("s3cret 1"));
+#endif
+    }
+
+    // File server out of reach: the password read last time.
+    QVERIFY(QFile::remove(dir.filePath(QStringLiteral("anna.txt"))));
+    s.load();
+    QCOMPARE(managed().password, QStringLiteral("s3cret 1"));
+    QVERIFY(managed().enabled);
+
+    // A new password in the file wins.
+    QVERIFY(write("n3w"));
+    s.load();
+    QCOMPARE(managed().password, QStringLiteral("n3w"));
+
+    qunsetenv("KKSIP_TEST_LOGIN");
     qunsetenv("KKSIP_POLICY_FILE");
     s = saved;
     s.save();

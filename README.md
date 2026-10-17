@@ -49,8 +49,9 @@ uses) and Qt 6.
 - English, Ukrainian and Russian UI: follows the system or set in Settings → General
 - **Central configuration for companies**: the PBX account, codecs, start at logon and
   update checks set for everyone through Group Policy (ADMX templates in English,
-  Ukrainian and Russian), the registry or `/etc/kk-sip/policy.ini`; users only type
-  their password once. See [docs/provisioning.md](docs/provisioning.md)
+  Ukrainian and Russian), the registry or `/etc/kk-sip/policy.ini`; the extension from
+  Active Directory, the password from a file on a share or typed once by the user. See
+  [docs/provisioning.md](docs/provisioning.md)
 
 <p align="center">
   <img src="docs/screenshots/wide.png" alt="Wide view, light theme" width="680">
@@ -183,7 +184,8 @@ sudo cmake --install build
 | Administrator's policy (optional) | `/etc/kk-sip/policy.ini` | `HKLM\` and `HKCU\SOFTWARE\Policies\kk-sip` | `/Library/Application Support/kk-sip/policy.ini` |
 | SIP debug log (when enabled) | `~/.local/share/kk-sip/pjsip.log` | `%LOCALAPPDATA%\kk-sip\pjsip.log` | `~/Library/Application Support/kk-sip/pjsip.log` |
 
-Passwords are stored in plain text in the settings file (mode 600 on Linux and macOS).
+Passwords are stored in the settings file: on Windows encrypted for the user (DPAPI), on
+Linux and macOS in plain text (mode 600).
 
 ## Audio
 

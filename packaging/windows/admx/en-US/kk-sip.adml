@@ -15,7 +15,7 @@
 
 Every field you fill in is locked: the user sees it greyed out and cannot change it. Fields you leave empty are filled in by the user and kept in their profile. The user can turn the account off and on, but cannot remove it.
 
-The password has no field here on purpose: everything in a GPO is readable by every domain user. Leave it to the user, who is asked for it at the first start (together with the username when that is empty too).
+The password has no field here on purpose: everything in a GPO is readable by every domain user. Either leave it to the user, who is asked for it at the first start (together with the username when that is empty too), or give each user a password file: a text file with the password on its first line, on a share where every user can read only their own file, for example \\fileserver\kk-sip$\%USERNAME%.txt. kk-sip-passwords.ps1 from the release creates the share and the files. kk-sip (0.3.2 or later) reads the file at every start and keeps the last password read, encrypted, for times when the file server is out of reach; when the file is missing, the user is asked.
 
 Fields may contain environment variables, for example %USERNAME% as the username when extensions match Windows logins, and attributes of the user's own Active Directory account: %AD:ipPhone% takes the extension from the account's IP phone field, %AD:displayName% the full name. When the account has no such attribute, the field is left to the user; the last value read is kept for times when no domain controller is in reach. Values set in Computer Configuration win over User Configuration field by field, so the server can be set for the computer and the username per user.
 
@@ -25,6 +25,7 @@ Login (auth ID): when authentication uses a different name.
 Display name: caller name sent with calls.
 Account name: name in the account switcher.
 SIP domain, SIP proxy: when they differ from the server.
+Password file: path of the user's password file, see above.
 Re-register every: seconds, 60 to 3600.
 
 If you disable or do not configure this policy, the account is not added, and an account added before disappears at the next start of kk-sip.</string>
@@ -81,6 +82,7 @@ A fixed port helps with firewall rules, but on a terminal server only the first 
         <textBox refId="Label"><label>Account name:</label></textBox>
         <textBox refId="Domain"><label>SIP domain:</label></textBox>
         <textBox refId="Proxy"><label>SIP proxy:</label></textBox>
+        <textBox refId="PasswordFile"><label>Password file:</label></textBox>
         <checkBox refId="SRTP" defaultChecked="false">Encrypt media (SRTP)</checkBox>
         <checkBox refId="NatRewrite" defaultChecked="false">Adapt addresses to NAT (rewrite Contact/Via/SDP)</checkBox>
         <decimalTextBox refId="RegExpiry" defaultValue="300" spinStep="60">Re-register every (seconds):</decimalTextBox>

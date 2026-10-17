@@ -64,8 +64,9 @@ if(APPLE)
 endif()
 target_link_libraries(kk-sip-core PUBLIC ${KKSIP_PJSIP_LIBS})
 if(WIN32)
-    # Active Directory lookups for %AD:ipPhone% in the policy (src/core/Directory.cpp).
-    target_link_libraries(kk-sip-core PUBLIC wldap32)
+    # Active Directory lookups for %AD:ipPhone% in the policy (src/core/Directory.cpp),
+    # passwords encrypted for the user (src/core/Settings.cpp).
+    target_link_libraries(kk-sip-core PUBLIC wldap32 crypt32)
 endif()
 
 if(WIN32)

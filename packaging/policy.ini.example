@@ -34,6 +34,8 @@ User=%USER%
 ;RegExpiry=300
 ; Readable by every local user: only on single-user machines.
 ;Password=
+; Or a file only this user can read, with the password on its first line.
+;PasswordFile=/mnt/kk-sip/%USER%.txt
 
 ;[Account2]
 ;Server=pbx.office.lan

@@ -5,11 +5,22 @@
 
 #include <QDir>
 #include <QFile>
+#include <QHash>
 #include <QRegularExpression>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QUuid>
 #include <algorithm>
+#include <chrono>
+#include <future>
+#include <memory>
+#include <optional>
+#include <thread>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <wincrypt.h>
+#endif
 
 QString AccountConfig::title() const
 {
@@ -49,6 +60,83 @@ QString Settings::newAccountId()
 static QString iniPath()
 {
     return Settings::instance().configDir() + QStringLiteral("/kk-sip.ini");
+}
+
+// Passwords in the user's file: on Windows encrypted for the signed-in user (DPAPI), so a
+// copy of the file is no use under another account or on another computer; elsewhere
+// plain, in a file only the user can read.
+static const QString protectedPrefix = QStringLiteral("dpapi:");
+
+static QString storedPassword(const QString &password)
+{
+#ifdef Q_OS_WIN
+    if (password.isEmpty())
+        return {};
+    QByteArray plain = password.toUtf8();
+    DATA_BLOB in{DWORD(plain.size()), reinterpret_cast<BYTE *>(plain.data())};
+    DATA_BLOB out{};
+    const bool ok = CryptProtectData(&in, nullptr, nullptr, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &out);
+    SecureZeroMemory(plain.data(), plain.size());
+    if (!ok)
+        return password;
+    const QByteArray blob(reinterpret_cast<const char *>(out.pbData), int(out.cbData));
+    LocalFree(out.pbData);
+    return protectedPrefix + QString::fromLatin1(blob.toBase64());
+#else
+    return password;
+#endif
+}
+
+static QString passwordFromStore(const QString &stored)
+{
+    if (!stored.startsWith(protectedPrefix))
+        return stored; // plain: kk-sip up to 0.3.1, Linux, macOS
+#ifdef Q_OS_WIN
+    QByteArray blob = QByteArray::fromBase64(stored.mid(protectedPrefix.size()).toLatin1());
+    DATA_BLOB in{DWORD(blob.size()), reinterpret_cast<BYTE *>(blob.data())};
+    DATA_BLOB out{};
+    if (CryptUnprotectData(&in, nullptr, nullptr, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &out)) {
+        const QString password = QString::fromUtf8(reinterpret_cast<const char *>(out.pbData), int(out.cbData));
+        SecureZeroMemory(out.pbData, out.cbData);
+        LocalFree(out.pbData);
+        return password;
+    }
+#endif
+    return {}; // encrypted under another account or on another computer: asked again
+}
+
+// The first line of the administrator's password file (an account's PasswordFile), or
+// std::nullopt when it cannot be read: no such file, no access, no file server in reach.
+// Opening a file on a server out of reach can hang for half a minute, so the read gets
+// 3 seconds. Settings are loaded more than once at start; the file is read once.
+static std::optional<QString> readPasswordFile(const QString &path)
+{
+    static QHash<QString, std::optional<QString>> read;
+    const bool remember = !QStandardPaths::isTestModeEnabled(); // tests change the file between loads
+    if (remember && read.contains(path))
+        return read.value(path);
+    auto result = std::make_shared<std::promise<std::optional<QString>>>();
+    std::future<std::optional<QString>> answer = result->get_future();
+    std::thread([result, path] {
+        std::optional<QString> line;
+        QFile file(path);
+        if (file.open(QIODevice::ReadOnly)) {
+            QString text = QString::fromUtf8(file.read(4096)).section(QLatin1Char('\n'), 0, 0);
+            if (text.startsWith(QChar(0xfeff))) // Notepad's byte order mark
+                text.remove(0, 1);
+            if (text.endsWith(QLatin1Char('\r')))
+                text.chop(1);
+            if (!text.isEmpty())
+                line = text;
+        }
+        result->set_value(line);
+    }).detach();
+    std::optional<QString> line;
+    if (answer.wait_for(std::chrono::seconds(3)) == std::future_status::ready)
+        line = answer.get();
+    if (remember)
+        read.insert(path, line);
+    return line;
 }
 
 bool Settings::anyLocked() const
@@ -109,6 +197,16 @@ static QList<AccountConfig> managedAccounts(const QVariantMap &policy, const QVa
         text("authUser", a.authUser);
         text("password", a.password);
         text("displayName", a.displayName);
+        // A file only this user may read, on the administrator's share: read at every
+        // start. When it cannot be read, the password read (or typed) last time stays.
+        if (!a.isLocked("password")) {
+            const QVariant v = Policy::value(policy, group + QStringLiteral("/passwordFile"));
+            const QString path = v.isValid() ? Policy::string(v, directory) : QString();
+            if (const std::optional<QString> password = path.isEmpty() ? std::nullopt : readPasswordFile(path)) {
+                a.password = *password;
+                a.locked << QStringLiteral("password") << QStringLiteral("passwordFile");
+            }
+        }
         if (const QVariant v = field("transport"); v.isValid()) {
             const QString t = Policy::string(v).toLower();
             if (t == QLatin1String("udp") || t == QLatin1String("tcp") || t == QLatin1String("tls"))
@@ -221,7 +319,7 @@ void Settings::load()
         a.proxy = ini.value("proxy").toString();
         a.user = ini.value("user").toString();
         a.authUser = ini.value("authUser").toString();
-        a.password = ini.value("password").toString();
+        a.password = passwordFromStore(ini.value("password").toString());
         a.displayName = ini.value("displayName").toString();
         a.transport = ini.value("transport", "udp").toString();
         a.srtp = ini.value("srtp", false).toBool();
@@ -315,8 +413,10 @@ void Settings::save() const
             ini.setValue("proxy", a.proxy);
             ini.setValue("user", a.user);
             ini.setValue("authUser", a.authUser);
-            // A password from the policy stays there, not in the user's file.
-            ini.setValue("password", a.isLocked("password") ? QString() : a.password);
+            // A password from the policy stays there, not in the user's file; one from a
+            // password file is kept for starts without the file server.
+            const bool fromPolicy = a.isLocked("password") && !a.isLocked("passwordFile");
+            ini.setValue("password", fromPolicy ? QString() : storedPassword(a.password));
             ini.setValue("displayName", a.displayName);
             ini.setValue("transport", a.transport);
             ini.setValue("srtp", a.srtp);
@@ -333,6 +433,6 @@ void Settings::save() const
             ini.setValue(it.key(), it.value());
         ini.endGroup();
     }
-    // Passwords are stored in plain text, so keep the file private.
+    // Passwords are in it (plain outside Windows), so keep the file private.
     QFile::setPermissions(iniPath(), QFileDevice::ReadOwner | QFileDevice::WriteOwner);
 }

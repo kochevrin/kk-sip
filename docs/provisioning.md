@@ -2,7 +2,7 @@
 
 An administrator can set up kk-sip for everyone at once: the PBX account, codecs,
 start at logon, update checks. Users then only type their password once (or nothing
-at all, if the administrator provides it).
+at all, with [password files](#passwords)).
 
 The rule is the same everywhere:
 
@@ -57,6 +57,7 @@ needs at least `Server`.
 | `Transport` | string | `udp`, `tcp` or `tls` (default `udp`) |
 | `User` | string | Extension / SIP user name |
 | `Password` | string | SIP password. See [Passwords](#passwords) before you set it here |
+| `PasswordFile` | string | File with the SIP password on its first line, such as `\\fileserver\kk-sip$\%USERNAME%.txt`. See [Passwords](#passwords) |
 | `AuthUser` | string | Login for authentication when it differs from `User` |
 | `DisplayName` | string | Caller name sent with calls |
 | `Label` | string | Name in the account switcher; default `User@Domain` |
@@ -103,14 +104,44 @@ The Android app reads the same keys as managed configurations, with these differ
 
 ## Passwords
 
-From best to worst:
+kk-sip keeps the password in the user's own settings file. On Windows it is encrypted
+for the signed-in user (DPAPI), so a copy of the file is no use under another account
+or on another computer; kk-sip 0.3.2 encrypts passwords older versions saved in plain
+text at its first start. On Linux and macOS it is plain text in a file only the user
+can read.
 
-1. **The user types it once.** Leave `Password` out. On first start kk-sip shows the
-   account with the locked fields filled in and asks for the password (and the
-   extension, if `User` is left out too). It is stored in the user's own settings file.
-2. **In the per-machine file on Linux or macOS** (single-user machines only):
+Ways to get it there, from best to worst:
+
+1. **Password files on a share** (nothing to type, the PBX stays as it is). One text
+   file per user with the password on its first line, on a share where each user can
+   read only their own file. Set `PasswordFile=\\fileserver\kk-sip$\%USERNAME%.txt` in
+   the account (*Password file* in the ADMX template). At every start kk-sip reads the
+   file (3 seconds at most to reach it), greys out the password field and keeps the
+   password for starts away from the office. When the file cannot be read and kk-sip
+   has no password from before, the user is asked.
+
+   The release asset `kk-sip-passwords.ps1` sets this up. Run it on the file server as
+   an administrator:
+
+   ```powershell
+   .\kk-sip-passwords.ps1 -Folder D:\kk-sip -Csv passwords.csv   # Login,Password per line
+   .\kk-sip-passwords.ps1 -Folder D:\kk-sip -Login ivan.petrov    # one user, asks for the password
+   ```
+
+   It shares the folder as `kk-sip$`, lets users open files in it but not list it, and
+   writes `<login>.txt` readable only by that user, the administrators and SYSTEM. Delete
+   the CSV afterwards. For a changed password run it again for that user; kk-sip picks
+   it up at its next start. Deleting a user's file stops new reads, but kk-sip keeps the
+   last password it read: to cut a user off, change the password on the PBX.
+
+   On Linux and macOS `PasswordFile` works the same with any path the user can read,
+   such as a mounted share.
+2. **The user types it once.** Leave `Password` and `PasswordFile` out. On first start
+   kk-sip shows the account with the locked fields filled in and asks for the password
+   (and the extension, if `User` is left out too).
+3. **In the per-machine file on Linux or macOS** (single-user machines only):
    `/etc/kk-sip/policy.ini` must be readable by the user, so every local user can read it.
-3. **In Group Policy**: avoid. Everything in a GPO is stored in SYSVOL, readable by every
+4. **In Group Policy**: avoid. Everything in a GPO is stored in SYSVOL, readable by every
    domain user, and the `Policies` registry keys are readable by everyone on the PC. The
    ADMX template therefore has no password field. If a shared phone really needs it, set
    the `Password` value with a Group Policy Preferences registry item.
