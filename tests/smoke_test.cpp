@@ -35,6 +35,7 @@
 #include <QLabel>
 #include <QTabBar>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QLineEdit>
 #include <QMenu>
@@ -49,6 +50,10 @@
 #include <QToolButton>
 #include <QTranslator>
 #include <QTreeWidget>
+
+#ifndef Q_OS_WIN
+#include <sys/stat.h> // mkfifo
+#endif
 
 class SmokeTest : public QObject {
     Q_OBJECT
@@ -1145,6 +1150,24 @@ void SmokeTest::policyPasswordFile()
     QVERIFY(write("n3w"));
     s.load();
     QCOMPARE(managed().password, QStringLiteral("n3w"));
+
+#ifndef Q_OS_WIN
+    // A file server that does not answer: opening a FIFO nobody writes to hangs. The
+    // start waits 3 seconds, then goes on with the password saved last.
+    QVERIFY(QFile::remove(dir.filePath(QStringLiteral("anna.txt"))));
+    QCOMPARE(::mkfifo(QFile::encodeName(dir.filePath(QStringLiteral("anna.txt"))).constData(), 0600), 0);
+    QElapsedTimer timer;
+    timer.start();
+    s.load();
+    QVERIFY2(timer.elapsed() >= 2500 && timer.elapsed() < 10000, QByteArray::number(timer.elapsed()).constData());
+    QCOMPARE(managed().password, QStringLiteral("s3cret 1"));
+    QVERIFY(!managed().isLocked("password"));
+    {
+        QFile unblock(dir.filePath(QStringLiteral("anna.txt"))); // lets the waiting read finish
+        QVERIFY(unblock.open(QIODevice::WriteOnly));
+    }
+    QTest::qWait(100);
+#endif
 
     qunsetenv("KKSIP_TEST_LOGIN");
     qunsetenv("KKSIP_POLICY_FILE");

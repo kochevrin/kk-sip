@@ -7,15 +7,14 @@
 #include <QFile>
 #include <QHash>
 #include <QRegularExpression>
+#include <QSemaphore>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QThread>
 #include <QUuid>
 #include <algorithm>
-#include <chrono>
-#include <future>
 #include <memory>
 #include <optional>
-#include <thread>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -115,10 +114,13 @@ static std::optional<QString> readPasswordFile(const QString &path)
     const bool remember = !QStandardPaths::isTestModeEnabled(); // tests change the file between loads
     if (remember && read.contains(path))
         return read.value(path);
-    auto result = std::make_shared<std::promise<std::optional<QString>>>();
-    std::future<std::optional<QString>> answer = result->get_future();
-    std::thread([result, path] {
+    // Shared with a thread that may outlive the wait; `line` is only read after `done`.
+    struct Answer {
+        QSemaphore done;
         std::optional<QString> line;
+    };
+    auto answer = std::make_shared<Answer>();
+    QThread *reader = QThread::create([answer, path] {
         QFile file(path);
         if (file.open(QIODevice::ReadOnly)) {
             QString text = QString::fromUtf8(file.read(4096)).section(QLatin1Char('\n'), 0, 0);
@@ -127,13 +129,15 @@ static std::optional<QString> readPasswordFile(const QString &path)
             if (text.endsWith(QLatin1Char('\r')))
                 text.chop(1);
             if (!text.isEmpty())
-                line = text;
+                answer->line = text;
         }
-        result->set_value(line);
-    }).detach();
+        answer->done.release();
+    });
+    QObject::connect(reader, &QThread::finished, reader, &QObject::deleteLater);
+    reader->start();
     std::optional<QString> line;
-    if (answer.wait_for(std::chrono::seconds(3)) == std::future_status::ready)
-        line = answer.get();
+    if (answer->done.tryAcquire(1, 3000))
+        line = answer->line;
     if (remember)
         read.insert(path, line);
     return line;
