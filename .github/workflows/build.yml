@@ -13,6 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The runners' default mirror (azure.archive.ubuntu.com) sometimes crawls at a few kB/s
+      # and the job hangs for half an hour; kernel.org's mirror is fast and complete.
+      - name: Use a faster Ubuntu mirror
+        run: |
+          sudo sed -i 's|http://azure.archive.ubuntu.com/|https://mirrors.edge.kernel.org/|' /etc/apt/sources.list.d/ubuntu.sources
+          grep '^URIs' /etc/apt/sources.list.d/ubuntu.sources
+
       - name: Install dependencies
         run: |
           packaging/linux/build-ubuntu.sh --install-deps --deps-only
@@ -42,6 +49,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      # The runners' default mirror (azure.archive.ubuntu.com) sometimes crawls at a few kB/s
+      # and the job hangs for half an hour; kernel.org's mirror is fast and complete.
+      - name: Use a faster Ubuntu mirror
+        run: |
+          sudo sed -i 's|http://azure.archive.ubuntu.com/|https://mirrors.edge.kernel.org/|' /etc/apt/sources.list.d/ubuntu.sources
+          grep '^URIs' /etc/apt/sources.list.d/ubuntu.sources
       - name: Build .deb and AppImage
         run: packaging/linux/build-ubuntu.sh --install-deps
       - uses: actions/upload-artifact@v4
