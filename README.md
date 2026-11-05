@@ -74,7 +74,7 @@ Packages are attached to every [release](https://github.com/kochevrin/kk-sip/rel
 | Any other distribution | `kk-sip-<ver>-x86_64.AppImage` | `chmod +x kk-sip-*.AppImage` and run it |
 | Windows 10/11 (x64) | `kk-sip-<ver>-windows-x64.msi` | double-click, or `msiexec /i kk-sip-<ver>-windows-x64.msi /qn` |
 | Windows, no install | `kk-sip-<ver>-windows-x64.zip` | unpack anywhere and run `kk-sip.exe` |
-| macOS 14+ (Apple Silicon) | `kk-sip-<ver>-macos-arm64.dmg` | open it and drag kk-sip to Applications, then see below |
+| macOS 15+ (Apple Silicon) | `kk-sip-<ver>-macos-arm64.dmg` | open it and drag kk-sip to Applications, then see below |
 | Android 8+ (64-bit ARM) | `kk-sip-<ver>-android.apk` | open it on the phone and allow installing from that app; see [Android](#android) |
 
 The MSI installs for all users into `Program Files\kk-sip`, adds a Start menu
@@ -89,8 +89,7 @@ first launch ("Apple could not verify kk-sip..."). Once per installed version:
 
 1. Open kk-sip from Applications and close the warning with *Done*.
 2. Open System Settings → Privacy & Security, scroll down to *"kk-sip" was blocked*
-   and click *Open Anyway*, then confirm. (On macOS 14 right-click kk-sip → *Open*
-   works too.)
+   and click *Open Anyway*, then confirm.
 
 Or remove the quarantine flag in Terminal instead:
 `xattr -dr com.apple.quarantine /Applications/kk-sip.app`.

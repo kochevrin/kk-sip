@@ -30,8 +30,8 @@ BREW="$(brew --prefix)"
 # PJSIP's configure and the linker look for opus and OpenSSL in Homebrew's prefix.
 export CPATH="$BREW/include${CPATH:+:$CPATH}"
 export LIBRARY_PATH="$BREW/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
-# Homebrew bottles from the macos-14 runner need Sonoma anyway (see Info.plist.in).
-export MACOSX_DEPLOYMENT_TARGET=14.0
+# Homebrew bottles from the macos-15 runner need Sequoia anyway (see Info.plist.in).
+export MACOSX_DEPLOYMENT_TARGET=15.0
 
 # Tests on macOS run offline, so pjsua (the remote party) isn't needed.
 PJSIP_LIBS_ONLY=1 "$ROOT/scripts/build-pjsip.sh"
