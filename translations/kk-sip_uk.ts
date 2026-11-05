@@ -171,42 +171,42 @@
 <context>
     <name>CallPanel</name>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="44"/>
+        <location filename="../src/ui/CallPanel.cpp" line="47"/>
         <source>Calling…</source>
         <translation>Виклик…</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="46"/>
+        <location filename="../src/ui/CallPanel.cpp" line="49"/>
         <source>Incoming call</source>
         <translation>Вхідний виклик</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="48"/>
+        <location filename="../src/ui/CallPanel.cpp" line="51"/>
         <source>Ringing…</source>
         <translation>Дзвонить…</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="50"/>
+        <location filename="../src/ui/CallPanel.cpp" line="53"/>
         <source>Connecting…</source>
         <translation>З’єднання…</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="55"/>
+        <location filename="../src/ui/CallPanel.cpp" line="58"/>
         <source>on hold</source>
         <translation>на утриманні</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="57"/>
+        <location filename="../src/ui/CallPanel.cpp" line="60"/>
         <source>muted</source>
         <translation>мікрофон вимк.</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="61"/>
+        <location filename="../src/ui/CallPanel.cpp" line="64"/>
         <source>Ended</source>
         <translation>Завершено</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="137"/>
+        <location filename="../src/ui/CallPanel.cpp" line="140"/>
         <source>Answer</source>
         <translation>Відповісти</translation>
     </message>
@@ -215,54 +215,59 @@
         <translation type="vanished">Мікрофон</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="112"/>
-        <location filename="../src/ui/CallPanel.cpp" line="226"/>
+        <location filename="../src/ui/CallPanel.cpp" line="115"/>
+        <location filename="../src/ui/CallPanel.cpp" line="238"/>
         <source>Mute microphone</source>
         <translation>Вимкнути мікрофон</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="114"/>
+        <location filename="../src/ui/CallPanel.cpp" line="117"/>
         <source>Hold</source>
         <translation>Утримання</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="160"/>
+        <location filename="../src/ui/CallPanel.cpp" line="163"/>
         <source>Transfer</source>
         <translation>Переадресація</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="116"/>
+        <location filename="../src/ui/CallPanel.cpp" line="119"/>
         <source>Transfer call</source>
         <translation>Переадресувати виклик</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="120"/>
-        <location filename="../src/ui/CallPanel.cpp" line="121"/>
+        <location filename="../src/ui/CallPanel.cpp" line="123"/>
+        <location filename="../src/ui/CallPanel.cpp" line="124"/>
         <source>Hang up</source>
         <translation>Покласти слухавку</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="155"/>
+        <location filename="../src/ui/CallPanel.cpp" line="158"/>
         <source>Transfer to number…</source>
         <translation>Переадресувати на номер…</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="139"/>
+        <location filename="../src/ui/CallPanel.cpp" line="142"/>
         <source>Reject</source>
         <translation>Відхилити</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="226"/>
+        <location filename="../src/ui/CallPanel.cpp" line="238"/>
         <source>Unmute microphone</source>
         <translation>Увімкнути мікрофон</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="291"/>
+        <location filename="../src/ui/CallPanel.cpp" line="295"/>
+        <source>Copy number</source>
+        <translation>Копіювати номер</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/CallPanel.cpp" line="313"/>
         <source>Transfer failed: %1</source>
         <translation>Не вдалося переадресувати: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/CallPanel.cpp" line="295"/>
+        <location filename="../src/ui/CallPanel.cpp" line="317"/>
         <source>Transferring to %1…</source>
         <translation>Переадресація на %1…</translation>
     </message>
@@ -551,24 +556,29 @@
 <context>
     <name>IncomingDialog</name>
     <message>
-        <location filename="../src/ui/IncomingDialog.cpp" line="18"/>
+        <location filename="../src/ui/IncomingDialog.cpp" line="21"/>
         <source>Incoming call</source>
         <translation>Вхідний виклик</translation>
     </message>
     <message>
-        <location filename="../src/ui/IncomingDialog.cpp" line="37"/>
+        <location filename="../src/ui/IncomingDialog.cpp" line="40"/>
         <source>to %1</source>
         <translation>на %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/IncomingDialog.cpp" line="44"/>
+        <location filename="../src/ui/IncomingDialog.cpp" line="47"/>
         <source>Answer</source>
         <translation>Відповісти</translation>
     </message>
     <message>
-        <location filename="../src/ui/IncomingDialog.cpp" line="45"/>
+        <location filename="../src/ui/IncomingDialog.cpp" line="48"/>
         <source>Reject</source>
         <translation>Відхилити</translation>
+    </message>
+    <message>
+        <location filename="../src/ui/IncomingDialog.cpp" line="80"/>
+        <source>Copy number</source>
+        <translation>Копіювати номер</translation>
     </message>
 </context>
 <context>
@@ -895,13 +905,13 @@
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="99"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="315"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="317"/>
         <source>Up</source>
         <translation>Вгору</translation>
     </message>
     <message>
         <location filename="../src/ui/SettingsDialog.cpp" line="100"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="316"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="318"/>
         <source>Down</source>
         <translation>Вниз</translation>
     </message>
@@ -926,185 +936,185 @@
         <translation>вимкнено</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="148"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="149"/>
         <source>managed</source>
         <translation>від адміністратора</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="183"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="185"/>
         <source>Remove account</source>
         <translation>Видалити обліковий запис</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="183"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="185"/>
         <source>Remove account %1?</source>
         <translation>Видалити обліковий запис %1?</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="210"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="212"/>
         <source>MicroSIP settings</source>
         <translation>Налаштування MicroSIP</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="211"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="213"/>
         <source>microsip.ini (*.ini);;All files (*)</source>
         <translation>microsip.ini (*.ini);;Усі файли (*)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="217"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="222"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="219"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="224"/>
         <source>Import</source>
         <translation>Імпорт</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="223"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="225"/>
         <source>Imported %1 account(s). MicroSIP keeps passwords encrypted with a Windows key, so the accounts are disabled until you enter a password with Edit.</source>
         <translation>Імпортовано облікових записів: %1. MicroSIP шифрує паролі ключем Windows, тому облікові записи вимкнено, доки ви не введете пароль через «Змінити».</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="237"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="238"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="239"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="240"/>
         <source>System default</source>
         <translation>Типовий системний</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="252"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="254"/>
         <source>Microphone:</source>
         <translation>Мікрофон:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="253"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="255"/>
         <source>Speaker:</source>
         <translation>Динамік:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="257"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="259"/>
         <source>built-in tone</source>
         <translation>вбудований сигнал</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="262"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="264"/>
         <source>Ringtone</source>
         <translation>Мелодія дзвінка</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="262"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="264"/>
         <source>WAV files (*.wav)</source>
         <translation>Файли WAV (*.wav)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="268"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="270"/>
         <source>Ringtone:</source>
         <translation>Мелодія дзвінка:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="271"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="273"/>
         <source>“System default” follows the default devices in Windows sound settings.</source>
         <translation>«Типовий системний» — пристрої, вибрані типовими в налаштуваннях звуку Windows.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="273"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="275"/>
         <source>“System default” uses the input and output chosen in macOS Sound settings.</source>
         <translation>«Типовий системний» — вхід і вихід, вибрані в налаштуваннях звуку macOS.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="275"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="277"/>
         <source>“System default” follows the PipeWire/PulseAudio default device.</source>
         <translation>«Типовий системний» — пристрій, вибраний у PipeWire/PulseAudio.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="345"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="347"/>
         <source>Closing the window keeps kk-sip in the tray</source>
         <translation>Під час закриття вікна залишатися в треї</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="347"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="349"/>
         <source>Start with the system</source>
         <translation>Запускати разом із системою</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="349"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="351"/>
         <source>…straight to the tray, without the window</source>
         <translation>…одразу в трей, без вікна</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="354"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="356"/>
         <source>Check GitHub for new versions</source>
         <translation>Перевіряти нові версії на GitHub</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="355"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="357"/>
         <source>Once a day. kk-sip only tells you about a new version, it never installs anything.</source>
         <translation>Раз на день. kk-sip лише повідомляє про нову версію і нічого не встановлює сам.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="357"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="359"/>
         <source>Write SIP debug log (restart needed)</source>
         <translation>Вести SIP-журнал налагодження (потрібен перезапуск)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="361"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="363"/>
         <source>random</source>
         <translation>випадковий</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="364"/>
-        <location filename="../src/ui/SettingsDialog.cpp" line="371"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="366"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="373"/>
         <source>Follow system</source>
         <translation>Як у системі</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="365"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="367"/>
         <source>Light</source>
         <translation>Світла</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="366"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="368"/>
         <source>Dark</source>
         <translation>Темна</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="368"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="370"/>
         <source>Theme:</source>
         <translation>Тема:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="376"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="378"/>
         <source>Applies after a restart</source>
         <translation>Застосовується після перезапуску</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="377"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="379"/>
         <source>Language:</source>
         <translation>Мова:</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="378"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="380"/>
         <source>System window frame (restart needed)</source>
         <translation>Системна рамка вікна (потрібен перезапуск)</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="381"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="383"/>
         <source>Remember window position</source>
         <translation>Запам’ятовувати положення вікна</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="384"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="386"/>
         <source>On KDE Wayland this adds a KWin window rule for kk-sip.</source>
         <translation>У KDE на Wayland для цього додається правило вікна KWin для kk-sip.</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="391"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="393"/>
         <source>Local SIP port (restart needed):</source>
         <translation>Локальний SIP-порт (потрібен перезапуск):</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="427"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="429"/>
         <source>Language</source>
         <translation>Мова</translation>
     </message>
     <message>
-        <location filename="../src/ui/SettingsDialog.cpp" line="427"/>
+        <location filename="../src/ui/SettingsDialog.cpp" line="429"/>
         <source>The new language applies after kk-sip restarts.</source>
         <translation>Нова мова застосується після перезапуску kk-sip.</translation>
     </message>
@@ -1198,12 +1208,12 @@
         <translation>Запуститися в треї, не показуючи вікно</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="232"/>
+        <location filename="../src/main.cpp" line="235"/>
         <source>Cannot open database: %1</source>
         <translation>Не вдалося відкрити базу: %1</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="239"/>
+        <location filename="../src/main.cpp" line="242"/>
         <source>Cannot start SIP stack: %1</source>
         <translation>Не вдалося запустити SIP: %1</translation>
     </message>

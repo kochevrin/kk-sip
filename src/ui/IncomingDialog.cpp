@@ -3,8 +3,11 @@
 #include "sip/SipEngine.h"
 #include "ui/Icons.h"
 
+#include <QApplication>
+#include <QClipboard>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMenu>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -68,6 +71,15 @@ IncomingDialog::IncomingDialog(SipEngine *engine, int callId, const QString &cal
     connect(m_engine, &SipEngine::callEnded, this, [this](const CallView &c) {
         if (c.id == m_callId)
             close();
+    });
+
+    // Right click copies the caller's number, same as on the call panel.
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, &QWidget::customContextMenuRequested, this, [this, number](const QPoint &pos) {
+        QMenu menu(this);
+        menu.addAction(Icons::get(QStringLiteral("edit-copy")), tr("Copy number"), this,
+                       [number] { QApplication::clipboard()->setText(number); });
+        menu.exec(mapToGlobal(pos));
     });
 
     adjustSize();

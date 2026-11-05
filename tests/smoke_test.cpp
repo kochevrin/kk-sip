@@ -27,6 +27,8 @@
 
 #include <QAbstractButton>
 #include <QCheckBox>
+#include <QClipboard>
+#include <QContextMenuEvent>
 #include <QListWidget>
 #include <QSettings>
 #include <QAbstractSpinBox>
@@ -388,6 +390,30 @@ void SmokeTest::incomingAnswer()
     shot(m_window.get(), QStringLiteral("05b-transfer-inline"));
     QTest::keyClick(transferEdit, Qt::Key_Escape);
     QVERIFY(!transferEdit->isVisible());
+
+    // Right click on the call copies the caller's number (e.g. into a CRM) while talking.
+    QApplication::clipboard()->clear();
+    QLabel *callTitle = nullptr;
+    for (QLabel *l : panel->findChildren<QLabel *>())
+        if (l->isVisible() && l->font().bold())
+            callTitle = l;
+    QVERIFY(callTitle);
+    bool copied = false;
+    QTimer::singleShot(100, this, [&] {
+        if (auto *menu = qobject_cast<QMenu *>(QApplication::activePopupWidget())) {
+            for (QAction *a : menu->actions())
+                if (a->text() == CallPanel::tr("Copy number")) {
+                    a->trigger();
+                    copied = true;
+                }
+            menu->close();
+        }
+    });
+    QContextMenuEvent menuEvent(QContextMenuEvent::Mouse, callTitle->rect().center(),
+                                callTitle->mapToGlobal(callTitle->rect().center()));
+    QApplication::sendEvent(callTitle, &menuEvent);
+    QVERIFY(copied);
+    QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("103"));
 
     QTest::qWait(400);
     QVERIFY2(!modalOpened, "a dialog popped up while answering");

@@ -4,10 +4,13 @@
 #include "ui/Icons.h"
 #include "ui/Theme.h"
 
+#include <QApplication>
+#include <QClipboard>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QKeyEvent>
+#include <QMenu>
 #include <QPushButton>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -193,6 +196,11 @@ CallPanel::Row *CallPanel::createRow(int callId)
     connect(go, &QPushButton::clicked, this, [this, callId, row] { doTransfer(callId, row); });
     row->transferEdit->installEventFilter(this); // Esc closes the transfer field
 
+    // Right click on the call copies the other side's number, e.g. into a CRM.
+    row->widget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(row->widget, &QWidget::customContextMenuRequested, this,
+            [this, row](const QPoint &pos) { showMenu(row, pos); });
+
     m_layout->addWidget(row->widget);
     return row;
 }
@@ -205,6 +213,10 @@ void CallPanel::updateRow(Row *row, const CallView &c)
     const bool named = !name.isEmpty() && name != c.number;
     row->title->setText(named ? name : c.number);
     row->status->setText(named ? c.number + QStringLiteral(" · ") + stateText(c) : stateText(c));
+    row->number = c.number;
+    const QString tip = named ? name + QLatin1Char('\n') + c.number : c.number; // the title may be cut
+    row->title->setToolTip(tip);
+    row->status->setToolTip(tip);
 
     if (c.state != row->shownState) {
         row->shownState = c.state;
@@ -273,6 +285,16 @@ bool CallPanel::eventFilter(QObject *watched, QEvent *event)
         }
     }
     return QFrame::eventFilter(watched, event);
+}
+
+void CallPanel::showMenu(Row *row, const QPoint &pos)
+{
+    if (row->number.isEmpty())
+        return;
+    QMenu menu(this);
+    menu.addAction(Icons::get(QStringLiteral("edit-copy")), tr("Copy number"), this,
+                   [number = row->number] { QApplication::clipboard()->setText(number); });
+    menu.exec(row->widget->mapToGlobal(pos));
 }
 
 bool CallPanel::justAppeared(const Row *row)

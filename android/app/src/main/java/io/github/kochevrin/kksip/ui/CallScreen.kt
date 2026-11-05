@@ -1,5 +1,6 @@
 package io.github.kochevrin.kksip.ui
 
+import android.content.ClipData
 import android.os.SystemClock
 import android.text.format.DateUtils
 import androidx.compose.animation.AnimatedContent
@@ -13,7 +14,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,11 +39,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -53,8 +59,10 @@ import io.github.kochevrin.kksip.sip.Phase
 import io.github.kochevrin.kksip.sip.Route
 import io.github.kochevrin.kksip.sip.RouteType
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Header shared by the incoming and the in-call screen: avatar, name, number, status. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CallHeader(call: CallUi, status: String, statusIsError: Boolean, ringing: Boolean) {
     val colors = MaterialTheme.colorScheme
@@ -62,11 +70,31 @@ private fun CallHeader(call: CallUi, status: String, statusIsError: Boolean, rin
         Spacer(Modifier.height(48.dp))
         Avatar(call.title, 112.dp, Modifier.ringPulse(ringing, Orange))
         Spacer(Modifier.height(24.dp))
-        Text(
-            call.title, fontSize = 30.sp, color = colors.onBackground, textAlign = TextAlign.Center,
-            maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 24.dp),
-        )
-        if (call.name.isNotEmpty()) Text(call.number, color = colors.onSurfaceVariant, fontSize = 16.sp)
+        // A long press on the name or number copies the number, e.g. into a CRM while talking.
+        val clipboard = LocalClipboard.current
+        val scope = rememberCoroutineScope()
+        var menu by remember { mutableStateOf(false) }
+        Box {
+            Column(
+                Modifier.combinedClickable(
+                    interactionSource = null, indication = null, enabled = call.number.isNotEmpty(),
+                    onClick = {}, onLongClick = { menu = true },
+                ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    call.title, fontSize = 30.sp, color = colors.onBackground, textAlign = TextAlign.Center,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 24.dp),
+                )
+                if (call.name.isNotEmpty()) Text(call.number, color = colors.onSurfaceVariant, fontSize = 16.sp)
+            }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.copy_number)) }, onClick = {
+                    scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(call.number, call.number))) }
+                    menu = false
+                })
+            }
+        }
         Spacer(Modifier.height(8.dp))
         AnimatedContent(
             status,

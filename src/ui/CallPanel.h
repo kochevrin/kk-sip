@@ -40,6 +40,7 @@ private:
         QPushButton *hangup = nullptr;
         QWidget *transferBox = nullptr;   // inline "transfer to" field, shown on request
         QLineEdit *transferEdit = nullptr;
+        QString number;                   // what "Copy number" puts on the clipboard
         CallView::State shownState = CallView::Ended;
         int muteIcon = -1;                // muted state the mute icon shows, -1 = repaint
         qint64 armedAt = 0;               // when the current set of buttons appeared
@@ -48,6 +49,7 @@ private:
     Row *createRow(int callId);
     void updateRow(Row *row, const CallView &call);
     void doTransfer(int callId, Row *row);
+    void showMenu(Row *row, const QPoint &pos);
     static bool justAppeared(const Row *row);
 
     SipEngine *m_engine;
